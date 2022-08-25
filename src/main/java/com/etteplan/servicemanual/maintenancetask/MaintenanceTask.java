@@ -24,7 +24,7 @@ public class MaintenanceTask {
     @Enumerated(EnumType.ORDINAL)
     private TaskStatus status; // Open or closed
     private String description;
-    private LocalDateTime registered; // When the task was registered
+    private LocalDateTime registered; // FIXME: we might have to use int or some other type here, depending on the database
 
     public MaintenanceTask(Long deviceId, TaskSeverity severity, TaskStatus status, String description) {
         // Overloaded constructor for creating new tasks: registeration time will automatically be right now
