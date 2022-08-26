@@ -22,18 +22,29 @@ class MaintenanceTaskController {
         this.taskRepository = taskRepository;
         this.deviceRepository = deviceRepository;
     }
+    // TODO: add hyperlinks to all with HAL.
 
+    // Show all tasks, GET request
     @GetMapping("/tasks")
     List<MaintenanceTask> getAllTasks() {
-        // No filter applied
-        // TODO: sort the results by severity and registration time.
         return taskRepository.findAllByOrderBySeverityDescRegistered();
     }
 
+    // Show all tasks performed on <deviceId>, GET
     @GetMapping("/tasks/{deviceId}")
     List<MaintenanceTask> getTaskById(@PathVariable Long deviceId) {
         // Return all the tasks associated with <deviceId>
         List<MaintenanceTask> tasks = taskRepository.findAllByDeviceIdOrderBySeverityDescRegistered(deviceId);
         return tasks;
+    }
+
+    @DeleteMapping("/tasks/{taskId}/delete")
+    void deleteTask(@PathVariable Long taskId) {
+        taskRepository.deleteById(taskId);
+    }
+
+    @PostMapping("/tasks/new")
+    MaintenanceTask createTask(@RequestBody MaintenanceTask task) {
+        return taskRepository.save(task);
     }
 }

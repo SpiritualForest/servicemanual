@@ -26,6 +26,8 @@ public class MaintenanceTask {
     private String description;
     private LocalDateTime registered; // FIXME: we might have to use int or some other type here, depending on the database
 
+    protected MaintenanceTask() {} // Default constructor because... satan.
+
     public MaintenanceTask(Long deviceId, TaskSeverity severity, TaskStatus status, String description) {
         // Overloaded constructor for creating new tasks: registeration time will automatically be right now
         this.deviceId = deviceId;
