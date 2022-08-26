@@ -10,8 +10,8 @@ import java.util.List;
 public interface MaintenanceTaskRepository extends JpaRepository<MaintenanceTask, Long> { 
     
     // ... where deviceId = <deviceId> order by severity desc, registered
-    List<MaintenanceTask> findAllByDeviceIdOrderBySeverityDescRegistered(Long deviceId);
+    List<MaintenanceTask> findAllByDeviceIdOrderBySeverityAscRegistered(Long deviceId);
 
     // ... order by severity desc, registered
-    List<MaintenanceTask> findAllByOrderBySeverityDescRegistered();
+    List<MaintenanceTask> findAllByOrderBySeverityAscRegistered();
 }

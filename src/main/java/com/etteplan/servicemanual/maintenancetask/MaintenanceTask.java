@@ -75,7 +75,7 @@ public class MaintenanceTask {
         return this.description;
     }
 
-    public LocalDateTime getRegisteredTime() {
+    public LocalDateTime getRegistered() {
         return this.registered;
     }
 }

@@ -77,7 +77,7 @@ public class DatabaseInitializer {
         // Creates a new random device whose Year param is between 1975-2022 (inclusive)
         String name = deviceNames.get(random.nextInt(deviceNames.size()));
         String type = deviceTypes.get(random.nextInt(deviceTypes.size()));
-        int year = random.nextInt((2023-1975)+1975);
+        int year = random.nextInt(2023-1975)+1975;
         return new FactoryDevice(name, year, type);
     }
 }
