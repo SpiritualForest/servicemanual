@@ -3,14 +3,17 @@ package com.etteplan.servicemanual.maintenancetask;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.DeleteMapping;
-import org.springframework.web.bind.annotation.PutMapping; // Might use this for editing, we'll see
+import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestBody;
+
 import org.springframework.http.ResponseEntity;
+
 import org.springframework.hateoas.EntityModel;
 import org.springframework.hateoas.CollectionModel;
 import static org.springframework.hateoas.server.mvc.WebMvcLinkBuilder.*;
+
 import com.etteplan.servicemanual.factorydevice.FactoryDeviceRepository;
 import com.etteplan.servicemanual.factorydevice.FactoryDeviceNotFoundException;
 
@@ -34,6 +37,7 @@ class MaintenanceTaskController {
     }
 
     // Show all tasks with default sorting - severity first, then registration time
+    // TODO: GET request parameters
     @GetMapping("/tasks")
     CollectionModel<EntityModel<MaintenanceTask>> getAllTasks() {
         List<EntityModel<MaintenanceTask>> tasks = taskRepository.findAllByOrderBySeverityAscRegistered().stream()
@@ -56,42 +60,54 @@ class MaintenanceTaskController {
     }
 
     // Show a unique task by its id
-    @GetMapping("/tasks/{id}")
-    EntityModel<MaintenanceTask> getTaskById(@PathVariable Long id) {
-        MaintenanceTask task = taskRepository.findById(id)
-            .orElseThrow(() -> new MaintenanceTaskNotFoundException(id));
+    @GetMapping("/tasks/{taskId}")
+    EntityModel<MaintenanceTask> getTaskById(@PathVariable Long taskId) {
+        MaintenanceTask task = taskRepository.findById(taskId)
+            .orElseThrow(() -> new MaintenanceTaskNotFoundException(taskId));
 
         return EntityModel.of(task,
-                linkTo(methodOn(MaintenanceTaskController.class).getTaskById(id)).withSelfRel(),
+                linkTo(methodOn(MaintenanceTaskController.class).getTaskById(taskId)).withSelfRel(),
                 linkTo(methodOn(MaintenanceTaskController.class).getAllTasks()).withRel("tasks")
             );
     }
 
     // Delete a single task based on its id
-    @DeleteMapping("/tasks/{id}")
-    ResponseEntity<String> deleteTask(@PathVariable Long id) {
-        
-        // TODO: return JSON here with a status and some links maybe
-
-        if (taskRepository.findById(id).isPresent()) {
-            taskRepository.deleteById(id);
-            return ResponseEntity.ok().body("success");
+    @DeleteMapping("/tasks/{taskId}")
+    ResponseEntity<String> deleteTask(@PathVariable Long taskId) {
+        if (taskRepository.existsById(taskId)) {
+            taskRepository.deleteById(taskId);
+            return ResponseEntity.ok("Task deleted successfully.");
         }
         // If we reached here, there was an error
-        return ResponseEntity.unprocessableEntity().body("failed");
+        return ResponseEntity.unprocessableEntity().body("Task deletion failed: no such task: " + taskId);
     }
 
     // Update a single task
-    @PutMapping("/tasks/{id}")
+    @PutMapping("/tasks/{taskId}")
     MaintenanceTask updateTask(@RequestBody MaintenanceTask modifiedTask, @PathVariable Long taskId) {
         return taskRepository.findById(taskId)
             .map(task -> {
                 // Modify the data in the original task entity
-                task.setSeverity(modifiedTask.getSeverity());
-                task.setStatus(modifiedTask.getStatus());
-                task.setDeviceId(modifiedTask.getDeviceId());
-                task.setDescription(modifiedTask.getDescription());
-                task.setRegistered(modifiedTask.getRegistered());
+                // Severity
+                TaskSeverity severity = modifiedTask.getSeverity();
+                if (severity != null) {
+                    task.setSeverity(severity);
+                }
+                // Status
+                TaskStatus status = modifiedTask.getStatus();
+                if (status != null) {
+                    task.setStatus(status);
+                }
+                // Desc
+                String description = modifiedTask.getDescription();
+                if (description != null) {
+                    task.setDescription(description);
+                }
+                // Device ID. Need to be careful with this one.
+                Long deviceId = modifiedTask.getDeviceId();
+                if (deviceId != null) {
+                    task.setDeviceId(deviceId);
+                }
                 return taskRepository.save(task);
             }).orElseThrow(() -> new MaintenanceTaskNotFoundException(taskId));
     }
