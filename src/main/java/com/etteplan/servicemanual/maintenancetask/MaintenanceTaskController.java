@@ -27,16 +27,13 @@ class MaintenanceTaskController {
     List<MaintenanceTask> getAllTasks() {
         // No filter applied
         // TODO: sort the results by severity and registration time.
-        return taskRepository.findAll();
+        return taskRepository.findAllByOrderBySeverityDescRegistered();
     }
 
     @GetMapping("/tasks/{deviceId}")
     List<MaintenanceTask> getTaskById(@PathVariable Long deviceId) {
         // Return all the tasks associated with <deviceId>
         List<MaintenanceTask> tasks = taskRepository.findAllByDeviceIdOrderBySeverityDescRegistered(deviceId);
-        if (tasks == null) {
-            throw new FactoryDeviceNotFoundException(deviceId);
-        }
         return tasks;
     }
 }
