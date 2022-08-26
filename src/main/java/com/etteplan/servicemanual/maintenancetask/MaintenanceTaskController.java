@@ -7,6 +7,7 @@ import org.springframework.web.bind.annotation.PutMapping; // Might use this for
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.http.ResponseEntity;
 import org.springframework.hateoas.EntityModel;
 import org.springframework.hateoas.CollectionModel;
 import static org.springframework.hateoas.server.mvc.WebMvcLinkBuilder.*;
@@ -18,6 +19,9 @@ import com.etteplan.servicemanual.factorydevice.FactoryDeviceNotFoundException;
 import java.util.List;
 import java.util.stream.Collectors;
 
+// TODO: Clean this stuff a little bit. Look at this mess!
+// FIXME: we have to do data validation and other error checks. Make sure to implement this.
+
 @RestController
 class MaintenanceTaskController {
     
@@ -28,10 +32,8 @@ class MaintenanceTaskController {
         this.taskRepository = taskRepository;
         this.deviceRepository = deviceRepository;
     }
-    // TODO: add hyperlinks to all with HAL.
 
-    // Show all tasks, GET request
-    // Aggregate root
+    // Show all tasks with default sorting - severity first, then registration time
     @GetMapping("/tasks")
     CollectionModel<EntityModel<MaintenanceTask>> getAllTasks() {
         List<EntityModel<MaintenanceTask>> tasks = taskRepository.findAllByOrderBySeverityAscRegistered().stream()
@@ -47,16 +49,51 @@ class MaintenanceTaskController {
         return CollectionModel.of(tasks, linkTo(methodOn(MaintenanceTaskController.class).getAllTasks()).withSelfRel());
     }
 
+    // Delete all tasks
+    @DeleteMapping("/tasks")
+    void deleteAllTasks() {
+        taskRepository.deleteAll();
+    }
+
     // Show a unique task by its id
-    @GetMapping("/tasks/{taskId}")
-    EntityModel<MaintenanceTask> getTaskById(@PathVariable Long taskId) {
-        MaintenanceTask task = taskRepository.findById(taskId)
-            .orElseThrow(() -> new MaintenanceTaskNotFoundException(taskId));
+    @GetMapping("/tasks/{id}")
+    EntityModel<MaintenanceTask> getTaskById(@PathVariable Long id) {
+        MaintenanceTask task = taskRepository.findById(id)
+            .orElseThrow(() -> new MaintenanceTaskNotFoundException(id));
 
         return EntityModel.of(task,
-                linkTo(methodOn(MaintenanceTaskController.class).getTaskById(taskId)).withSelfRel(),
+                linkTo(methodOn(MaintenanceTaskController.class).getTaskById(id)).withSelfRel(),
                 linkTo(methodOn(MaintenanceTaskController.class).getAllTasks()).withRel("tasks")
             );
+    }
+
+    // Delete a single task based on its id
+    @DeleteMapping("/tasks/{id}")
+    ResponseEntity<String> deleteTask(@PathVariable Long id) {
+        
+        // TODO: return JSON here with a status and some links maybe
+
+        if (taskRepository.findById(id).isPresent()) {
+            taskRepository.deleteById(id);
+            return ResponseEntity.ok().body("success");
+        }
+        // If we reached here, there was an error
+        return ResponseEntity.unprocessableEntity().body("failed");
+    }
+
+    // Update a single task
+    @PutMapping("/tasks/{id}")
+    MaintenanceTask updateTask(@RequestBody MaintenanceTask modifiedTask, @PathVariable Long taskId) {
+        return taskRepository.findById(taskId)
+            .map(task -> {
+                // Modify the data in the original task entity
+                task.setSeverity(modifiedTask.getSeverity());
+                task.setStatus(modifiedTask.getStatus());
+                task.setDeviceId(modifiedTask.getDeviceId());
+                task.setDescription(modifiedTask.getDescription());
+                task.setRegistered(modifiedTask.getRegistered());
+                return taskRepository.save(task);
+            }).orElseThrow(() -> new MaintenanceTaskNotFoundException(taskId));
     }
 
     // Show all tasks performed on <deviceId>
@@ -72,13 +109,13 @@ class MaintenanceTaskController {
         
         return CollectionModel.of(tasks, linkTo(methodOn(MaintenanceTaskController.class).getTasksByDeviceId(deviceId)).withSelfRel());
     }
-    
-    // Delete a single task based on its id
-    @DeleteMapping("/tasks/{taskId}/delete")
-    void deleteTask(@PathVariable Long taskId) {
-        taskRepository.deleteById(taskId);
+    // Delete all tasks for this deviceId
+    @DeleteMapping("/tasks/device/{deviceId}")
+    void deleteDeviceTasks(@PathVariable Long deviceId) {
+        List<MaintenanceTask> tasks = taskRepository.findAllByDeviceIdOrderBySeverityAscRegistered(deviceId);
+        taskRepository.deleteAll(tasks);
     }
-
+    
     // Create a new task
     @PostMapping("/tasks/new")
     MaintenanceTask createTask(@RequestBody MaintenanceTask task) {

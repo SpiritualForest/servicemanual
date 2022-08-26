@@ -56,26 +56,47 @@ public class MaintenanceTask {
         return this.id;
     }
 
+    public void setId() {
+        this.id = id;
+    }
+
     public Long getDeviceId() {
         return this.deviceId;
     }
 
-    /* public FactoryDevice getDevice() { } */
-
+    public void setDeviceId(Long deviceId) {
+        this.deviceId = deviceId;
+    }
 
     public TaskSeverity getSeverity() {
         return this.severity;
+    }
+
+    public void setSeverity(TaskSeverity severity) {
+        this.severity = severity;
     }
 
     public TaskStatus getStatus() {
         return this.status;
     }
 
+    public void setStatus(TaskStatus status) {
+        this.status = status;
+    }
+
     public String getDescription() {
         return this.description;
     }
 
+    public void setDescription(String description) {
+        this.description = description;
+    }
+
     public LocalDateTime getRegistered() {
         return this.registered;
+    }
+
+    public void setRegistered(LocalDateTime registered) {
+        this.registered = registered;
     }
 }
