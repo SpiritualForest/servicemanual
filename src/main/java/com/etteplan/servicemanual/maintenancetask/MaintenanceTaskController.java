@@ -40,7 +40,7 @@ class MaintenanceTaskController {
 
     // Show all tasks with default sorting - severity first, then registration time
     // TODO: GET request parameters
-    @GetMapping("/tasks")
+    @GetMapping("/api/tasks")
     CollectionModel<EntityModel<MaintenanceTask>> getAllTasks() {
         List<EntityModel<MaintenanceTask>> tasks = taskRepository.findAllByOrderBySeverityAscRegistered().stream()
             .map(task -> EntityModel.of(task, 
@@ -56,13 +56,13 @@ class MaintenanceTaskController {
     }
 
     // Delete all tasks
-    @DeleteMapping("/tasks")
+    @DeleteMapping("/api/tasks")
     void deleteAllTasks() {
         taskRepository.deleteAll();
     }
 
     // Show a unique task by its id
-    @GetMapping("/tasks/{taskId}")
+    @GetMapping("/api/tasks/{taskId}")
     EntityModel<MaintenanceTask> getTaskById(@PathVariable Long taskId) {
         MaintenanceTask task = taskRepository.findById(taskId)
             .orElseThrow(() -> new MaintenanceTaskNotFoundException(taskId));
@@ -74,7 +74,7 @@ class MaintenanceTaskController {
     }
 
     // Delete a single task based on its id
-    @DeleteMapping("/tasks/{taskId}")
+    @DeleteMapping("/api/tasks/{taskId}")
     ResponseEntity<String> deleteTask(@PathVariable Long taskId) {
         if (taskRepository.existsById(taskId)) {
             taskRepository.deleteById(taskId);
@@ -85,37 +85,33 @@ class MaintenanceTaskController {
     }
 
     // Update a single task
-    @PutMapping("/tasks/{taskId}")
-    MaintenanceTask updateTask(@RequestBody MaintenanceTask modifiedTask, @PathVariable Long taskId) {
-        return taskRepository.findById(taskId)
-            .map(task -> {
-                // Modify the data in the original task entity
-                // Severity
-                TaskSeverity severity = modifiedTask.getSeverity();
-                if (severity != null) {
-                    task.setSeverity(severity);
-                }
-                // Status
-                TaskStatus status = modifiedTask.getStatus();
-                if (status != null) {
-                    task.setStatus(status);
-                }
-                // Desc
-                String description = modifiedTask.getDescription();
-                if (description != null) {
-                    task.setDescription(description);
-                }
-                // Device ID. Need to be careful with this one.
-                Long deviceId = modifiedTask.getDeviceId();
-                if (deviceId != null) {
-                    task.setDeviceId(deviceId);
-                }
-                return taskRepository.save(task);
-            }).orElseThrow(() -> new MaintenanceTaskNotFoundException(taskId));
+    @PutMapping("/api/tasks/{taskId}")
+    MaintenanceTask updateTask(@RequestBody @Valid MaintenanceTask modifiedTask, @PathVariable Long taskId) {
+        if (!taskRepository.existsById(taskId)) {
+            // No such task
+            throw new MaintenanceTaskNotFoundException(taskId);
+        }
+        if (!deviceRepository.existsById(modifiedTask.getDeviceId())) {
+            // The supplied deviceId doesn't actually exist in the database. Abort.
+            throw new FactoryDeviceNotFoundException(modifiedTask.getDeviceId());
+        }
+        // Will return BadRequest if it contains null values
+        
+        /* We must load up the appropriate MaintenanceTask entity
+         * and update all of its relevant fields ourselves, otherwise
+         * a new one will be created in its place with these fields,
+         * and the original one will remain unmodified.
+         * God bless the people who developed this. */
+        MaintenanceTask task = taskRepository.findById(taskId).get();
+        task.setStatus(modifiedTask.getStatus());
+        task.setSeverity(modifiedTask.getSeverity());
+        task.setDescription(modifiedTask.getDescription());
+        task.setDeviceId(modifiedTask.getDeviceId());
+        return taskRepository.save(task);
     }
 
     // Show all tasks performed on <deviceId> sorted by severity and then registration time.
-    @GetMapping("/tasks/device/{deviceId}")
+    @GetMapping("/api/tasks/device/{deviceId}")
     CollectionModel<EntityModel<MaintenanceTask>> getTasksByDeviceId(@PathVariable Long deviceId) {
         // Return all the tasks associated with <deviceId>
         List<EntityModel<MaintenanceTask>> tasks = taskRepository.findAllByDeviceIdOrderBySeverityAscRegistered(deviceId).stream()
@@ -128,14 +124,17 @@ class MaintenanceTaskController {
         return CollectionModel.of(tasks, linkTo(methodOn(MaintenanceTaskController.class).getTasksByDeviceId(deviceId)).withSelfRel());
     }
     // Delete all tasks for this deviceId
-    @DeleteMapping("/tasks/device/{deviceId}")
+    @DeleteMapping("/api/tasks/device/{deviceId}")
     void deleteDeviceTasks(@PathVariable Long deviceId) {
+        if (!deviceRepository.existsById(deviceId)) {
+            throw new FactoryDeviceNotFoundException(deviceId);
+        }
         List<MaintenanceTask> tasks = taskRepository.findAllByDeviceId(deviceId);
         taskRepository.deleteAll(tasks);
     }
     
     // Create a new task
-    @PostMapping("/tasks/new")
+    @PostMapping("/api/tasks/new")
     MaintenanceTask createTask(@RequestBody @Valid MaintenanceTask task) {
         if (!deviceRepository.existsById(task.getDeviceId())) {
             // Error, no such device.
