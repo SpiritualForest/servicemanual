@@ -33,34 +33,25 @@ public class ServiceManualApplication {
     }
 
     @Bean
-    public CommandLineRunner populateDeviceTable(String... args) {
-        if (deviceRepository.findAll().isEmpty()) {
+    public CommandLineRunner initDatabase(String... args) {
+        if (deviceRepository.findAll().isEmpty() && taskRepository.findAll().isEmpty()) {
             // Create 100 random devices
             List<FactoryDevice> devices = new ArrayList<>();
-            for(int i = 0; i < 100; i++) {
-                devices.add(db.createRandomDevice());
-            }
-            deviceRepository.saveAll(devices);
-        }
-        return (params) -> {
-            System.out.println("Running on http://localhost:8080/");
-        };
-    }
-
-    @Bean
-    public CommandLineRunner populateMaintenanceTable(String... args) {
-        if (taskRepository.findAll().isEmpty()) {
-            // Now find all the devices and create 3 random tasks for each device
             List<MaintenanceTask> tasks = new ArrayList<>();
-            List<FactoryDevice> devices = deviceRepository.findAll();
-            for(FactoryDevice device : devices) {
-                for(int i = 0; i < 3; i++) {
+            for(int i = 0; i < 100; i++) {
+                FactoryDevice device = db.createRandomDevice();
+                device = deviceRepository.save(device); // Save individual to generate an ID for it
+                // Create 3 tasks per device
+                for(int x = 0; x < 3; x++) {
                     MaintenanceTask task = db.createRandomTask(device.getId());
                     tasks.add(task);
                 }
             }
             taskRepository.saveAll(tasks);
+            System.out.println("Database initialized");
         }
-        return (params) -> {};
+        return (params) -> {
+            System.out.println("Running on http://localhost:8080/");
+        };
     }
 }
