@@ -18,6 +18,9 @@ import com.etteplan.servicemanual.maintenancetask.MaintenanceTaskRepository;
 import com.etteplan.servicemanual.maintenancetask.TaskStatus;
 import com.etteplan.servicemanual.maintenancetask.TaskSeverity;
 
+import java.util.ArrayList;
+import java.util.List;
+
 // MvcResult result = mvc.perform(MockMvcRequestBuilders.get("/endpoint").accept(MediaType.APPLICATION_JSON))
 // .andExcept(status().isOk()).andReturn();
 //
@@ -51,7 +54,13 @@ public class MaintenanceTaskControllerTest {
 
     @Test
     public void getSingleTask() throws Exception {
-        mvc.perform(MockMvcRequestBuilders.get("/api/tasks/102").accept(MediaType.APPLICATION_JSON))
+        MaintenanceTask task = new MaintenanceTask();
+        task.setSeverity(TaskSeverity.UNIMPORTANT);
+        task.setStatus(TaskStatus.CLOSED);
+        task.setDescription("Some description");
+        task.setDeviceId(1L);
+        task = taskRepository.save(task);
+        mvc.perform(MockMvcRequestBuilders.get(String.format("/api/tasks/%d", task.getId())).accept(MediaType.APPLICATION_JSON))
             .andExpect(status().isOk());
     }
 
@@ -69,7 +78,6 @@ public class MaintenanceTaskControllerTest {
         MvcResult result = mvc.perform(MockMvcRequestBuilders.post("/api/tasks/new").accept(MediaType.APPLICATION_JSON)
                 .contentType(MediaType.APPLICATION_JSON).content(json))
             .andExpect(status().isOk()).andReturn();
-        System.out.println(result.getResponse().getContentAsString());
     }
     
     @Test
@@ -79,7 +87,6 @@ public class MaintenanceTaskControllerTest {
         MvcResult result = mvc.perform(MockMvcRequestBuilders.post("/api/tasks/new").accept(MediaType.APPLICATION_JSON)
                 .contentType(MediaType.APPLICATION_JSON).content(json))
             .andExpect(status().isBadRequest()).andReturn();
-        System.out.println(result.getResponse().getContentAsString());
     }
 
     @Test
@@ -91,7 +98,6 @@ public class MaintenanceTaskControllerTest {
         MvcResult result = mvc.perform(MockMvcRequestBuilders.post("/api/tasks/new").accept(MediaType.APPLICATION_JSON)
                 .contentType(MediaType.APPLICATION_JSON).content(json))
             .andExpect(status().isBadRequest()).andReturn();
-        System.out.println(result.getResponse().getContentAsString());
     }
 
     @Test
@@ -101,7 +107,6 @@ public class MaintenanceTaskControllerTest {
         MvcResult result = mvc.perform(MockMvcRequestBuilders.post("/api/tasks/new").accept(MediaType.APPLICATION_JSON)
                 .contentType(MediaType.APPLICATION_JSON).content(json))
             .andExpect(status().isNotFound()).andReturn();
-        System.out.println(result.getResponse().getContentAsString());
     }
 
     // PUT
@@ -149,6 +154,63 @@ public class MaintenanceTaskControllerTest {
         mvc.perform(MockMvcRequestBuilders.put(String.format("/api/tasks/%d", newTask.getId())).accept(MediaType.APPLICATION_JSON)
                 .contentType(MediaType.APPLICATION_JSON).content(json))
             .andExpect(status().isBadRequest());
+    }
+
+    // DELETE
+
+    @Test
+    public void deleteSingleTask() throws Exception {
+        MaintenanceTask task = new MaintenanceTask();
+        task.setSeverity(TaskSeverity.UNIMPORTANT);
+        task.setStatus(TaskStatus.CLOSED);
+        task.setDescription("Meaningless drivel");
+        task.setDeviceId(1L);
+        task = taskRepository.save(task);
+        // Confirm its existence in the database
+        assertTrue(taskRepository.findById(task.getId()).isPresent());
+        // Delete
+        mvc.perform(MockMvcRequestBuilders.delete(String.format("/api/tasks/%d", task.getId())).accept(MediaType.APPLICATION_JSON))
+            .andExpect(status().isOk());
+        // Assert the deletion
+        assertFalse(taskRepository.findById(task.getId()).isPresent());
+    }
+
+    @Test
+    public void deleteTaskNotFound() throws Exception {
+        // Try to delete a non existent task
+        mvc.perform(MockMvcRequestBuilders.delete("/api/tasks/123456789").accept(MediaType.APPLICATION_JSON))
+            .andExpect(status().isNotFound());
+    }
+
+    @Test
+    public void deleteTasksByDeviceId() throws Exception {
+        // Delete all the tasks associated with a given device.
+        
+        // First, create a bunch of new tasks
+        List<MaintenanceTask> tasks = new ArrayList<>();
+        for(int i = 0; i < 10; i++) {
+            MaintenanceTask task = new MaintenanceTask();
+            task.setSeverity(TaskSeverity.IMPORTANT);
+            task.setStatus(TaskStatus.CLOSED);
+            task.setDeviceId(1L);
+            task.setDescription("This task is about to be deleted lulz");
+            tasks.add(task);
+        }
+        taskRepository.saveAll(tasks);
+        // Assert the existence of the newly created tasks
+        assertFalse(taskRepository.findAllByDeviceId(1L).isEmpty());
+        // Now delete
+        mvc.perform(MockMvcRequestBuilders.delete("/api/tasks/device/1").accept(MediaType.APPLICATION_JSON))
+            .andExpect(status().isOk());
+        // Assert the deletion
+        assertTrue(taskRepository.findAllByDeviceId(1L).isEmpty());
+    }
+
+    @Test
+    public void deleteTasksDeviceNotFound() throws Exception {
+        // Should return isNotFound()
+        mvc.perform(MockMvcRequestBuilders.delete("/api/tasks/device/123456789").accept(MediaType.APPLICATION_JSON))
+            .andExpect(status().isNotFound());
     }
 }
 

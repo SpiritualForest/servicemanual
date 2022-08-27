@@ -81,7 +81,7 @@ class MaintenanceTaskController {
             return ResponseEntity.ok("Task deleted successfully.");
         }
         // If we reached here, there was an error
-        return ResponseEntity.unprocessableEntity().body("Task deletion failed: no such task: " + taskId);
+        throw new MaintenanceTaskNotFoundException(taskId);
     }
 
     // Update a single task
@@ -102,6 +102,7 @@ class MaintenanceTaskController {
          * a new one will be created in its place with these fields,
          * and the original one will remain unmodified.
          * God bless the people who developed this. */
+
         MaintenanceTask task = taskRepository.findById(taskId).get();
         task.setStatus(modifiedTask.getStatus());
         task.setSeverity(modifiedTask.getSeverity());
