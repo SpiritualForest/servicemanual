@@ -1,6 +1,5 @@
 package com.etteplan.servicemanual;
 
-import java.util.Arrays;
 import java.util.List;
 import java.util.ArrayList;
 
@@ -34,6 +33,7 @@ public class ServiceManualApplication {
 
     @Bean
     public CommandLineRunner initDatabase(String... args) {
+        // FIXME: command line arguments.
         if (deviceRepository.findAll().isEmpty() && taskRepository.findAll().isEmpty()) {
             // Create 100 random devices
             List<FactoryDevice> devices = new ArrayList<>();

@@ -1,6 +1,5 @@
 package com.etteplan.servicemanual.factorydevice;
 
-
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 import org.junit.jupiter.api.Test;

@@ -17,6 +17,8 @@ import static org.springframework.hateoas.server.mvc.WebMvcLinkBuilder.*;
 import com.etteplan.servicemanual.factorydevice.FactoryDeviceRepository;
 import com.etteplan.servicemanual.factorydevice.FactoryDeviceNotFoundException;
 
+import javax.validation.Valid;
+
 // MaintenanceTask and its Repository already exist in this package, that's why we don't have to import them.
 
 import java.util.List;
@@ -112,7 +114,7 @@ class MaintenanceTaskController {
             }).orElseThrow(() -> new MaintenanceTaskNotFoundException(taskId));
     }
 
-    // Show all tasks performed on <deviceId>
+    // Show all tasks performed on <deviceId> sorted by severity and then registration time.
     @GetMapping("/tasks/device/{deviceId}")
     CollectionModel<EntityModel<MaintenanceTask>> getTasksByDeviceId(@PathVariable Long deviceId) {
         // Return all the tasks associated with <deviceId>
@@ -128,13 +130,17 @@ class MaintenanceTaskController {
     // Delete all tasks for this deviceId
     @DeleteMapping("/tasks/device/{deviceId}")
     void deleteDeviceTasks(@PathVariable Long deviceId) {
-        List<MaintenanceTask> tasks = taskRepository.findAllByDeviceIdOrderBySeverityAscRegistered(deviceId);
+        List<MaintenanceTask> tasks = taskRepository.findAllByDeviceId(deviceId);
         taskRepository.deleteAll(tasks);
     }
     
     // Create a new task
     @PostMapping("/tasks/new")
-    MaintenanceTask createTask(@RequestBody MaintenanceTask task) {
+    MaintenanceTask createTask(@RequestBody @Valid MaintenanceTask task) {
+        if (!deviceRepository.existsById(task.getDeviceId())) {
+            // Error, no such device.
+            throw new FactoryDeviceNotFoundException(task.getDeviceId());
+        }
         return taskRepository.save(task);
     }
 }

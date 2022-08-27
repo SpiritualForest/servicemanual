@@ -7,6 +7,7 @@ import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.EnumType;
 import javax.persistence.Id;
+import javax.validation.constraints.NotNull;
 import java.time.LocalDateTime;
 
 @Entity
@@ -16,17 +17,27 @@ public class MaintenanceTask {
     @Id
     @GeneratedValue(strategy = GenerationType.AUTO)
     private Long id;
+
+    @NotNull
     private Long deviceId; // The device that underwent this maintenance task
 
     @Enumerated(EnumType.STRING)
+    @NotNull
     private TaskSeverity severity; // Severity
     
     @Enumerated(EnumType.ORDINAL)
+    @NotNull
     private TaskStatus status; // Open or closed
+    
+    @NotNull
     private String description;
+    
     private LocalDateTime registered; // FIXME: we might have to use int or some other type here, depending on the database
 
-    protected MaintenanceTask() {} // Default constructor because... satan.
+    protected MaintenanceTask() {
+        // Default constructor
+        this.registered = LocalDateTime.now();
+    }
 
     public MaintenanceTask(Long deviceId, TaskSeverity severity, TaskStatus status, String description) {
         // Overloaded constructor for creating new tasks: registeration time will automatically be right now

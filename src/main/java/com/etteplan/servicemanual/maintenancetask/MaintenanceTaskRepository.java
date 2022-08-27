@@ -14,4 +14,7 @@ public interface MaintenanceTaskRepository extends JpaRepository<MaintenanceTask
 
     // ... order by severity desc, registered
     List<MaintenanceTask> findAllByOrderBySeverityAscRegistered();
+    
+    // ... where deviceId = <deviceId>
+    List<MaintenanceTask> findAllByDeviceId(Long deviceId);
 }
