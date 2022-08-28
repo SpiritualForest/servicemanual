@@ -12,6 +12,11 @@ schemes:
   - https
 
 definitions:
+  MaintenanceTaskList:
+    type: array
+    items:
+      $ref: '#/definitions/MaintenanceTask'
+
   MaintenanceTask:
     type: object
     properties:
@@ -48,6 +53,10 @@ paths:
       responses:
         200:
           description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/definitions/MaintenanceTaskList'
 
   /tasks/{taskId}:
     get:
@@ -109,8 +118,6 @@ paths:
           content:
             application/json:
               schema:
-                type: array
-                items:
-                  $ref: '#/definitions/MaintenanceTask'
+                $ref: '#/definitions/MaintenanceTask'
         404:
           description: Factory device not found
