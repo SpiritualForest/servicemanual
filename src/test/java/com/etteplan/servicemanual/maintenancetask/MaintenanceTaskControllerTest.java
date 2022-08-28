@@ -70,12 +70,21 @@ public class MaintenanceTaskControllerTest {
             .andExpect(status().isNotFound());
     }
 
+    @Test
+    public void getTasksByDeviceId() throws Exception {
+        // Get all the tasks associated with a deviceId.
+        // This should always return status 200.
+        // If the device doesn't exist, it should just return an empty collection.
+        mvc.perform(MockMvcRequestBuilders.get("/api/tasks/deviceId/1").accept(MediaType.APPLICATION_JSON))
+            .andExpect(status().isOk());
+    }
+
     // POST
 
     @Test
     public void addTask() throws Exception {
         String json = "{\"deviceId\": 1, \"status\": \"OPEN\", \"severity\": \"CRITICAL\", \"description\": \"Major fixes of security holes\"}";
-        MvcResult result = mvc.perform(MockMvcRequestBuilders.post("/api/tasks/new").accept(MediaType.APPLICATION_JSON)
+        MvcResult result = mvc.perform(MockMvcRequestBuilders.post("/api/tasks/create").accept(MediaType.APPLICATION_JSON)
                 .contentType(MediaType.APPLICATION_JSON).content(json))
             .andExpect(status().isOk()).andReturn();
     }
@@ -84,7 +93,7 @@ public class MaintenanceTaskControllerTest {
     public void addTaskNullValue() throws Exception {
         // Try adding a task with a null device ID. Should return bad request
         String json = "{\"deviceId\": null, \"status\": \"OPEN\", \"severity\": \"CRITICAL\", \"description\": \"Major fixes of security holes\"}";
-        MvcResult result = mvc.perform(MockMvcRequestBuilders.post("/api/tasks/new").accept(MediaType.APPLICATION_JSON)
+        MvcResult result = mvc.perform(MockMvcRequestBuilders.post("/api/tasks/create").accept(MediaType.APPLICATION_JSON)
                 .contentType(MediaType.APPLICATION_JSON).content(json))
             .andExpect(status().isBadRequest()).andReturn();
     }
@@ -95,7 +104,7 @@ public class MaintenanceTaskControllerTest {
         // Result should a disregard of this value altogether, with a replacement by LocalDateTime.now()
         // in the TaskMaintenance's default constructor.
         String json = "{\"deviceId\": 1, \"status\": \"OPEN\", \"severity\": \"CRITICAL\", \"description\": \"Major fixes of security holes\", \"registered\": \"some random value lol\"}";
-        MvcResult result = mvc.perform(MockMvcRequestBuilders.post("/api/tasks/new").accept(MediaType.APPLICATION_JSON)
+        MvcResult result = mvc.perform(MockMvcRequestBuilders.post("/api/tasks/create").accept(MediaType.APPLICATION_JSON)
                 .contentType(MediaType.APPLICATION_JSON).content(json))
             .andExpect(status().isBadRequest()).andReturn();
     }
@@ -104,7 +113,7 @@ public class MaintenanceTaskControllerTest {
     public void addTaskDeviceNotFound() throws Exception {
         // Add a task with a deviceId that doesn't exist.
         String json = "{\"deviceId\": 123456789, \"status\": \"OPEN\", \"severity\": \"CRITICAL\", \"description\": \"Major fixes of security holes\"}";
-        MvcResult result = mvc.perform(MockMvcRequestBuilders.post("/api/tasks/new").accept(MediaType.APPLICATION_JSON)
+        MvcResult result = mvc.perform(MockMvcRequestBuilders.post("/api/tasks/create").accept(MediaType.APPLICATION_JSON)
                 .contentType(MediaType.APPLICATION_JSON).content(json))
             .andExpect(status().isNotFound()).andReturn();
     }
@@ -200,7 +209,7 @@ public class MaintenanceTaskControllerTest {
         // Assert the existence of the newly created tasks
         assertFalse(taskRepository.findAllByDeviceId(1L).isEmpty());
         // Now delete
-        mvc.perform(MockMvcRequestBuilders.delete("/api/tasks/device/1").accept(MediaType.APPLICATION_JSON))
+        mvc.perform(MockMvcRequestBuilders.delete("/api/tasks/deviceId/1").accept(MediaType.APPLICATION_JSON))
             .andExpect(status().isOk());
         // Assert the deletion
         assertTrue(taskRepository.findAllByDeviceId(1L).isEmpty());
@@ -209,7 +218,7 @@ public class MaintenanceTaskControllerTest {
     @Test
     public void deleteTasksDeviceNotFound() throws Exception {
         // Should return isNotFound()
-        mvc.perform(MockMvcRequestBuilders.delete("/api/tasks/device/123456789").accept(MediaType.APPLICATION_JSON))
+        mvc.perform(MockMvcRequestBuilders.delete("/api/tasks/deviceId/123456789").accept(MediaType.APPLICATION_JSON))
             .andExpect(status().isNotFound());
     }
 }

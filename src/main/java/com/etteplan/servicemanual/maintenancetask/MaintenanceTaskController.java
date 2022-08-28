@@ -7,6 +7,7 @@ import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestParam;
 
 import org.springframework.http.ResponseEntity;
 
@@ -32,29 +33,25 @@ class MaintenanceTaskController {
     
     private final MaintenanceTaskRepository taskRepository;
     private final FactoryDeviceRepository deviceRepository;
+    private final MaintenanceTaskModelAssembler assembler;
 
-    public MaintenanceTaskController(MaintenanceTaskRepository taskRepository, FactoryDeviceRepository deviceRepository) {
+    public MaintenanceTaskController(MaintenanceTaskRepository taskRepository, FactoryDeviceRepository deviceRepository, MaintenanceTaskModelAssembler assembler) {
         this.taskRepository = taskRepository;
         this.deviceRepository = deviceRepository;
+        this.assembler = assembler;
     }
 
-    // Show all tasks with default sorting - severity first, then registration time
-    // TODO: GET request parameters
+    // MAPPING: /api/tasks
+
+    // Show all tasks
     @GetMapping("/api/tasks")
-    CollectionModel<EntityModel<MaintenanceTask>> getAllTasks() {
+    CollectionModel<EntityModel<MaintenanceTask>> all() {
+        // Get all
         List<EntityModel<MaintenanceTask>> tasks = taskRepository.findAllByOrderBySeverityAscRegistered().stream()
-            .map(task -> EntityModel.of(task, 
-                        // self: { ... }
-                        linkTo(methodOn(MaintenanceTaskController.class).getTaskById(task.getId())).withSelfRel(),
-                        // deviceId: { ... }
-                        linkTo(methodOn(MaintenanceTaskController.class).getTasksByDeviceId(task.getDeviceId())).withRel("deviceId"),
-                        // tasks: { ... }
-                        linkTo(methodOn(MaintenanceTaskController.class).getAllTasks()).withRel("tasks")))
+            .map(assembler::toModel)
             .collect(Collectors.toList());
-        
-        return CollectionModel.of(tasks, linkTo(methodOn(MaintenanceTaskController.class).getAllTasks()).withSelfRel());
+        return CollectionModel.of(tasks, linkTo(methodOn(MaintenanceTaskController.class).all()).withSelfRel());
     }
-
     // Delete all tasks
     @DeleteMapping("/api/tasks")
     void deleteAllTasks() {
@@ -67,10 +64,7 @@ class MaintenanceTaskController {
         MaintenanceTask task = taskRepository.findById(taskId)
             .orElseThrow(() -> new MaintenanceTaskNotFoundException(taskId));
 
-        return EntityModel.of(task,
-                linkTo(methodOn(MaintenanceTaskController.class).getTaskById(taskId)).withSelfRel(),
-                linkTo(methodOn(MaintenanceTaskController.class).getAllTasks()).withRel("tasks")
-            );
+        return assembler.toModel(task);
     }
 
     // Delete a single task based on its id
@@ -111,21 +105,21 @@ class MaintenanceTaskController {
         return taskRepository.save(task);
     }
 
-    // Show all tasks performed on <deviceId> sorted by severity and then registration time.
-    @GetMapping("/api/tasks/device/{deviceId}")
-    CollectionModel<EntityModel<MaintenanceTask>> getTasksByDeviceId(@PathVariable Long deviceId) {
-        // Return all the tasks associated with <deviceId>
+    // MAPPING: /api/tasks/deviceId
+
+    // Show all tasks associated with <deviceId>
+    @GetMapping("/api/tasks/deviceId/{deviceId}")
+    CollectionModel<EntityModel<MaintenanceTask>> all(@PathVariable Long deviceId) {
         List<EntityModel<MaintenanceTask>> tasks = taskRepository.findAllByDeviceIdOrderBySeverityAscRegistered(deviceId).stream()
-            .map(task -> EntityModel.of(task,
-                        linkTo(methodOn(MaintenanceTaskController.class).getTaskById(task.getId())).withSelfRel(),
-                        linkTo(methodOn(MaintenanceTaskController.class).getTasksByDeviceId(deviceId)).withRel("deviceId"),
-                        linkTo(methodOn(MaintenanceTaskController.class).getAllTasks()).withRel("tasks")))
-            .collect(Collectors.toList());
-        
-        return CollectionModel.of(tasks, linkTo(methodOn(MaintenanceTaskController.class).getTasksByDeviceId(deviceId)).withSelfRel());
+                .map(assembler::toModelWithDevice)
+                .collect(Collectors.toList());
+        return CollectionModel.of(tasks, 
+                linkTo(methodOn(MaintenanceTaskController.class).all(deviceId)).withRel("deviceId"),
+                linkTo(methodOn(MaintenanceTaskController.class).all()).withRel("tasks"));
     }
+
     // Delete all tasks for this deviceId
-    @DeleteMapping("/api/tasks/device/{deviceId}")
+    @DeleteMapping("/api/tasks/deviceId/{deviceId}")
     void deleteDeviceTasks(@PathVariable Long deviceId) {
         if (!deviceRepository.existsById(deviceId)) {
             throw new FactoryDeviceNotFoundException(deviceId);
@@ -135,7 +129,7 @@ class MaintenanceTaskController {
     }
     
     // Create a new task
-    @PostMapping("/api/tasks/new")
+    @PostMapping("/api/tasks/create")
     MaintenanceTask createTask(@RequestBody @Valid MaintenanceTask task) {
         if (!deviceRepository.existsById(task.getDeviceId())) {
             // Error, no such device.
