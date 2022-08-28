@@ -12,6 +12,11 @@ schemes:
   - https
 
 definitions:
+  _embedded:
+    type: object
+    properties:
+      $ref: '#/definitions/MaintenanceTaskList'
+
   MaintenanceTaskList:
     type: array
     items:
@@ -44,7 +49,30 @@ definitions:
         type: string
         description: Datetime string, registration time for the task
         example: 2022-08-28T17:32:11.058674
-
+      _links:
+        type: object
+        properties:
+          self:
+            type: object
+            properties:
+              href:
+                type: string
+                description: Hyperlink to this task
+                example: http://localhost:8080/api/tasks/733
+          tasks:
+            type: object
+            properties:
+              href:
+                type: string
+                description: Hyperlink to the tasks page that shows all tasks
+                example: http://localhost:8080/api/tasks
+          deviceId:
+            type: object
+            properties:
+              href:
+                type: string
+                description: Hyperlink to the page that shows all the tasks for this task's attached device
+                example: http://localhost:8080/api/tasks/deviceId/1
 paths:
   /tasks:
     get:
