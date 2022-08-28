@@ -1,0 +1,116 @@
+swagger: "2.0"
+
+info:
+  title: Maintenance Task API
+  description: Maintenance Task REST API
+  version: 1.0
+
+host: localhost
+basePath: /api
+schemes:
+  - http
+  - https
+
+definitions:
+  MaintenanceTask:
+    type: object
+    properties:
+      id:
+        type: integer
+        description: The task ID
+        example: 151
+      deviceId:
+        type: integer
+        description: The ID of the device this task is tied to
+        example: 4
+      status:
+        type: string
+        description: The status of the task (OPEN or CLOSED)
+        example: OPEN
+      severity:
+        type: string
+        description: The severity of the task. UNIMPORTANT, IMPORTANT, or CRITICAL.
+        example: CRITICAL
+      description:
+        type: string
+        description: The description of the task
+        example: Fix CPU overheating problem
+      registered:
+        type: string
+        description: Datetime string, registration time for the task
+        example: 2022-08-28T17:32:11.058674
+
+paths:
+  /tasks:
+    get:
+      summary: Returns a list of maintenance tasks
+      produces: application/json
+      responses:
+        200:
+          description: OK
+
+  /tasks/{taskId}:
+    get:
+      summary: Returns a single task based on the given ID
+      parameters:
+        - in: path
+          name: taskId
+          required: true
+          schema:
+            type: integer
+            minimum: 1
+          description: The task ID
+      produces: application/json
+      responses:
+        200:
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/definitions/MaintenanceTask'
+        404:
+          description: Task not found
+    put:
+      summary: Modifies a single task based on the given ID
+      consumes: application/json
+      produces: application/json
+      responses:
+        200:
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/definitions/MaintenanceTask'
+                required:
+                  - id
+                  - deviceId
+                  - status
+                  - severity
+                  - description
+        404:
+          description: Task not found
+    delete:
+      summary: Deletes the specified task
+      produces: application/json
+      responses:
+        200:
+          description: OK
+        404:
+          description: Task not found
+
+  /tasks/create:
+    post:
+      summary: Creates a new maintenance task
+      consumes: application/json
+      produces: application/json
+      responses:
+        200:
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/definitions/MaintenanceTask'
+        404:
+          description: Factory device not found
