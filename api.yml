@@ -79,7 +79,7 @@ definitions:
                   type: string
                   description: Hyperlink to the API endpoint that retrieves all tasks
                   example: http://localhost:8080/api/tasks
-            deviceId:
+            device:
               type: object
               properties:
                 href:

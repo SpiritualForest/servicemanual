@@ -116,7 +116,7 @@ class MaintenanceTaskController {
                 .map(assembler::toModelWithDevice)
                 .collect(Collectors.toList());
         return CollectionModel.of(tasks, 
-                linkTo(methodOn(MaintenanceTaskController.class).all(deviceId)).withRel("deviceId"),
+                linkTo(methodOn(MaintenanceTaskController.class).all(deviceId)).withRel("device"),
                 linkTo(methodOn(MaintenanceTaskController.class).all()).withRel("tasks"));
     }
 
