@@ -124,6 +124,7 @@ paths:
       summary: Modifies a single task based on the given ID
       parameters:
         - in: body
+          name: Maintenance task
           schema:
             $ref: '#/definitions/MaintenanceTask'
           required:
@@ -160,6 +161,16 @@ paths:
     post:
       summary: Creates a new maintenance task
       consumes: application/json
+      parameters:
+        - in: body
+          name: Maintenance task
+          schema:
+            $ref: '#/definitions/MaintenanceTask'
+          required:
+            - deviceId
+            - description
+            - status
+            - severity
       produces: application/json
       responses:
         201:
@@ -191,3 +202,10 @@ paths:
             application/json:
               schema:
                 $ref: '#/definitions/maintenanceTaskList'
+  delete:
+    summary: Deletes all the tasks associated with this device
+    responses:
+      200:
+        description: OK
+      404:
+        description: Factory device not found
