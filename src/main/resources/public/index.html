@@ -2,10 +2,40 @@
 <html>
     <head>
         <meta charset="UTF-8">
-        <link href="/css/styles.css" rel="stylesheet" type="text/css"/>
+        <!-- change link to just css/styles.css when running the app for real -->
+        <link href="styles.css" rel="stylesheet" type="text/css"/>
+        <script src="tasks.js" async></script>
         <title>Maintenance tasks admin panel</title>
     </head>
     <body>
-        <h1>Welcome to the maintenance task admin panel.</h1>
+        <div class="navbar">
+            <a class="nav-link nav-link-active" href="/">Tasks</a>
+            <a class="nav-link" href="add.html">Add</a>
+        </div>
+        <div class="tasks-container">
+            <table class="tasks">
+                <tr>
+                    <th>Task</th>
+                    <th>Device</th>
+                    <th>Status</th>
+                    <th>Severity</th>
+                    <th>Description</th>
+                    <th>Registered</th>
+                    <th>Action</th>
+                </tr>
+                <tr>
+                    <td>112</td>
+                    <td>1</td>
+                    <td>Open</td>
+                    <td>Critical</td>
+                    <td>CPU fix</td>
+                    <td>Date time object</td>
+                    <td>
+                        <a href="#">Edit</a>
+                        <a href="#">Delete</a>
+                    </td>
+                </tr>
+            </table>
+        </div>
     </body>
 </html>

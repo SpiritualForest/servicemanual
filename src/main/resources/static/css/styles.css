@@ -1,4 +1,14 @@
-h1 {
-    color: blue;
-    background-color: black;
+* {
+    box-sizing: border-box;
+    border: 1px solid red; /* Debug */
+}
+
+.tasks, .add-task {
+    background-color: lightgray;
+    color: black;
+}
+
+.maintenance-task-div {
+    width: 80%;
+    margin: 0 auto;
 }

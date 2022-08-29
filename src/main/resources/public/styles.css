@@ -1,0 +1,51 @@
+* {
+    box-sizing: border-box;
+    /*border: 1px solid red; /* Debug */
+    margin: 0;
+}
+
+body {
+    background-color: #f8f8ff;
+}
+
+.navbar {
+    background-color: #100c08;
+    display: flex;
+    justify-content: center;
+    margin-bottom: 20px;
+}
+
+.nav-link {
+    color: white;
+    text-decoration: none;
+    font-family: sans-serif;
+    font-size: 18px;
+    margin: 10px;
+}
+
+.nav-link:hover {
+    color: #d3d3d3;
+}
+
+.nav-link-active {
+    font-style: italic;
+}
+
+.tasks-container {
+    display: flex;
+    justify-content: center;
+}
+
+tr:nth-child(even) {
+    background-color: #dddddd;
+}
+
+table {
+    border-collapse: collapse;
+}
+
+td, th {
+    border: 1px solid #c0c0c0;
+    text-align: left;
+    padding: 8px;
+}
