@@ -160,12 +160,30 @@ public class MaintenanceTaskControllerTest {
         newTask.setDescription("A test task");
         newTask.setDeviceId(1L);
         newTask = taskRepository.save(newTask); // to get the id
-        mvc.perform(MockMvcRequestBuilders.put(String.format("/api/tasks/%d", newTask.getId())).accept(MediaType.APPLICATION_JSON)
+        MvcResult result = mvc.perform(MockMvcRequestBuilders.put(String.format("/api/tasks/%d", newTask.getId())).accept(MediaType.APPLICATION_JSON)
                 .contentType(MediaType.APPLICATION_JSON).content(json))
-            .andExpect(status().isBadRequest());
+            .andExpect(status().isBadRequest()).andReturn();
+        System.out.println("---------------------------------------- RESULT OF NULL VALUE MODIFICATION ----------------------------------------");
+        System.out.println(result.getResponse());
     }
 
     // DELETE
+
+    @Test
+    public void deleteAllTasks() throws Exception {
+        MaintenanceTask task = new MaintenanceTask();
+        task.setSeverity(TaskSeverity.IMPORTANT);
+        task.setStatus(TaskStatus.CLOSED);
+        task.setDescription("Some description");
+        task.setDeviceId(1L);
+        task = taskRepository.save(task);
+        assertTrue(taskRepository.existsById(task.getId()));
+        // Delete
+        mvc.perform(MockMvcRequestBuilders.delete("/api/tasks").accept(MediaType.APPLICATION_JSON))
+            .andExpect(status().isOk());
+        // Assert that no tasks exist
+        assertTrue(taskRepository.findAll().isEmpty());
+    }
 
     @Test
     public void deleteSingleTask() throws Exception {
@@ -176,7 +194,7 @@ public class MaintenanceTaskControllerTest {
         task.setDeviceId(1L);
         task = taskRepository.save(task);
         // Confirm its existence in the database
-        assertTrue(taskRepository.findById(task.getId()).isPresent());
+        assertTrue(taskRepository.existsById(task.getId()));
         // Delete
         mvc.perform(MockMvcRequestBuilders.delete(String.format("/api/tasks/%d", task.getId())).accept(MediaType.APPLICATION_JSON))
             .andExpect(status().isOk());
