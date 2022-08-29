@@ -8,8 +8,10 @@ import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.ResponseStatus;
 
 import org.springframework.http.ResponseEntity;
+import org.springframework.http.HttpStatus;
 
 import org.springframework.hateoas.EntityModel;
 import org.springframework.hateoas.CollectionModel;
@@ -105,10 +107,10 @@ class MaintenanceTaskController {
         return taskRepository.save(task);
     }
 
-    // MAPPING: /api/tasks/deviceId
+    // MAPPING: /api/tasks/device
 
     // Show all tasks associated with <deviceId>
-    @GetMapping("/api/tasks/deviceId/{deviceId}")
+    @GetMapping("/api/tasks/device/{deviceId}")
     CollectionModel<EntityModel<MaintenanceTask>> all(@PathVariable Long deviceId) {
         List<EntityModel<MaintenanceTask>> tasks = taskRepository.findAllByDeviceIdOrderBySeverityAscRegistered(deviceId).stream()
                 .map(assembler::toModelWithDevice)
@@ -119,7 +121,7 @@ class MaintenanceTaskController {
     }
 
     // Delete all tasks for this deviceId
-    @DeleteMapping("/api/tasks/deviceId/{deviceId}")
+    @DeleteMapping("/api/tasks/device/{deviceId}")
     void deleteDeviceTasks(@PathVariable Long deviceId) {
         if (!deviceRepository.existsById(deviceId)) {
             throw new FactoryDeviceNotFoundException(deviceId);
@@ -130,6 +132,7 @@ class MaintenanceTaskController {
     
     // Create a new task
     @PostMapping("/api/tasks/create")
+    @ResponseStatus(HttpStatus.CREATED)
     MaintenanceTask createTask(@RequestBody @Valid MaintenanceTask task) {
         if (!deviceRepository.existsById(task.getDeviceId())) {
             // Error, no such device.

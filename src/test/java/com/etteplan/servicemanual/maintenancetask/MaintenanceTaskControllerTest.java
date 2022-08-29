@@ -75,7 +75,7 @@ public class MaintenanceTaskControllerTest {
         // Get all the tasks associated with a deviceId.
         // This should always return status 200.
         // If the device doesn't exist, it should just return an empty collection.
-        mvc.perform(MockMvcRequestBuilders.get("/api/tasks/deviceId/1").accept(MediaType.APPLICATION_JSON))
+        mvc.perform(MockMvcRequestBuilders.get("/api/tasks/device/1").accept(MediaType.APPLICATION_JSON))
             .andExpect(status().isOk());
     }
 
@@ -86,7 +86,7 @@ public class MaintenanceTaskControllerTest {
         String json = "{\"deviceId\": 1, \"status\": \"OPEN\", \"severity\": \"CRITICAL\", \"description\": \"Major fixes of security holes\"}";
         MvcResult result = mvc.perform(MockMvcRequestBuilders.post("/api/tasks/create").accept(MediaType.APPLICATION_JSON)
                 .contentType(MediaType.APPLICATION_JSON).content(json))
-            .andExpect(status().isOk()).andReturn();
+            .andExpect(status().isCreated()).andReturn();
     }
     
     @Test
@@ -209,7 +209,7 @@ public class MaintenanceTaskControllerTest {
         // Assert the existence of the newly created tasks
         assertFalse(taskRepository.findAllByDeviceId(1L).isEmpty());
         // Now delete
-        mvc.perform(MockMvcRequestBuilders.delete("/api/tasks/deviceId/1").accept(MediaType.APPLICATION_JSON))
+        mvc.perform(MockMvcRequestBuilders.delete("/api/tasks/device/1").accept(MediaType.APPLICATION_JSON))
             .andExpect(status().isOk());
         // Assert the deletion
         assertTrue(taskRepository.findAllByDeviceId(1L).isEmpty());
@@ -218,7 +218,7 @@ public class MaintenanceTaskControllerTest {
     @Test
     public void deleteTasksDeviceNotFound() throws Exception {
         // Should return isNotFound()
-        mvc.perform(MockMvcRequestBuilders.delete("/api/tasks/deviceId/123456789").accept(MediaType.APPLICATION_JSON))
+        mvc.perform(MockMvcRequestBuilders.delete("/api/tasks/device/123456789").accept(MediaType.APPLICATION_JSON))
             .andExpect(status().isNotFound());
     }
 }
