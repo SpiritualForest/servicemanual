@@ -115,6 +115,12 @@ function fillTasksTable(tasks) {
         for(let x in allData) {
             let cell = row.insertCell(x);
             cell.innerHTML = allData[x];
+            console.log(x);
+            if (x == 3 && allData[x] == "CRITICAL") {
+                // Severity - we want to highlight critical tasks by making them red
+                cell.style.color = "red";
+                cell.style.fontWeight = "bold";
+            }
         }
         // Now add a cell that contains the actions
         let actionCell = row.insertCell(allData.length);
