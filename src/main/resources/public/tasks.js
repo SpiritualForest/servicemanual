@@ -118,8 +118,12 @@ function fillTasksTable(tasks) {
         let deleteBtn = document.createElement("button");
         editBtn.id = `edit-task-btn-${id}`; // edit-btn-task-112
         editBtn.innerHTML = "Edit";
+        editBtn.style.fontSize = "14px";
+        editBtn.style.margin = "5px";
         deleteBtn.id = `delete-task-btn-${id}`; // delete-btn-task-112
         deleteBtn.innerHTML = "Delete";
+        deleteBtn.style.fontSize = "14px";
+        deleteBtn.style.margin = "5px";
         actionCell.appendChild(editBtn);
         actionCell.appendChild(deleteBtn);
         // Add the functions to edit and delete the tasks

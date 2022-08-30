@@ -117,3 +117,9 @@ td, th {
 .add-task-textarea {
     width: 100%;
 }
+
+.task-btn {
+    margin: 5px;
+    padding: 5px;
+    font-size: 12px;
+}
