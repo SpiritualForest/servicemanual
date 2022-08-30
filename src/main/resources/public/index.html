@@ -9,10 +9,66 @@
     </head>
     <body>
         <div class="navbar">
-            <a class="nav-link nav-link-active" href="/">Tasks</a>
-            <a class="nav-link" href="add.html">Add</a>
+            <a class="nav-link" href="index.html">Tasks</a>
+            <button id="open-modal-btn" class="add-task-open-modal nav-link">Add new task</button>
         </div>
+
         <div class="tasks-container">
+            
+            <div id="add-task-modal" class="add-task-modal">
+				<div class="add-task-modal-content">
+                    <h3 class="add-new-task-header">Add new task</h3>
+                	<div class="add-task-modal-attribute">
+                    	<p class="modal-paragraph">Device:</p>
+                    	<select id="add-task-select-device" class="add-task-modal-select"></select> <!-- populate this with JS -->
+                	</div>
+                	<div class="add-task-modal-attribute">
+                    	<p class="modal-paragraph">Status:</p>
+                    	<select id="add-task-select-status" class="add-task-modal-select">
+                        	<option value="OPEN">Open</option>
+                        	<option value="CLOSED">Closed</option>
+                    	</select>
+                	</div>
+                	<div class="add-task-modal-attribute">
+                    	<p class="modal-paragraph">Severity:</p>
+                    	<select id="add-task-select-severity" class="add-task-modal-select">
+                        	<option value="CRITICAL">Critical</option>
+                        	<option value="IMPORTANT">Important</option>
+                        	<option value="UNIMPORTANT">Unimportant</option>
+                    	</select>
+                	</div>
+                	<div class="add-task-modal-attribute">
+                    	<textarea id="add-task-description" rows=5 cols=20 placeholder="Task description..." class="add-task-textarea"></textarea>
+                	</div>
+                    <div class="add-task-modal-attribute">
+                	    <button class="add-task-modal-save-btn add-task-btn" id="add-task-modal-save-btn">Save</button>
+                	    <button class="add-task-modal-cancel-btn add-task-btn" id="add-task-modal-cancel-btn">Cancel</button>
+                    </div>
+                </div>
+            </div> <!-- end of add-task-modal class div -->
+            
+            <div class="filter-tasks">
+                <input type="checkbox" id="filter-tasks" name="filter-tasks">
+                <label for="filter-tasks" class="filter-paragraph filter-checkbox">Filter</label>
+                <p class="filter-paragraph">Device:</p>
+                <select class="select-filter-tasks" id="filter-tasks-device" name="filter-tasks-device">
+                    <option value="-1">No filter</option>
+                </select>
+                <p class="filter-paragraph">Severity:</p>
+                <select class="select-filter-tasks" id="filter-tasks-severity" name="filter-tasks-severity">
+                    <option value="-1">No filter</option>
+                    <option value="CRITICAL">Critical</option>
+                    <option value="IMPORTANT">Important</option>
+                    <option value="UNIMPORTANT">Unimportant</option>
+                </select>
+                <p class="filter-paragraph">Status:</p>
+                <select class="select-filter-tasks" id="filter-tasks-status" name="filter-tasks-status">
+                    <option value="-1">No filter</option>
+                    <option value="OPEN">Open</option>
+                    <option value="CLOSED">Closed</option>
+                </select>
+            </div>
+
             <table class="tasks">
                 <tr>
                     <th>Task</th>

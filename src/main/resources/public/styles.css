@@ -2,6 +2,7 @@
     box-sizing: border-box;
     /*border: 1px solid red; /* Debug */
     margin: 0;
+    font-family: sans-serif;
 }
 
 body {
@@ -11,7 +12,7 @@ body {
 .navbar {
     background-color: #100c08;
     display: flex;
-    justify-content: center;
+    justify-content: flex-start;
     margin-bottom: 20px;
 }
 
@@ -27,13 +28,28 @@ body {
     color: #d3d3d3;
 }
 
-.nav-link-active {
-    font-style: italic;
-}
-
 .tasks-container {
     display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+.filter-tasks {
+    display: flex;
     justify-content: center;
+    padding: 8px;
+    border: 1px solid #c0c0c0;
+    margin-bottom: 10px;
+}
+
+.filter-checkbox {
+    font-weight: bold;
+}
+
+.filter-paragraph {
+    display: inline;
+    padding: 5px;
+    margin: 5px;
 }
 
 tr:nth-child(even) {
@@ -48,4 +64,52 @@ td, th {
     border: 1px solid #c0c0c0;
     text-align: left;
     padding: 8px;
+}
+
+.modal-paragraph {
+    display: inline;
+    margin: 5px;
+    padding: 5px;
+}
+.add-task-modal {
+    padding: 10px;
+    z-index: 1;
+    display: none; /* Hidden by default */
+    background-color: rgba(0,0,0, 0.4);
+    border: 1px solid #c0c0c0;
+    margin-bottom: 10px;
+}
+
+.add-new-task-header {
+    width: 65%;
+    margin: 0 auto;
+}
+
+.add-task-modal-select {
+    margin: 5px;
+}
+
+.add-task-textarea {
+    margin-bottom: 5px;
+    margin-top: 5px;
+}
+
+.add-task-modal-save-btn {
+    float: left;
+}
+
+.add-task-modal-cancel-btn {
+    float: right;
+}
+.add-task-btn {
+    font-size: 14px;
+}
+
+.add-task-open-modal {
+    margin-top: 10px;
+    margin-bottom: 10px;
+    font-size: 18px;
+    background: none;
+    border: none;
+    cursor: pointer;
 }
