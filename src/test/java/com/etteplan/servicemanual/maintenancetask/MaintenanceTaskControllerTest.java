@@ -21,6 +21,8 @@ import com.etteplan.servicemanual.maintenancetask.TaskSeverity;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.json.*; // For parsing specific JSON results when filtering tasks
+
 // MvcResult result = mvc.perform(MockMvcRequestBuilders.get("/endpoint").accept(MediaType.APPLICATION_JSON))
 // .andExcept(status().isOk()).andReturn();
 //
@@ -44,6 +46,73 @@ public class MaintenanceTaskControllerTest {
         // All tasks
         mvc.perform(MockMvcRequestBuilders.get("/api/tasks").accept(MediaType.APPLICATION_JSON))
             .andExpect(status().isOk());
+    }
+
+    @Test
+    public void getMaintenanceTaskFilterByStatusAndSeverity() throws Exception {
+        // All tasks where status == <status> and severity == <severity>
+        // First let's create some tasks
+        List<MaintenanceTask> tasks = new ArrayList<>();
+        for(int i = 0; i < 5; i++) {
+            // Status closed, severity critical
+            MaintenanceTask task = new MaintenanceTask();
+            task.setDeviceId(1L);
+            task.setSeverity(TaskSeverity.CRITICAL);
+            task.setStatus(TaskStatus.CLOSED);
+            task.setDescription("A description");
+            tasks.add(task);
+        }
+        for(int i = 0; i < 5; i++) {
+            // Status open, severity unimportant
+            MaintenanceTask task = new MaintenanceTask();
+            task.setDeviceId(1L);
+            task.setSeverity(TaskSeverity.UNIMPORTANT);
+            task.setStatus(TaskStatus.OPEN);
+            task.setDescription("A description");
+            tasks.add(task);
+        }
+        taskRepository.saveAll(tasks);
+        // Make the request, status closed, severity critical
+        MvcResult result = mvc.perform(MockMvcRequestBuilders.get("/api/tasks").param("status", "CLOSED").param("severity", "CRITICAL")
+                .accept(MediaType.APPLICATION_JSON))
+            .andExpect(status().isOk()).andReturn();
+        // Parse JSON so that we can assert that only open status and critical severity have been returned
+        JSONObject jsonResult = new JSONObject(result.getResponse().getContentAsString());
+        JSONObject em = jsonResult.getJSONObject("_embedded");
+        JSONArray taskArray = em.getJSONArray("maintenanceTaskList");
+        for(int i = 0; i < taskArray.length(); i++) {
+            JSONObject taskObj = taskArray.getJSONObject(i);
+            String severity = taskObj.getString("severity");
+            String status = taskObj.getString("status");
+            assertEquals("CRITICAL", severity);
+            assertEquals("CLOSED", status);
+        }
+        // Make the request, status open
+        result = mvc.perform(MockMvcRequestBuilders.get("/api/tasks").param("status", "OPEN")
+                .accept(MediaType.APPLICATION_JSON))
+            .andExpect(status().isOk()).andReturn();
+        // Parse JSON so that we can assert that only open status has been returned
+        jsonResult = new JSONObject(result.getResponse().getContentAsString());
+        em = jsonResult.getJSONObject("_embedded");
+        taskArray = em.getJSONArray("maintenanceTaskList");
+        for(int i = 0; i < taskArray.length(); i++) {
+            JSONObject taskObj = taskArray.getJSONObject(i);
+            String status = taskObj.getString("status");
+            assertEquals("OPEN", status);
+        }
+        // Make the request, severity unimportant
+        result = mvc.perform(MockMvcRequestBuilders.get("/api/tasks").param("severity", "UNIMPORTANT")
+                .accept(MediaType.APPLICATION_JSON))
+            .andExpect(status().isOk()).andReturn();
+        // Parse JSON so that we can assert that only unimportant severity has been returned
+        jsonResult = new JSONObject(result.getResponse().getContentAsString());
+        em = jsonResult.getJSONObject("_embedded");
+        taskArray = em.getJSONArray("maintenanceTaskList");
+        for(int i = 0; i < taskArray.length(); i++) {
+            JSONObject taskObj = taskArray.getJSONObject(i);
+            String severity = taskObj.getString("severity");
+            assertEquals("UNIMPORTANT", severity);
+        }
     }
 
     @Test
@@ -163,8 +232,6 @@ public class MaintenanceTaskControllerTest {
         MvcResult result = mvc.perform(MockMvcRequestBuilders.put(String.format("/api/tasks/%d", newTask.getId())).accept(MediaType.APPLICATION_JSON)
                 .contentType(MediaType.APPLICATION_JSON).content(json))
             .andExpect(status().isBadRequest()).andReturn();
-        System.out.println("---------------------------------------- RESULT OF NULL VALUE MODIFICATION ----------------------------------------");
-        System.out.println(result.getResponse());
     }
 
     // DELETE

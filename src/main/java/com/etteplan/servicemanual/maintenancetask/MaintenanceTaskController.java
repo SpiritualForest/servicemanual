@@ -26,6 +26,7 @@ import javax.validation.Valid;
 
 import java.util.List;
 import java.util.stream.Collectors;
+import java.util.ArrayList;
 
 // TODO: Clean this stuff a little bit. Look at this mess!
 // FIXME: we have to do data validation and other error checks. Make sure to implement this.
@@ -45,20 +46,61 @@ class MaintenanceTaskController {
 
     // MAPPING: /api/tasks
 
-    // Show all tasks
+    CollectionModel<EntityModel<MaintenanceTask>> query(TaskStatus status, TaskSeverity severity) {
+        // Helper function to organize our code better.
+        // Filters the tasks based on the given parameters.
+        List<MaintenanceTask> tasks = new ArrayList<>();
+        if (status != null && severity != null) {
+            // Status and severity
+            tasks = taskRepository.findAllByStatusAndSeverityOrderBySeverityAscRegistered(status, severity);
+        }
+        else if (status != null) {
+            // Status only
+            tasks = taskRepository.findAllByStatusOrderBySeverityAscRegistered(status);
+        }
+        else if (severity != null) {
+            // Severity only
+            tasks = taskRepository.findAllBySeverityOrderBySeverityAscRegistered(severity);
+        }
+        else {
+            // Everything, no filter.
+            tasks = taskRepository.findAllByOrderBySeverityAscRegistered();
+        }
+        List<EntityModel<MaintenanceTask>> tasksModel = tasks.stream().map(assembler::toModel).collect(Collectors.toList());
+        return CollectionModel.of(tasksModel, linkTo(methodOn(MaintenanceTaskController.class).all()).withSelfRel());
+    }
+
+    @GetMapping(path = "/api/tasks", params = { "status", "severity" })
+    CollectionModel<EntityModel<MaintenanceTask>> all(@RequestParam TaskStatus status, @RequestParam TaskSeverity severity) {
+        // Filter by both
+        return query(status, severity);
+    }
+
+    @GetMapping(path = "/api/tasks", params = { "status" })
+    CollectionModel<EntityModel<MaintenanceTask>> all(@RequestParam TaskStatus status) {
+        // Filter by status
+        return query(status, null);
+    }
+
+    @GetMapping(path = "/api/tasks", params = { "severity" })
+    CollectionModel<EntityModel<MaintenanceTask>> all(@RequestParam TaskSeverity severity) {
+        // Filters by severity
+        return query(null, severity);
+    }
+    
     @GetMapping("/api/tasks")
     CollectionModel<EntityModel<MaintenanceTask>> all() {
-        // Get all
-        List<EntityModel<MaintenanceTask>> tasks = taskRepository.findAllByOrderBySeverityAscRegistered().stream()
-            .map(assembler::toModel)
-            .collect(Collectors.toList());
-        return CollectionModel.of(tasks, linkTo(methodOn(MaintenanceTaskController.class).all()).withSelfRel());
+        // Query with no filter, fetches all existing tasks
+        return query(null, null);
     }
+
     // Delete all tasks
     @DeleteMapping("/api/tasks")
     void deleteAllTasks() {
         taskRepository.deleteAll();
     }
+    
+    // MAPPING: /api/tasks/{taskId}
 
     // Show a unique task by its id
     @GetMapping("/api/tasks/{taskId}")
