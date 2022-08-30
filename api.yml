@@ -97,7 +97,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/definitions/maintenanceTaskList'
+                $ref: '#/definitions/_embedded'
 
   /tasks/{taskId}:
     get:
@@ -201,7 +201,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/definitions/maintenanceTaskList'
+                $ref: '#/definitions/_embedded'
   delete:
     summary: Deletes all the tasks associated with this device
     responses:

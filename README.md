@@ -37,4 +37,17 @@ MaintenanceTask object example:
         }
     }
 }
-
+```
+Object returned by various GET requests:
+```
+{
+    _embedded: {
+        maintenanceTaskList: [ array of MaintenanceTask objects ],
+    }
+    _links: {
+        tasks: {
+            href: "http://localhost:8080/api/tasks"
+        }
+    }
+}
+```

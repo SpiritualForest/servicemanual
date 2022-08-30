@@ -83,16 +83,16 @@ function fetchDevices() {
 function fetchTasks(deviceId) {
     // if deviceId is -1, fetch all from /api/tasks
     // Otherwise, fetch from /api/tasks/device/deviceId
-    if (deviceId === -1) {
-        fetch("/api/tasks").then(response => {
-            if (response.ok) {
-                return response.json();
-            }
-        })
-        .then(tasks => {
-            fillTasksTable(tasks);
-        })
-    }
+    let endpoint = deviceId == -1 ? "/api/tasks" : `/api/tasks/device/${deviceId}`;
+    fetch(endpoint).then(response => {
+        if (response.ok) {
+            return response.json();
+        }
+    })
+    .then(tasks => {
+        // TODO: apply filters!
+        fillTasksTable(tasks);
+    })
 }
 
 function fillTasksTable(tasks) {
