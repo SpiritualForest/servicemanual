@@ -21,6 +21,10 @@ function saveNewTask(modalDiv) {
     let taskDescription = document.getElementById("add-task-description").value; // Textarea
     let endpoint = "/api/tasks/create"
 
+    // Escape the HTML - we don't want XSS attacks :)
+    taskDescription = taskDescription.replace(/</g, "&lt;");
+    taskDescription = taskDescription.replace(/>/g, "&gt");
+
     let taskObj = {
         deviceId: deviceId,
         status: taskStatus,
