@@ -1,6 +1,8 @@
 package com.etteplan.servicemanual.maintenancetask;
 
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Query;
+
 import java.util.List;
 
 // Query creation: https://docs.spring.io/spring-data/jpa/docs/1.4.2.RELEASE/reference/html/jpa.repositories.html#jpa.query-methods.query-creation
@@ -26,4 +28,11 @@ public interface MaintenanceTaskRepository extends JpaRepository<MaintenanceTask
 
     // where severity = <severity>
     List<MaintenanceTask> findAllBySeverityOrderBySeverityAscRegistered(TaskSeverity severity);
+
+    // Same as the above methods with severity and status, just including deviceId
+    List<MaintenanceTask> findAllByDeviceIdAndStatusAndSeverityOrderBySeverityAscRegistered(Long deviceId, TaskStatus status, TaskSeverity severity);
+
+    List<MaintenanceTask> findAllByDeviceIdAndStatusOrderBySeverityAscRegistered(Long deviceId, TaskStatus status);
+
+    List<MaintenanceTask> findAllByDeviceIdAndSeverityOrderBySeverityAscRegistered(Long deviceId, TaskSeverity severity);
 }
