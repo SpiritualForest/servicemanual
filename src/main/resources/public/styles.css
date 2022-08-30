@@ -113,3 +113,7 @@ td, th {
     border: none;
     cursor: pointer;
 }
+
+.add-task-textarea {
+    width: 100%;
+}

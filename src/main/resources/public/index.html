@@ -4,7 +4,6 @@
         <meta charset="UTF-8">
         <!-- change link to just css/styles.css when running the app for real -->
         <link href="styles.css" rel="stylesheet" type="text/css"/>
-        <script src="tasks.js" async></script>
         <title>Maintenance tasks admin panel</title>
     </head>
     <body>
@@ -51,47 +50,39 @@
                 <input type="checkbox" id="filter-tasks" name="filter-tasks">
                 <label for="filter-tasks" class="filter-paragraph filter-checkbox">Filter</label>
                 <p class="filter-paragraph">Device:</p>
-                <select class="select-filter-tasks" id="filter-tasks-device" name="filter-tasks-device">
+                <select class="select-filter-tasks" id="select-filter-tasks-device" name="filter-tasks-device">
                     <option value="-1">No filter</option>
                 </select>
                 <p class="filter-paragraph">Severity:</p>
-                <select class="select-filter-tasks" id="filter-tasks-severity" name="filter-tasks-severity">
+                <select class="select-filter-tasks" id="select-filter-tasks-severity" name="filter-tasks-severity">
                     <option value="-1">No filter</option>
                     <option value="CRITICAL">Critical</option>
                     <option value="IMPORTANT">Important</option>
                     <option value="UNIMPORTANT">Unimportant</option>
                 </select>
                 <p class="filter-paragraph">Status:</p>
-                <select class="select-filter-tasks" id="filter-tasks-status" name="filter-tasks-status">
+                <select class="select-filter-tasks" id="select-filter-tasks-status" name="filter-tasks-status">
                     <option value="-1">No filter</option>
                     <option value="OPEN">Open</option>
                     <option value="CLOSED">Closed</option>
                 </select>
             </div>
 
-            <table class="tasks">
-                <tr>
-                    <th>Task</th>
-                    <th>Device</th>
-                    <th>Status</th>
-                    <th>Severity</th>
-                    <th>Description</th>
-                    <th>Registered</th>
-                    <th>Action</th>
-                </tr>
-                <tr>
-                    <td>112</td>
-                    <td>1</td>
-                    <td>Open</td>
-                    <td>Critical</td>
-                    <td>CPU fix</td>
-                    <td>Date time object</td>
-                    <td>
-                        <a href="#">Edit</a>
-                        <a href="#">Delete</a>
-                    </td>
+            <table id="tasks-table">
+                <thead>
+                    <tr>
+                        <th>Task</th>
+                        <th>Device</th>
+                        <th>Status</th>
+                        <th>Severity</th>
+                        <th>Description</th>
+                        <th>Registered</th>
+                        <th>Action</th>
+                    </tr>
+                </thead>
                 </tr>
             </table>
         </div>
+        <script src="tasks.js"></script>
     </body>
 </html>
