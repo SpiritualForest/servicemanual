@@ -1,7 +1,8 @@
 ### To run the application: 
 * Install Maven.
 * Navigate to the application's directory and execute the command "mvn install" to install the dependencies.
-* Execute the command "mvn spring-boot: run" to run the application.
+* Execute the command "mvn spring-boot:run" to run the application.
+* Additionally, you may be interested in running all the unit tests through "mvn test"
 
 The application listens on localhost:8080. A front-end web interface will be made available in the coming days.
 
