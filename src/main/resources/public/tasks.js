@@ -83,8 +83,20 @@ function fetchDevices() {
 function fetchTasks(deviceId) {
     // if deviceId is -1, fetch all from /api/tasks
     // Otherwise, fetch from /api/tasks/device/deviceId
+    let applyFilters = document.getElementById("filter-tasks").checked;
     let endpoint = deviceId == -1 ? "/api/tasks" : `/api/tasks/device/${deviceId}`;
-    fetch(endpoint).then(response => {
+    let searchParams = new URLSearchParams();
+    if (applyFilters) {
+        let selectStatus = document.getElementById("select-filter-tasks-status").value;
+        let selectSeverity = document.getElementById("select-filter-tasks-severity").value;
+        if (selectStatus != -1) {
+            searchParams.append("status", selectStatus);
+        }
+        if (selectSeverity != -1) {
+            searchParams.append("severity", selectSeverity);
+        }
+    }
+    fetch(endpoint + "?" + searchParams).then(response => {
         if (response.ok) {
             return response.json();
         }
@@ -92,6 +104,8 @@ function fetchTasks(deviceId) {
     .then(tasks => {
         // TODO: apply filters!
         fillTasksTable(tasks);
+    }).catch(err => {
+        console.log("Error: " + err);
     })
 }
 
@@ -113,9 +127,9 @@ function fillTasksTable(tasks) {
         let row = tableElement.insertRow();
         let allData = [id, deviceId, taskStatus, taskSeverity, description, registered];
         for(let x in allData) {
+            // FIXME: hard coded values are BAD. Find a better way.
             let cell = row.insertCell(x);
             cell.innerHTML = allData[x];
-            console.log(x);
             if (x == 3 && allData[x] == "CRITICAL") {
                 // Severity - we want to highlight critical tasks by making them red
                 cell.style.color = "red";
@@ -145,6 +159,30 @@ function fillTasksTable(tasks) {
 // TODO
 function editTask(id) { }
 function deleteTask(id) { }
+
+let filterCheckbox = document.getElementById("filter-tasks");
+filterCheckbox.onchange = function() {
+    if (filterCheckbox.checked) {
+        // Fetch filtered
+        let deviceId = document.getElementById("select-filter-tasks-device").value;
+        fetchTasks(deviceId);
+    }
+    else {
+        // Fetch all
+        fetchTasks(-1);
+    }
+}
+
+// Filtration select menus
+let filterDevice = document.getElementById("select-filter-tasks-device");
+let filterSeverity = document.getElementById("select-filter-tasks-severity");
+let filterStatus = document.getElementById("select-filter-tasks-status");
+
+// Now we hook up the onchange event to all these bastards - all it does is call fetchTasks with the filterDevice's value
+
+filterDevice.onchange = function() { fetchTasks(filterDevice.value); }
+filterSeverity.onchange = function() { fetchTasks(filterDevice.value); }
+filterStatus.onchange = function() { fetchTasks(filterDevice.value); }
 
 configureAddTaskModalButtons();
 fetchDevices();

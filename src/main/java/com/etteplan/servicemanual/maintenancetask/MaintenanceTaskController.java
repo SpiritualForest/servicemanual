@@ -44,8 +44,6 @@ class MaintenanceTaskController {
         this.assembler = assembler;
     }
 
-    // MAPPING: /api/tasks
-
     CollectionModel<EntityModel<MaintenanceTask>> query(Long deviceId, TaskStatus status, TaskSeverity severity) {
         // Helper function to organize our code better.
         // Filters the tasks based on the given parameters.
@@ -104,6 +102,8 @@ class MaintenanceTaskController {
                     linkTo(methodOn(MaintenanceTaskController.class).all()).withRel("tasks"));
         }
     }
+
+    // MAPPING: /api/tasks
     
     @GetMapping(path = "/api/tasks", params = { "status", "severity" })
     CollectionModel<EntityModel<MaintenanceTask>> all(@RequestParam TaskStatus status, @RequestParam TaskSeverity severity) {
