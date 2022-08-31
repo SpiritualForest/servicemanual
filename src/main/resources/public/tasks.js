@@ -54,8 +54,13 @@ function saveNewTask(modalDiv) {
 
 // TODO: error checks here?
 function fetchDevices() {
+    /* This function fetches all the devices and populates the Device ID selection menus
+     * for filtering, adding, and editing tasks.
+     * Since we don't provide the option to add, edit, or remove devices,
+     * this function only gets called once. */
     let addTaskSelectDevice = document.getElementById("add-task-select-device"); // Device ID menu for the adding new tasks
     let selectFilterTasksDevice = document.getElementById("select-filter-tasks-device"); // Device ID menu for filter tasks by device ID
+    let editTaskSelectDevice = document.getElementById("edit-task-select-device"); // Device ID menu for editing existing tasks
     fetch("/factorydevices").then(response => {
         if (response.ok) {
             return response.json();
@@ -67,26 +72,35 @@ function fetchDevices() {
             let name = device.name;
             let type = device.type;
             let year = device.year;
-            let optionElementAddTask = document.createElement("option");
+            let optionElementAddTask = document.createElement("option"); // Add task select
             let fullDeviceData = `${deviceId} (${name}/${type}/${year})`;
             optionElementAddTask.value = deviceId;
             optionElementAddTask.innerHTML = fullDeviceData
             addTaskSelectDevice.appendChild(optionElementAddTask);
-            let optionElementFilterTasks = document.createElement("option");
+            let optionElementFilterTasks = document.createElement("option"); // Filter select
             optionElementFilterTasks.value = deviceId;
             optionElementFilterTasks.innerHTML = fullDeviceData;
             selectFilterTasksDevice.appendChild(optionElementFilterTasks);
+            let optionElementEditTask = document.createElement("option"); // Edit task select
+            optionElementEditTask.value = deviceId;
+            optionElementEditTask.innerHTML = fullDeviceData;
+            editTaskSelectDevice.appendChild(optionElementEditTask);
         }
+    }).catch(err => {
+        console.log("Error fetching devices: " + err);
     })
 }
 
 function fetchTasks(deviceId) {
-    // if deviceId is -1, fetch all from /api/tasks
-    // Otherwise, fetch from /api/tasks/device/deviceId
     let applyFilters = document.getElementById("filter-tasks").checked;
-    let endpoint = deviceId == -1 ? "/api/tasks" : `/api/tasks/device/${deviceId}`;
+    let endpoint = "/api/tasks"
     let searchParams = new URLSearchParams();
     if (applyFilters) {
+        // If a filter parameter's value is -1, it is NOT applied to the request
+        if (deviceId != -1) {
+            // Apply the device
+            searchParams.append("deviceId", deviceId);
+        }
         let selectStatus = document.getElementById("select-filter-tasks-status").value;
         let selectSeverity = document.getElementById("select-filter-tasks-severity").value;
         if (selectStatus != -1) {
@@ -102,7 +116,6 @@ function fetchTasks(deviceId) {
         }
     })
     .then(tasks => {
-        // TODO: apply filters!
         fillTasksTable(tasks);
     }).catch(err => {
         console.log("Error: " + err);
@@ -151,40 +164,112 @@ function fillTasksTable(tasks) {
         actionCell.appendChild(editBtn);
         actionCell.appendChild(deleteBtn);
         // Add the functions to edit and delete the tasks
-        editBtn.onclick = function() { editTask(id); }
+        editBtn.onclick = function() { openEditTaskDiv(id, deviceId, taskStatus, taskSeverity, description); }
         deleteBtn.onclick = function() { deleteTask(id); }
     }
 }
 
-// TODO
-function editTask(id) { }
-function deleteTask(id) { }
-
-let filterCheckbox = document.getElementById("filter-tasks");
-filterCheckbox.onchange = function() {
-    if (filterCheckbox.checked) {
-        // Fetch filtered
-        let deviceId = document.getElementById("select-filter-tasks-device").value;
-        fetchTasks(deviceId);
-    }
-    else {
-        // Fetch all
-        fetchTasks(-1);
-    }
+function configureEditTaskModalCancelButton() {
+    let editTaskDiv = document.getElementById("edit-task");
+    let cancelEditBtn = document.getElementById("edit-task-modal-cancel-btn");
+    cancelEditBtn.onclick = function() { editTaskDiv.style.display = "none"; }
+    let saveEditedTaskBtn = document.getElementById("edit-task-modal-save-btn");
+    saveEditedTaskBtn.onclick = function() { saveEditedTask(); }
 }
 
-// Filtration select menus
-let filterDevice = document.getElementById("select-filter-tasks-device");
-let filterSeverity = document.getElementById("select-filter-tasks-severity");
-let filterStatus = document.getElementById("select-filter-tasks-status");
+function openEditTaskDiv(id, deviceId, taskStatus, taskSeverity, description) {
+    // Open the task editing div
+    let editTaskDiv = document.getElementById("edit-task");
+    editTaskDiv.style.display = "block";
+    
+    // Now we populate the various input elements with the task's information
+    // TaskID
+    document.getElementById("edit-task-id").value = id;
+    // DeviceID
+    document.getElementById("edit-task-select-device").value = deviceId;
+    // Task status
+    document.getElementById("edit-task-select-status").value = taskStatus;
+    // Task severity
+    document.getElementById("edit-task-select-severity").value = taskSeverity;
+    // Description
+    document.getElementById("edit-task-description").value = description;
+}
 
-// Now we hook up the onchange event to all these bastards - all it does is call fetchTasks with the filterDevice's value
+function saveEditedTask() {
+    let editTaskDiv = document.getElementById("edit-task");
+    let taskId = document.getElementById("edit-task-id").value;
+    let deviceId = document.getElementById("edit-task-select-device").value;
+    let taskStatus = document.getElementById("edit-task-select-status").value;
+    let taskSeverity = document.getElementById("edit-task-select-severity").value;
+    let description = document.getElementById("edit-task-description").value;
+    
+    // Escape the HTML - we don't want XSS attacks :)
+    description = description.replace(/</g, "&lt;");
+    description = description.replace(/>/g, "&gt");
 
-filterDevice.onchange = function() { fetchTasks(filterDevice.value); }
-filterSeverity.onchange = function() { fetchTasks(filterDevice.value); }
-filterStatus.onchange = function() { fetchTasks(filterDevice.value); }
+    let endpoint = `/api/tasks/${taskId}`;
 
+    let taskObj = {
+        // We provide the task ID as an endpoint path variable, not in the body object.
+        deviceId: deviceId,
+        status: taskStatus,
+        severity: taskSeverity,
+        description: description,
+    }
+    // Perform the request
+    fetch(endpoint,  {
+        method: "PUT",
+        body: JSON.stringify(taskObj),
+        headers: {"Content-type": "application/json; charset=UTF-8"}
+    }).then(response => {
+        if (response.status === 200) {
+            // Successfully created the resource
+            return response.json();
+        }
+    }).then(() => {
+        // Close the modal and fetch all the tasks again to refresh the tasks lists.
+        editTaskDiv.style.display = "none";
+        fetchTasks(-1);
+    })
+    .catch(err => {
+        console.log("Error: " + err);
+    })
+}
+
+
+function deleteTask(id) { }
+
+function configureFilters() {
+    // Hook the checkbox onchange event
+    let filterCheckbox = document.getElementById("filter-tasks");
+    filterCheckbox.onchange = function() {
+        // Triggered when the "Filter" checkbox is checked or unchecked
+        if (filterCheckbox.checked) {
+            // Fetch filtered
+            let deviceId = document.getElementById("select-filter-tasks-device").value;
+            fetchTasks(deviceId);
+        }
+        else {
+            // Fetch all
+            fetchTasks(-1);
+        }
+    }
+    // Filtration select menus
+    let filterDevice = document.getElementById("select-filter-tasks-device");
+    let filterSeverity = document.getElementById("select-filter-tasks-severity");
+    let filterStatus = document.getElementById("select-filter-tasks-status");
+
+    // Now we hook up the onchange event to all these bastards - all it does is call fetchTasks with the filterDevice's value
+    // fetchTasks() issues the fetch() request with the appropriate URLSearchParams based on the values
+    // obtained from these select menus.
+    filterDevice.onchange = function() { fetchTasks(filterDevice.value); }
+    filterSeverity.onchange = function() { fetchTasks(filterDevice.value); }
+    filterStatus.onchange = function() { fetchTasks(filterDevice.value); }
+}
+
+configureFilters();
 configureAddTaskModalButtons();
-fetchDevices();
-fetchTasks(-1);
+configureEditTaskModalCancelButton();
+fetchDevices(); // Populate our DeviceID select menus
+fetchTasks(-1); // Populate the tasks table with all tasks
 
