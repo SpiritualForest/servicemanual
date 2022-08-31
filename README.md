@@ -6,6 +6,8 @@
 
 The application listens on localhost:8080. A front-end web interface is available at http://localhost:8080/ when the application is running.  
 
+The application will initialize the database with some randomly created tasks on the first run.  
+
 Please view the api.yml file for a detailed documentation of the API.
 
 Short version:
