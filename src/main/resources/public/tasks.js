@@ -45,7 +45,7 @@ function saveNewTask(modalDiv) {
     }).then(() => {
         // Close the modal and fetch all the tasks again to refresh the tasks lists.
         modalDiv.style.display = "none";
-        fetchTasks(-1);
+        fetchTasks();
     })
     .catch(err => {
         console.log("Error: " + err);
@@ -91,12 +91,13 @@ function fetchDevices() {
     })
 }
 
-function fetchTasks(deviceId) {
+function fetchTasks() {
     let applyFilters = document.getElementById("filter-tasks").checked;
     let endpoint = "/api/tasks"
     let searchParams = new URLSearchParams();
     if (applyFilters) {
         // If a filter parameter's value is -1, it is NOT applied to the request
+        let deviceId = document.getElementById("select-filter-tasks-device").value;
         if (deviceId != -1) {
             // Apply the device
             searchParams.append("deviceId", deviceId);
@@ -109,8 +110,10 @@ function fetchTasks(deviceId) {
         if (selectSeverity != -1) {
             searchParams.append("severity", selectSeverity);
         }
+        // Add the search parameters to the endpoint
+        endpoint += "?" + searchParams;
     }
-    fetch(endpoint + "?" + searchParams).then(response => {
+    fetch(endpoint).then(response => {
         if (response.ok) {
             return response.json();
         }
@@ -229,13 +232,12 @@ function saveEditedTask() {
     }).then(() => {
         // Close the modal and fetch all the tasks again to refresh the tasks lists.
         editTaskDiv.style.display = "none";
-        fetchTasks(-1);
+        fetchTasks();
     })
     .catch(err => {
         console.log("Error: " + err);
     })
 }
-
 
 function deleteTask(id) {
     // Delete single task.
@@ -249,10 +251,49 @@ function deleteTask(id) {
         if (response.ok) {
             // Task delete, fetch tasks.
             alert(`Task ${id} deleted.`);
-            fetchTasks(-1);
+            fetchTasks();
         }
     }).catch(err => {
         console.log("Error in task deletion: " + err);
+    })
+}
+
+function deleteAllTasks() {
+    // Deletes all tasks
+    // Filter parameters apply (if the Filter checkbox is checked), and will affect what tasks are removed.
+    if (!confirm("Are you sure you want to delete all these tasks?")) {
+        return;
+    }
+    // Confirmed that the user wants to delete.
+    let queryParams = new URLSearchParams();
+    let endpoint = "/api/tasks"
+    if (document.getElementById("filter-tasks").checked) {
+        // Parameters apply to the deletion request
+        let deviceId = document.getElementById("select-filter-tasks-device").value;
+        let taskStatus = document.getElementById("select-filter-tasks-status").value;
+        let taskSeverity = document.getElementById("select-filter-tasks-severity").value;
+        if (deviceId != -1) {
+            queryParams.append("deviceId", deviceId);
+        }
+        if (taskStatus != -1) {
+            queryParams.append("status", taskStatus);
+        }
+        if (taskSeverity != -1) {
+            queryParams.append("severity", taskSeverity);
+        }
+        endpoint += "?" + queryParams;
+    }
+    // Perform the request
+    fetch(endpoint, {
+        method: "DELETE"
+    }).then(response => {
+        if (response.ok) {
+            // Deletion successful.
+            alert("Tasks deleted.");
+            fetchTasks();
+        }
+    }).catch(err => {
+        console.log("Error deleting tasks: " + err);
     })
 }
 
@@ -288,9 +329,11 @@ function configureFilters() {
     filterStatus.onchange = function() { fetchTasks(filterDevice.value); }
 }
 
+let deleteTasksBtn = document.getElementById("delete-tasks-btn");
+deleteTasksBtn.onclick = function() { deleteAllTasks(); }
 configureFilters();
 configureAddTaskModalButtons();
 configureEditTaskModalCancelButton();
 fetchDevices(); // Populate our DeviceID select menus
-fetchTasks(-1); // Populate the tasks table with all tasks
+fetchTasks(); // Populate the tasks table with all tasks
 
