@@ -367,6 +367,8 @@ public class MaintenanceTaskControllerTest {
         assertTrue(taskRepository.findAllByDeviceId(1L).isEmpty());
     }
 
+    // TODO: test deletion according to status and severity
+
     @Test
     public void deleteTasksDeviceNotFound() throws Exception {
         // Should return isNotFound()

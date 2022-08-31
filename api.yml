@@ -137,6 +137,7 @@ paths:
             application/json:
               schema:
                 $ref: '#/definitions/MaintenanceTask'
+                $ref: '#/definitions/MaintenanceTaskLinks'
         404:
           description: Task not found
     put:
