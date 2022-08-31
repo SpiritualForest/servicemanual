@@ -300,6 +300,9 @@ function deleteAllTasks() {
 }
 
 function actionMsg(message) {
+    // Shows the information text about a given action that was performed,
+    // such as modifying or deleting tasks.
+    // Also shows the green checkmark icon next to the text paragraph element.
     document.getElementById("information-text").innerHTML = message;
     document.getElementById("check-img").style.display = "inline";
 }
