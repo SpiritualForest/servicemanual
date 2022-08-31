@@ -112,11 +112,15 @@ paths:
             application/json:
               schema:
                 $ref: '#/definitions/_embedded'
+        400:
+          description: Bad request
     delete:
       summary: Delete all the tasks that match the query parameters. If no parameters are supplied, all tasks in the database are deleted.
       responses:
         200:
           description: OK
+        400:
+          description: Bad request
 
   /tasks/{taskId}:
     get:
@@ -200,4 +204,6 @@ paths:
               schema:
                 $ref: '#/definitions/MaintenanceTask'
         404:
-          description: Factory device not found 
+          description: Factory device not found
+        400:
+          description: Bad request
