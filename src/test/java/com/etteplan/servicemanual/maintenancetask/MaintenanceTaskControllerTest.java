@@ -144,7 +144,7 @@ public class MaintenanceTaskControllerTest {
         // Get all the tasks associated with a deviceId.
         // This should always return status 200.
         // If the device doesn't exist, it should just return an empty collection.
-        mvc.perform(MockMvcRequestBuilders.get("/api/tasks/device/1").accept(MediaType.APPLICATION_JSON))
+        mvc.perform(MockMvcRequestBuilders.get("/api/tasks").param("deviceId", "1").accept(MediaType.APPLICATION_JSON))
             .andExpect(status().isOk());
     }
 
@@ -173,7 +173,7 @@ public class MaintenanceTaskControllerTest {
         }
         taskRepository.saveAll(tasks);
         // Make the request, status closed, severity critical
-        MvcResult result = mvc.perform(MockMvcRequestBuilders.get("/api/tasks/device/1").param("status", "CLOSED").param("severity", "CRITICAL")
+        MvcResult result = mvc.perform(MockMvcRequestBuilders.get("/api/tasks").param("deviceId", "1").param("status", "CLOSED").param("severity", "CRITICAL")
                 .accept(MediaType.APPLICATION_JSON))
             .andExpect(status().isOk()).andReturn();
         // Parse JSON so that we can assert that only open status and critical severity have been returned
@@ -188,7 +188,7 @@ public class MaintenanceTaskControllerTest {
             assertEquals("CLOSED", status);
         }
         // Make the request, status open
-        result = mvc.perform(MockMvcRequestBuilders.get("/api/tasks/device/1").param("status", "OPEN")
+        result = mvc.perform(MockMvcRequestBuilders.get("/api/tasks").param("deviceId", "1").param("status", "OPEN")
                 .accept(MediaType.APPLICATION_JSON))
             .andExpect(status().isOk()).andReturn();
         // Parse JSON so that we can assert that only open status has been returned
@@ -201,7 +201,7 @@ public class MaintenanceTaskControllerTest {
             assertEquals("OPEN", status);
         }
         // Make the request, severity unimportant
-        result = mvc.perform(MockMvcRequestBuilders.get("/api/tasks/device/1").param("severity", "UNIMPORTANT")
+        result = mvc.perform(MockMvcRequestBuilders.get("/api/tasks").param("deviceId", "1").param("severity", "UNIMPORTANT")
                 .accept(MediaType.APPLICATION_JSON))
             .andExpect(status().isOk()).andReturn();
         // Parse JSON so that we can assert that only unimportant severity has been returned
@@ -361,8 +361,8 @@ public class MaintenanceTaskControllerTest {
         // Assert the existence of the newly created tasks
         assertFalse(taskRepository.findAllByDeviceId(1L).isEmpty());
         // Now delete
-        mvc.perform(MockMvcRequestBuilders.delete("/api/tasks/device/1").accept(MediaType.APPLICATION_JSON))
-            .andExpect(status().isOk());
+        MvcResult result = mvc.perform(MockMvcRequestBuilders.delete("/api/tasks").param("deviceId", "1").accept(MediaType.APPLICATION_JSON))
+            .andExpect(status().isOk()).andReturn();
         // Assert the deletion
         assertTrue(taskRepository.findAllByDeviceId(1L).isEmpty());
     }
@@ -370,7 +370,7 @@ public class MaintenanceTaskControllerTest {
     @Test
     public void deleteTasksDeviceNotFound() throws Exception {
         // Should return isNotFound()
-        mvc.perform(MockMvcRequestBuilders.delete("/api/tasks/device/123456789").accept(MediaType.APPLICATION_JSON))
+        mvc.perform(MockMvcRequestBuilders.delete("/api/tasks").param("deviceId", "123456789").accept(MediaType.APPLICATION_JSON))
             .andExpect(status().isNotFound());
     }
 }

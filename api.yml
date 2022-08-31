@@ -6,10 +6,6 @@ info:
   version: 1.0
 
 host: localhost
-basePath: /api
-schemes:
-  - http
-  - https
 
 definitions:
   _embedded:
@@ -86,10 +82,28 @@ definitions:
                   type: string
                   description: Hyperlink to the API endpoint that retrieves all the tasks for this task's attached device
                   example: http://localhost:8080/api/tasks/deviceId/1
+basePath: /api
+schemes:
+  - http
+  - https
+
 paths:
   /tasks:
+    parameters:
+      - in: query
+        name: deviceId
+        type: integer
+        description: The device by which to filter the tasks
+      - in: query
+        name: status
+        type: string
+        description: The status by which to filter tasks (OPEN/CLOSED)
+      - in: query
+        name: severity
+        type: string
+        description: The severity by which to filter tasks (UNIMPORTANT / IMPORTANT / CRITICAL)
     get:
-      summary: Returns a list of maintenance tasks
+      summary: Returns a list of maintenance tasks, filtered according to query parameters
       produces: application/json
       responses:
         200:
@@ -98,6 +112,11 @@ paths:
             application/json:
               schema:
                 $ref: '#/definitions/_embedded'
+    delete:
+      summary: Delete all the tasks that match the query parameters. If no parameters are supplied, all tasks in the database are deleted.
+      responses:
+        200:
+          description: OK
 
   /tasks/{taskId}:
     get:
@@ -180,32 +199,4 @@ paths:
               schema:
                 $ref: '#/definitions/MaintenanceTask'
         404:
-          description: Factory device not found
-  
-  /tasks/device/{deviceId}:
-    parameters:
-      - in: path
-        name: deviceId
-        required: true
-        schema:
-          type: integer
-          minimum: 1
-        description: The device ID
-    
-    get:
-      summary: Retrieves all the tasks associated with this device
-      produces: application/jso
-      responses:
-        200:
-          description: OK
-          content:
-            application/json:
-              schema:
-                $ref: '#/definitions/_embedded'
-  delete:
-    summary: Deletes all the tasks associated with this device
-    responses:
-      200:
-        description: OK
-      404:
-        description: Factory device not found
+          description: Factory device not found 

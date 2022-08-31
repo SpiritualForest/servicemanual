@@ -41,7 +41,7 @@ class MaintenanceTaskController {
         this.assembler = assembler;
     }
 
-    CollectionModel<EntityModel<MaintenanceTask>> query(Long deviceId, List<MaintenanceTask> tasks) {
+    CollectionModel<EntityModel<MaintenanceTask>> addHyperlinks(Long deviceId, List<MaintenanceTask> tasks) {
         // Helper function to organize our code better.
         // Filters the tasks based on the given parameters.
         // The tasks list comes from the various mapped methods that call this function.
@@ -68,28 +68,68 @@ class MaintenanceTaskController {
     CollectionModel<EntityModel<MaintenanceTask>> all(@RequestParam TaskStatus status, @RequestParam TaskSeverity severity) {
         // Filter by both, no device
         List<MaintenanceTask> tasks = taskRepository.findAllByStatusAndSeverityOrderBySeverityAscRegistered(status, severity);
-        return query(null, tasks);
+        return addHyperlinks(null, tasks);
     }
 
     @GetMapping(path = "/api/tasks", params = { "status" })
     CollectionModel<EntityModel<MaintenanceTask>> all(@RequestParam TaskStatus status) {
         // Filter by status, no device
         List<MaintenanceTask> tasks = taskRepository.findAllByStatusOrderBySeverityAscRegistered(status);
-        return query(null, tasks);
+        return addHyperlinks(null, tasks);
     }
 
     @GetMapping(path = "/api/tasks", params = { "severity" })
     CollectionModel<EntityModel<MaintenanceTask>> all(@RequestParam TaskSeverity severity) {
         // Filters by severity, no device
         List<MaintenanceTask> tasks = taskRepository.findAllBySeverityOrderBySeverityAscRegistered(severity);
-        return query(null, tasks);
+        return addHyperlinks(null, tasks);
     }
     
     @GetMapping("/api/tasks")
     CollectionModel<EntityModel<MaintenanceTask>> all() {
         // Query with no filter, fetches all existing tasks
         List<MaintenanceTask> tasks = taskRepository.findAllByOrderBySeverityAscRegistered();
-        return query(null, tasks);
+        return addHyperlinks(null, tasks);
+    }
+
+    // Filter tasks first by deviceId, then status and severity according to other parameters passed
+    
+    @GetMapping(path = "/api/tasks", params = { "deviceId" })
+    CollectionModel<EntityModel<MaintenanceTask>> all(@RequestParam Long deviceId) {
+        // Fetch all associated with this device
+        List<MaintenanceTask> tasks = taskRepository.findAllByDeviceIdOrderBySeverityAscRegistered(deviceId);
+        return addHyperlinks(deviceId, tasks);
+    }
+
+    @GetMapping(path = "/api/tasks", params = { "deviceId", "status", "severity" })
+    CollectionModel<EntityModel<MaintenanceTask>> all(@RequestParam Long deviceId, @RequestParam TaskStatus status, @RequestParam TaskSeverity severity) {
+        // Device, status, severity
+        List<MaintenanceTask> tasks = taskRepository.findAllByDeviceIdAndStatusAndSeverityOrderBySeverityAscRegistered(deviceId, status, severity);
+        return addHyperlinks(deviceId, tasks);
+    }
+
+    @GetMapping(path = "/api/tasks", params = { "deviceId", "status" })
+    CollectionModel<EntityModel<MaintenanceTask>> all(@RequestParam Long deviceId, @RequestParam TaskStatus status) {
+        // Device and status
+        List<MaintenanceTask> tasks = taskRepository.findAllByDeviceIdAndStatusOrderBySeverityAscRegistered(deviceId, status);
+        return addHyperlinks(deviceId, tasks);
+    }
+
+    @GetMapping(path = "/api/tasks", params = { "deviceId", "severity" })
+    CollectionModel<EntityModel<MaintenanceTask>> all(@RequestParam Long deviceId, @RequestParam TaskSeverity severity) {
+        // Device and severity
+        List<MaintenanceTask> tasks = taskRepository.findAllByDeviceIdAndSeverityOrderBySeverityAscRegistered(deviceId, severity);
+        return addHyperlinks(deviceId, tasks);
+    }
+
+    // Delete all tasks for this deviceId
+    @DeleteMapping(path = "/api/tasks", params = { "deviceId" })
+    void deleteDeviceTasks(@RequestParam Long deviceId) {
+        if (!deviceRepository.existsById(deviceId)) {
+            throw new FactoryDeviceNotFoundException(deviceId);
+        }
+        List<MaintenanceTask> tasks = taskRepository.findAllByDeviceId(deviceId);
+        taskRepository.deleteAll(tasks);
     }
 
     // Delete all tasks
@@ -146,48 +186,7 @@ class MaintenanceTaskController {
         task.setDeviceId(modifiedTask.getDeviceId());
         return taskRepository.save(task);
     }
-
-    // MAPPING: /api/tasks/device
-
-    // Show all tasks associated with <deviceId>
-    @GetMapping("/api/tasks/device/{deviceId}")
-    CollectionModel<EntityModel<MaintenanceTask>> all(@PathVariable Long deviceId) {
-        // Fetch all associated with this device
-        List<MaintenanceTask> tasks = taskRepository.findAllByDeviceIdOrderBySeverityAscRegistered(deviceId);
-        return query(deviceId, tasks);
-    }
-
-    @GetMapping(path = "/api/tasks/device/{deviceId}", params = { "status", "severity" })
-    CollectionModel<EntityModel<MaintenanceTask>> all(@PathVariable Long deviceId, @RequestParam TaskStatus status, @RequestParam TaskSeverity severity) {
-        // Device, status, severity
-        List<MaintenanceTask> tasks = taskRepository.findAllByDeviceIdAndStatusAndSeverityOrderBySeverityAscRegistered(deviceId, status, severity);
-        return query(deviceId, tasks);
-    }
-
-    @GetMapping(path = "/api/tasks/device/{deviceId}", params = { "status" })
-    CollectionModel<EntityModel<MaintenanceTask>> all(@PathVariable Long deviceId, @RequestParam TaskStatus status) {
-        // Device and status
-        List<MaintenanceTask> tasks = taskRepository.findAllByDeviceIdAndStatusOrderBySeverityAscRegistered(deviceId, status);
-        return query(deviceId, tasks);
-    }
-
-    @GetMapping(path = "/api/tasks/device/{deviceId}", params = { "severity" })
-    CollectionModel<EntityModel<MaintenanceTask>> all(@PathVariable Long deviceId, @RequestParam TaskSeverity severity) {
-        // Device and severity
-        List<MaintenanceTask> tasks = taskRepository.findAllByDeviceIdAndSeverityOrderBySeverityAscRegistered(deviceId, severity);
-        return query(deviceId, tasks);
-    }
-
-    // Delete all tasks for this deviceId
-    @DeleteMapping("/api/tasks/device/{deviceId}")
-    void deleteDeviceTasks(@PathVariable Long deviceId) {
-        if (!deviceRepository.existsById(deviceId)) {
-            throw new FactoryDeviceNotFoundException(deviceId);
-        }
-        List<MaintenanceTask> tasks = taskRepository.findAllByDeviceId(deviceId);
-        taskRepository.deleteAll(tasks);
-    }
-    
+ 
     // Create a new task
     @PostMapping("/api/tasks/create")
     @ResponseStatus(HttpStatus.CREATED)
