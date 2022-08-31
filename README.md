@@ -19,7 +19,7 @@ Endpoints:
 MaintenanceTask object example:
 ```
 {
-    id: 800,
+    id: 855,
     deviceId: 1,
     severity: "IMPORTANT",
     status: "CLOSED",
