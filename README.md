@@ -24,8 +24,7 @@ Requests are mapped according to the best matching path and parameter combinatio
 If a request has one good parameter (such as deviceId), and several parameters that don't exist,  
 then the function that handles only requests with the deviceId parameter present will be called.  
 
-If none of the parameters match anything, or if the framework can't convert a validly name parameter's data into the entity's required data type,  
-HTTP 400 "bad request" is returned.
+If none of the parameters match anything, or if the framework can't convert a validly name parameter's data into the entity's required data type, HTTP 400 "bad request" is returned.
 
 MaintenanceTask object example:
 ```
