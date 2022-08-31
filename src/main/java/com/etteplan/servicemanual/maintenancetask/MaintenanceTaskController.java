@@ -176,7 +176,7 @@ class MaintenanceTaskController {
     }
 
     // Delete all tasks from the database, no filter
-    @DeleteMapping("/api/tasks")
+    @DeleteMapping("/api/tasks/all")
     void deleteTasks() {
         taskRepository.deleteAll();
     }

@@ -313,7 +313,7 @@ public class MaintenanceTaskControllerTest {
         task = taskRepository.save(task);
         assertTrue(taskRepository.existsById(task.getId()));
         // Delete
-        mvc.perform(MockMvcRequestBuilders.delete("/api/tasks").accept(MediaType.APPLICATION_JSON))
+        mvc.perform(MockMvcRequestBuilders.delete("/api/tasks/all").accept(MediaType.APPLICATION_JSON))
             .andExpect(status().isOk());
         // Assert that no tasks exist
         assertTrue(taskRepository.findAll().isEmpty());
@@ -509,6 +509,21 @@ public class MaintenanceTaskControllerTest {
             .andExpect(status().isOk());
         // Assert the deletion
         assertTrue(taskRepository.findAllBySeverity(TaskSeverity.IMPORTANT).isEmpty());
+    }
+
+    @Test
+    public void deleteTaskGarbageParams() throws Exception {
+        // Delete tasks with garbage parameters - should return 400 bad request
+        mvc.perform(MockMvcRequestBuilders.delete("/api/tasks").param("deviceId", "lulzbad").accept(MediaType.APPLICATION_JSON))
+            .andExpect(status().isBadRequest());
+    }
+
+    @Test
+    public void deleteTaskNonExistentParam() throws Exception {
+        // Delete a task, but make the query with a non existent parameter name.
+        // Should return 400 with the request not being mapped anywhere.
+        mvc.perform(MockMvcRequestBuilders.delete("/api/tasks").param("lolshit", "lulzcrap").accept(MediaType.APPLICATION_JSON))
+            .andExpect(status().isBadRequest());
     }
     
     @Test

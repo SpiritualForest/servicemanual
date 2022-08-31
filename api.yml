@@ -207,3 +207,10 @@ paths:
           description: Factory device not found
         400:
           description: Bad request
+  
+  /tasks/all:
+    delete:
+      summary: Deletes all the tasks from the database
+      responses:
+        200:
+          description: OK
