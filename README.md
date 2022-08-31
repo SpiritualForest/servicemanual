@@ -19,6 +19,14 @@ Endpoints:
 /api/tasks/taskId - GET, PUT, DELETE. Retrieve, update, or delete the task with the given taskId. taskId is an integer. The body for the PUT request is the same as in the /api/tasks/create POST request. View the definition for 'MaintenanceTask' in api.yml.  
 /api/tasks/all - DELETE. Special endpoint to delete all tasks from the database.
 
+#### Note on query parameters and request mapping:
+Requests are mapped according to the best matching path and parameter combination.  
+If a request has one good parameter (such as deviceId), and several parameters that don't exist,  
+then the function that handles only requests with the deviceId parameter present will be called.  
+
+If none of the parameters match anything, or if the framework can't convert a validly name parameter's data into the entity's required data type,  
+HTTP 400 "bad request" is returned.
+
 MaintenanceTask object example:
 ```
 {
@@ -54,4 +62,6 @@ Object returned by GET on /api/tasks, which returns an array of MaintenanceTask 
     }
 }
 ```
+If the query didn't match anything, only the links portion of the object will exist.  
+
 Object returned by GET on /api/task/{taskId}: see the MaintenanceTask object example above.
