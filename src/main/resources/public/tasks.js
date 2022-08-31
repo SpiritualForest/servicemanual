@@ -237,7 +237,24 @@ function saveEditedTask() {
 }
 
 
-function deleteTask(id) { }
+function deleteTask(id) {
+    // Delete single task.
+    if (!confirm(`Are you sure you want to delete task ${id}?`)) {
+        return;
+    }
+    let endpoint = `/api/tasks/${id}`;
+    fetch(endpoint, {
+        method: "DELETE"
+    }).then(response => {
+        if (response.ok) {
+            // Task delete, fetch tasks.
+            alert(`Task ${id} deleted.`);
+            fetchTasks(-1);
+        }
+    }).catch(err => {
+        console.log("Error in task deletion: " + err);
+    })
+}
 
 function configureFilters() {
     // Hook the checkbox onchange event
@@ -245,11 +262,15 @@ function configureFilters() {
     filterCheckbox.onchange = function() {
         // Triggered when the "Filter" checkbox is checked or unchecked
         if (filterCheckbox.checked) {
+            // Filters apply to the Delete tasks function now
+            document.getElementById("delete-tasks-btn").innerHTML = "Delete tasks (filters apply)";
             // Fetch filtered
             let deviceId = document.getElementById("select-filter-tasks-device").value;
             fetchTasks(deviceId);
         }
         else {
+            // Filters don't apply to deletion: ALL tasks will be removed
+            document.getElementById("delete-tasks-btn").innerHTML = "Delete all tasks";
             // Fetch all
             fetchTasks(-1);
         }
