@@ -4,7 +4,7 @@
 * Execute the command "mvn spring-boot:run" to run the application.
 * Additionally, you may be interested in running all the unit tests through "mvn test"
 
-The application listens on localhost:8080. A front-end web interface will be made available in the coming days.
+The application listens on localhost:8080. A front-end web interface is available at http://localhost:8080/ when the application is running.  
 
 Please view the api.yml file for a detailed documentation of the API.
 
