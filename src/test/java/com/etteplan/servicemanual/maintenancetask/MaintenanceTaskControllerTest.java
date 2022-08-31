@@ -318,6 +318,24 @@ public class MaintenanceTaskControllerTest {
         // Assert that no tasks exist
         assertTrue(taskRepository.findAll().isEmpty());
     }
+    
+    @Test
+    public void deleteTasksNoParams() throws Exception {
+        // Call the normal /api/tasks, DELETE request, no query parameters.
+        // Should return 400 Bad request with no tasks deleted
+        MaintenanceTask task = new MaintenanceTask();
+        task.setSeverity(TaskSeverity.CRITICAL);
+        task.setStatus(TaskStatus.CLOSED);
+        task.setDescription("Some description");
+        task.setDeviceId(1L);
+        task = taskRepository.save(task);
+        assertTrue(taskRepository.existsById(task.getId()));
+        // Delete
+        mvc.perform(MockMvcRequestBuilders.delete("/api/tasks").accept(MediaType.APPLICATION_JSON))
+            .andExpect(status().isBadRequest());
+        // Assert that no deletion took place
+        assertFalse(taskRepository.findAll().isEmpty());
+    }
 
     @Test
     public void deleteSingleTask() throws Exception {
