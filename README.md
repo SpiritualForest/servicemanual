@@ -38,7 +38,7 @@ MaintenanceTask object example:
     }
 }
 ```
-Object returned by various GET requests:
+Object returned by GET on /api/tasks, which returns an array of MaintenanceTask objects:
 ```
 {
     _embedded: {
@@ -51,3 +51,4 @@ Object returned by various GET requests:
     }
 }
 ```
+Object returned by GET on /api/task/{taskId}: see the MaintenanceTask object example above.
