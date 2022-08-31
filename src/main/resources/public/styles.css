@@ -12,7 +12,7 @@ body {
 .navbar {
     background-color: #100c08;
     display: flex;
-    justify-content: flex-start;
+    justify-content: space-between;
     margin-bottom: 20px;
 }
 
@@ -26,6 +26,21 @@ body {
 
 .nav-link:hover {
     color: #d3d3d3;
+}
+
+.information-text {
+    display: inline;
+}
+
+.information-text-div {
+    display: flex;
+    align-items: center;
+}
+
+.check-img {
+    width: 20px;
+    height: 20px;
+    display: none; /* Hidden until we perform an action */
 }
 
 .tasks-container {

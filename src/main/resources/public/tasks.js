@@ -40,6 +40,7 @@ function saveNewTask(modalDiv) {
     }).then(response => {
         if (response.status === 201) {
             // Successfully created the resource
+            actionMsg("Task created successfully");
             return response.json();
         }
     }).then(() => {
@@ -226,7 +227,8 @@ function saveEditedTask() {
         headers: {"Content-type": "application/json; charset=UTF-8"}
     }).then(response => {
         if (response.status === 200) {
-            // Successfully created the resource
+            // Successfully modified the resource
+            actionMsg("Changes saved successfully");
             return response.json();
         }
     }).then(() => {
@@ -250,7 +252,7 @@ function deleteTask(id) {
     }).then(response => {
         if (response.ok) {
             // Task delete, fetch tasks.
-            alert(`Task ${id} deleted.`);
+            actionMsg(`Task ${id} deleted`);
             fetchTasks();
         }
     }).catch(err => {
@@ -289,12 +291,17 @@ function deleteAllTasks() {
     }).then(response => {
         if (response.ok) {
             // Deletion successful.
-            alert("Tasks deleted.");
+            actionMsg("Tasks deleted");
             fetchTasks();
         }
     }).catch(err => {
         console.log("Error deleting tasks: " + err);
     })
+}
+
+function actionMsg(message) {
+    document.getElementById("information-text").innerHTML = message;
+    document.getElementById("check-img").style.display = "inline";
 }
 
 function configureFilters() {
