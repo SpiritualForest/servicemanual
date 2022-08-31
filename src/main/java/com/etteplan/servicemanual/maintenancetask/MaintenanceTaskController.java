@@ -64,6 +64,10 @@ class MaintenanceTaskController {
 
     // MAPPING: /api/tasks
     
+    /* NOTE: requests are mapped according to whatever query parameters best fit the request.
+     * If a request has one matching parameter, and one garbage parameter, the function which
+     * mapped the valid parameter will be executed. */
+    
     @GetMapping(path = "/api/tasks", params = { "status", "severity" })
     CollectionModel<EntityModel<MaintenanceTask>> all(@RequestParam TaskStatus status, @RequestParam TaskSeverity severity) {
         // Filter by both, no device

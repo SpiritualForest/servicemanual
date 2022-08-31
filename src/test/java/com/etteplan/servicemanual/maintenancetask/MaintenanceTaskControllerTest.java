@@ -525,6 +525,21 @@ public class MaintenanceTaskControllerTest {
         mvc.perform(MockMvcRequestBuilders.delete("/api/tasks").param("lolshit", "lulzcrap").accept(MediaType.APPLICATION_JSON))
             .andExpect(status().isBadRequest());
     }
+
+    @Test
+    public void deleteTaskGoodAndGarbageParam() throws Exception {
+        // Delete a task, pass one valid parameter, and one garbage parameter
+        // It should just delete the tasks with the deviceId.
+        mvc.perform(MockMvcRequestBuilders.delete("/api/tasks").param("deviceId", "1").param("lolshit", "lulzies").accept(MediaType.APPLICATION_JSON))
+            .andExpect(status().isOk());
+    }
+
+    @Test
+    public void deleteTaskValidAndInvalidParams() throws Exception {
+        // Delete a task, pass one valid parameter, and one invalid parameter (that can't be converted to its type)
+        mvc.perform(MockMvcRequestBuilders.delete("/api/tasks").param("deviceId", "1").param("status", "FUCKITHAHAHAHAHA").accept(MediaType.APPLICATION_JSON))
+            .andExpect(status().isBadRequest());
+    }
     
     @Test
     public void deleteTasksDeviceNotFound() throws Exception {
