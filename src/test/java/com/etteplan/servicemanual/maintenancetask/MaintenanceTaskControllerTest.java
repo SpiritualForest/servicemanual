@@ -361,19 +361,161 @@ public class MaintenanceTaskControllerTest {
         // Assert the existence of the newly created tasks
         assertFalse(taskRepository.findAllByDeviceId(1L).isEmpty());
         // Now delete
-        MvcResult result = mvc.perform(MockMvcRequestBuilders.delete("/api/tasks").param("deviceId", "1").accept(MediaType.APPLICATION_JSON))
-            .andExpect(status().isOk()).andReturn();
+        mvc.perform(MockMvcRequestBuilders.delete("/api/tasks").param("deviceId", "1").accept(MediaType.APPLICATION_JSON))
+            .andExpect(status().isOk());
         // Assert the deletion
         assertTrue(taskRepository.findAllByDeviceId(1L).isEmpty());
     }
 
-    // TODO: test deletion according to status and severity
+    @Test
+    public void deleteTasksByDeviceIdAndStatusAndSeverity() throws Exception {
+        // Delete all the tasks associated with the deviceId, where status is <status> and severity is <severity>
+        // First, create a bunch of new tasks
+        List<MaintenanceTask> tasks = new ArrayList<>();
+        for(int i = 0; i < 10; i++) {
+            MaintenanceTask task = new MaintenanceTask();
+            task.setSeverity(TaskSeverity.IMPORTANT);
+            task.setStatus(TaskStatus.CLOSED);
+            task.setDeviceId(1L);
+            task.setDescription("This task is about to be deleted lulz");
+            tasks.add(task);
+        }
+        taskRepository.saveAll(tasks);
+        // Assert the existence of the newly created tasks
+        assertFalse(taskRepository.findAllByDeviceIdAndStatusAndSeverity(1L, TaskStatus.CLOSED, TaskSeverity.IMPORTANT).isEmpty());
+        // Delete
+        mvc.perform(MockMvcRequestBuilders.delete("/api/tasks").param("deviceId", "1").param("status", "CLOSED").param("severity", "IMPORTANT").
+                accept(MediaType.APPLICATION_JSON))
+            .andExpect(status().isOk());
+        // Assert the deletion
+        assertTrue(taskRepository.findAllByDeviceIdAndStatusAndSeverity(1L, TaskStatus.CLOSED, TaskSeverity.IMPORTANT).isEmpty());
+    }
 
     @Test
+    public void deleteTasksByDeviceIdAndStatus() throws Exception {
+        // Delete all the tasks associated with the deviceId, where status is <status>
+        // First, create a bunch of new tasks
+        List<MaintenanceTask> tasks = new ArrayList<>();
+        for(int i = 0; i < 10; i++) {
+            MaintenanceTask task = new MaintenanceTask();
+            task.setSeverity(TaskSeverity.IMPORTANT);
+            task.setStatus(TaskStatus.CLOSED);
+            task.setDeviceId(1L);
+            task.setDescription("This task is about to be deleted lulz");
+            tasks.add(task);
+        }
+        taskRepository.saveAll(tasks);
+        // Assert the existence of the newly created tasks
+        assertFalse(taskRepository.findAllByDeviceIdAndStatus(1L, TaskStatus.CLOSED).isEmpty());
+        // Delete
+        mvc.perform(MockMvcRequestBuilders.delete("/api/tasks").param("deviceId", "1").param("status", "CLOSED").
+                accept(MediaType.APPLICATION_JSON))
+            .andExpect(status().isOk());
+        // Assert the deletion
+        assertTrue(taskRepository.findAllByDeviceIdAndStatus(1L, TaskStatus.CLOSED).isEmpty());
+    }
+
+    @Test
+    public void deleteTasksByDeviceIdAndSeverity() throws Exception {
+        // Delete all the tasks associated with the deviceId, where severity is <severity>
+        // First, create a bunch of new tasks
+        List<MaintenanceTask> tasks = new ArrayList<>();
+        for(int i = 0; i < 10; i++) {
+            MaintenanceTask task = new MaintenanceTask();
+            task.setSeverity(TaskSeverity.IMPORTANT);
+            task.setStatus(TaskStatus.CLOSED);
+            task.setDeviceId(1L);
+            task.setDescription("This task is about to be deleted lulz");
+            tasks.add(task);
+        }
+        taskRepository.saveAll(tasks);
+        // Assert the existence of the newly created tasks
+        assertFalse(taskRepository.findAllByDeviceIdAndSeverity(1L, TaskSeverity.IMPORTANT).isEmpty());
+        // Delete
+        mvc.perform(MockMvcRequestBuilders.delete("/api/tasks").param("deviceId", "1").param("severity", "IMPORTANT").
+                accept(MediaType.APPLICATION_JSON))
+            .andExpect(status().isOk());
+        // Assert the deletion
+        assertTrue(taskRepository.findAllByDeviceIdAndSeverity(1L, TaskSeverity.IMPORTANT).isEmpty());
+    }
+
+    @Test
+    public void deleteTasksByStatusAndSeverity() throws Exception {
+        // Delete all the tasks where status is <status> and severity is <severity>
+        // First, create a bunch of new tasks
+        List<MaintenanceTask> tasks = new ArrayList<>();
+        for(int i = 0; i < 10; i++) {
+            MaintenanceTask task = new MaintenanceTask();
+            task.setSeverity(TaskSeverity.IMPORTANT);
+            task.setStatus(TaskStatus.CLOSED);
+            task.setDeviceId(1L);
+            task.setDescription("This task is about to be deleted lulz");
+            tasks.add(task);
+        }
+        taskRepository.saveAll(tasks);
+        // Assert the existence of the newly created tasks
+        assertFalse(taskRepository.findAllByStatusAndSeverity(TaskStatus.CLOSED, TaskSeverity.IMPORTANT).isEmpty());
+        // Delete
+        mvc.perform(MockMvcRequestBuilders.delete("/api/tasks").param("status", "CLOSED").param("severity", "IMPORTANT").
+                accept(MediaType.APPLICATION_JSON))
+            .andExpect(status().isOk());
+        // Assert the deletion
+        assertTrue(taskRepository.findAllByStatusAndSeverity(TaskStatus.CLOSED, TaskSeverity.IMPORTANT).isEmpty());
+    }
+
+    @Test
+    public void deleteTasksByStatus() throws Exception {
+        // Delete all the tasks where status is <status>
+        // First, create a bunch of new tasks
+        List<MaintenanceTask> tasks = new ArrayList<>();
+        for(int i = 0; i < 10; i++) {
+            MaintenanceTask task = new MaintenanceTask();
+            task.setSeverity(TaskSeverity.IMPORTANT);
+            task.setStatus(TaskStatus.CLOSED);
+            task.setDeviceId(1L);
+            task.setDescription("This task is about to be deleted lulz");
+            tasks.add(task);
+        }
+        taskRepository.saveAll(tasks);
+        // Assert the existence of the newly created tasks
+        assertFalse(taskRepository.findAllByStatus(TaskStatus.CLOSED).isEmpty());
+        // Delete
+        mvc.perform(MockMvcRequestBuilders.delete("/api/tasks").param("status", "CLOSED").
+                accept(MediaType.APPLICATION_JSON))
+            .andExpect(status().isOk());
+        // Assert the deletion
+        assertTrue(taskRepository.findAllByStatus(TaskStatus.CLOSED).isEmpty());
+    }
+
+    @Test
+    public void deleteTasksBySeverity() throws Exception {
+        // Delete all the tasks where severity is <severity>
+        // First, create a bunch of new tasks
+        List<MaintenanceTask> tasks = new ArrayList<>();
+        for(int i = 0; i < 10; i++) {
+            MaintenanceTask task = new MaintenanceTask();
+            task.setSeverity(TaskSeverity.IMPORTANT);
+            task.setStatus(TaskStatus.CLOSED);
+            task.setDeviceId(1L);
+            task.setDescription("This task is about to be deleted lulz");
+            tasks.add(task);
+        }
+        taskRepository.saveAll(tasks);
+        // Assert the existence of the newly created tasks
+        assertFalse(taskRepository.findAllBySeverity(TaskSeverity.IMPORTANT).isEmpty());
+        // Delete
+        mvc.perform(MockMvcRequestBuilders.delete("/api/tasks").param("severity", "IMPORTANT").
+                accept(MediaType.APPLICATION_JSON))
+            .andExpect(status().isOk());
+        // Assert the deletion
+        assertTrue(taskRepository.findAllBySeverity(TaskSeverity.IMPORTANT).isEmpty());
+    }
+    
+    @Test
     public void deleteTasksDeviceNotFound() throws Exception {
-        // Should return isNotFound()
+        // Should return isOk(), even though nothing happens
         mvc.perform(MockMvcRequestBuilders.delete("/api/tasks").param("deviceId", "123456789").accept(MediaType.APPLICATION_JSON))
-            .andExpect(status().isNotFound());
+            .andExpect(status().isOk());
     }
 }
 

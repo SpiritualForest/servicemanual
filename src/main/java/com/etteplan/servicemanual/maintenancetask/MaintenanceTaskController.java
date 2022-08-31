@@ -122,19 +122,62 @@ class MaintenanceTaskController {
         return addHyperlinks(deviceId, tasks);
     }
 
+    /* NOTE: all DELETE requests always return 200, even if nothing was actually removed.
+     * This is done to maintain consistency across the API. Rather than treating the device as a special parameter,
+     * it is treated as just another filtration parameter like status and severity.
+     * If no tasks attached to the device are found, the result is simply that nothing happens.
+     * This is consistent with deletion requests filtering without a deviceId, only status and/or severity. */
+
     // Delete all tasks for this deviceId
     @DeleteMapping(path = "/api/tasks", params = { "deviceId" })
-    void deleteDeviceTasks(@RequestParam Long deviceId) {
-        if (!deviceRepository.existsById(deviceId)) {
-            throw new FactoryDeviceNotFoundException(deviceId);
-        }
+    void deleteTasks(@RequestParam Long deviceId) {
         List<MaintenanceTask> tasks = taskRepository.findAllByDeviceId(deviceId);
         taskRepository.deleteAll(tasks);
     }
 
-    // Delete all tasks
+    // Delete all tasks for deviceId with status
+    @DeleteMapping(path = "/api/tasks", params = { "deviceId", "status" })
+    void deleteTasks(@RequestParam Long deviceId, @RequestParam TaskStatus status) {
+        List<MaintenanceTask> tasks = taskRepository.findAllByDeviceIdAndStatus(deviceId, status);
+        taskRepository.deleteAll(tasks);
+    }
+    
+    // Delete by deviceId, status, severity
+    @DeleteMapping(path = "/api/tasks", params = { "deviceId", "status", "severity" })
+    void deleteTasks(@RequestParam Long deviceId, TaskStatus status, TaskSeverity severity) {
+        List<MaintenanceTask> tasks = taskRepository.findAllByDeviceIdAndStatusAndSeverity(deviceId, status, severity);
+        taskRepository.deleteAll(tasks);
+    }
+
+    // Delete by deviceId and severity
+    @DeleteMapping(path = "/api/tasks", params = { "deviceId", "severity" })
+    void deleteTasks(@RequestParam Long deviceId, @RequestParam TaskSeverity severity) {
+        List<MaintenanceTask> tasks = taskRepository.findAllByDeviceIdAndSeverity(deviceId, severity);
+        taskRepository.deleteAll(tasks);
+    }
+
+    // Delete by status and severity (no device)
+    @DeleteMapping(path = "/api/tasks", params = { "status", "severity" })
+    void deleteTasks(@RequestParam TaskStatus status, @RequestParam TaskSeverity severity) {
+        List<MaintenanceTask> tasks = taskRepository.findAllByStatusAndSeverity(status, severity);
+        taskRepository.deleteAll(tasks);
+    }
+
+    // Delete by status only
+    @DeleteMapping(path = "/api/tasks", params = { "status" })
+    void deleteTasks(@RequestParam TaskStatus status) {
+        taskRepository.deleteAll(taskRepository.findAllByStatus(status));
+    }
+
+    // Delete by severity only
+    @DeleteMapping(path = "/api/tasks", params = { "severity" })
+    void deleteTasks(@RequestParam TaskSeverity severity) {
+        taskRepository.deleteAll(taskRepository.findAllBySeverity(severity));
+    }
+
+    // Delete all tasks from the database, no filter
     @DeleteMapping("/api/tasks")
-    void deleteAllTasks() {
+    void deleteTasks() {
         taskRepository.deleteAll();
     }
     

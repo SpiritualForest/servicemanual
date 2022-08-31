@@ -11,10 +11,10 @@ import java.util.List;
 
 public interface MaintenanceTaskRepository extends JpaRepository<MaintenanceTask, Long> { 
     
-    // ... where deviceId = <deviceId> order by severity desc, registered
+    // ... where deviceId = <deviceId> order by severity asc, registered
     List<MaintenanceTask> findAllByDeviceIdOrderBySeverityAscRegistered(Long deviceId);
 
-    // ... order by severity desc, registered
+    // ... order by severity asc, registered
     List<MaintenanceTask> findAllByOrderBySeverityAscRegistered();
     
     // ... where deviceId = <deviceId>
@@ -29,10 +29,30 @@ public interface MaintenanceTaskRepository extends JpaRepository<MaintenanceTask
     // where severity = <severity>
     List<MaintenanceTask> findAllBySeverityOrderBySeverityAscRegistered(TaskSeverity severity);
 
-    // Same as the above methods with severity and status, just including deviceId
+    // where deviceId = <deviceId> AND status = <status> AND severity = <severity> order by severity ASC, registered
     List<MaintenanceTask> findAllByDeviceIdAndStatusAndSeverityOrderBySeverityAscRegistered(Long deviceId, TaskStatus status, TaskSeverity severity);
-
+    
+    // where deviceId = <deviceId> AND status = <status> order by [...]
     List<MaintenanceTask> findAllByDeviceIdAndStatusOrderBySeverityAscRegistered(Long deviceId, TaskStatus status);
 
+    // where deviceId = <deviceId> AND severity = <severity> order by [...]
     List<MaintenanceTask> findAllByDeviceIdAndSeverityOrderBySeverityAscRegistered(Long deviceId, TaskSeverity severity);
+
+    // where deviceId = <deviceId> AND status = <status> (NO sorting)
+    List<MaintenanceTask> findAllByDeviceIdAndStatus(Long deviceId, TaskStatus status);
+    
+    // where deviceId = <deviceId> AND severity = <severity> (NO sorting)
+    List<MaintenanceTask> findAllByDeviceIdAndSeverity(Long deviceId, TaskSeverity severity);
+
+    // where deviceId = <deviceId> AND status = <status> AND severity = <severity> (NO sorting)
+    List<MaintenanceTask> findAllByDeviceIdAndStatusAndSeverity(Long deviceId, TaskStatus status, TaskSeverity severity);
+
+    // where status = <status> (NO sorting)
+    List<MaintenanceTask> findAllByStatus(TaskStatus status);
+
+    // where severity = <severity> (NO sorting)
+    List<MaintenanceTask> findAllBySeverity(TaskSeverity severity);
+
+    // where status = <status> AND severity = <severity> (NO sorting)
+    List<MaintenanceTask> findAllByStatusAndSeverity(TaskStatus status, TaskSeverity severity);
 }
