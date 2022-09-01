@@ -29,7 +29,6 @@ import java.util.Map;
 import java.util.HashMap;
 import java.util.stream.Collectors;
 import java.util.ArrayList;
-import java.lang.reflect.Array;
 
 @RestController
 class MaintenanceTaskController {
@@ -37,17 +36,12 @@ class MaintenanceTaskController {
     private final MaintenanceTaskRepository taskRepository;
     private final FactoryDeviceRepository deviceRepository;
     private final MaintenanceTaskModelAssembler assembler;
+    
     // We need these param objects for creating hyperlinks in responses
     private final Map<String, String> emptyParams = new HashMap<String, String>();
     private Map<String, String> deviceParam = new HashMap<String, String>();
-
-    // Accepted query parameter names
-    // We need to know these so that we can return 400 in case we encounter unknown params
     private final String Q_DEVICEID = "deviceId";
-    private final String Q_STATUS = "status";
-    private final String Q_SEVERITY = "severity";
-    private final List<String> acceptedQueryParameters = new ArrayList<String>(List.of(Q_DEVICEID, Q_STATUS, Q_SEVERITY));
-    
+
     // Our constructor
     public MaintenanceTaskController(MaintenanceTaskRepository taskRepository, FactoryDeviceRepository deviceRepository, MaintenanceTaskModelAssembler assembler) {
         this.taskRepository = taskRepository;

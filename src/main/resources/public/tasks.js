@@ -268,7 +268,7 @@ function deleteAllTasks() {
     }
     // Confirmed that the user wants to delete.
     let queryParams = new URLSearchParams();
-    let endpoint;
+    let endpoint = "/api/tasks";
     if (document.getElementById("filter-tasks").checked) {
         // Parameters apply to the deletion request
         let deviceId = document.getElementById("select-filter-tasks-device").value;
@@ -283,12 +283,7 @@ function deleteAllTasks() {
         if (taskSeverity != -1) {
             queryParams.append("severity", taskSeverity);
         }
-        endpoint = "/api/tasks?" + queryParams;
-    }
-    else {
-        // No filters. This means we delete literally ALL existing tasks from the database.
-        // We need to use the special endpoint for this.
-        endpoint = "/api/tasks/all";
+        endpoint += "?" + queryParams;
     }
     // Perform the request
     fetch(endpoint, {
