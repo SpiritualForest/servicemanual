@@ -19,28 +19,6 @@ Endpoints:
 /api/tasks/taskId - GET, PUT, DELETE. Retrieve, update, or delete the task with the given taskId. taskId is an integer. The body for the PUT request is the same as in the /api/tasks/create POST request. View the definition for 'MaintenanceTask' in api.yml.  
 /api/tasks/all - DELETE. Special endpoint to delete all tasks from the database.
 
-#### Note on query parameters and request mapping:
-Requests are mapped according to the best matching path and parameter combination.  
-If a request has one good parameter (such as deviceId), and several parameters that don't exist,  
-then the function that handles only requests with the deviceId parameter present will be called.  
-
-If none of the parameters match anything, or if the framework can't convert a validly name parameter's data into the entity's required data type, HTTP 400 "bad request" is returned.
-
-Query examples and resulting status responses:
-```
-GET http://localhost:8080/api/tasks?deviceId=1 - results in 200.
-Returns the object that contains an array of MaintenanceTask objects, links, etc.
-
-GET http://localhost:8080/api/tasks?status=NO_SUCH_STATUS - reuslts in 400 BAD REQUEST,
-because Hibernate can't map this value to a correct TaskStatus enum value.
-
-DELETE http://localhost:8080/api/tasks?deviceId=1&no_such_param=no_such_value - 200, 
-all tasks attached to deviceId 1 are deleted. This happens because Spring Boot doesn't find a parameter mapping for "no_such_param", but "deviceId" is correct, so it executes the function that accepts only "deviceId" as a query parameter.
-
-DELETE http://localhost:8080/api/tasks?status=CLOSED&severity=NO_SUCH_SEVERITY - 400 BAD REQUEST,
-because "NO_SUCH_SEVERITY" cannot be correctly converted to a TaskSeverity enum value.
-```
-
 MaintenanceTask object example:
 ```
 {

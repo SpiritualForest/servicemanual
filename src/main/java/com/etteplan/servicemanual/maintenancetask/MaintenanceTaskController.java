@@ -78,142 +78,27 @@ class MaintenanceTaskController {
     }
 
     // MAPPING: /api/tasks
-    // TODO: clean this mess up. This is horrible.
     
     @GetMapping("/api/tasks")
-    ResponseEntity<Object> all(@RequestParam Map<String, String> params) {
-        if (params.size() == 0) {
+    ResponseEntity<Object> all(@RequestParam Map<String, String> queryParameters) {
+        if (queryParameters.size() == 0) {
             // No query parameters supplied. Return all tasks.
             return ResponseEntity.ok().body(addHyperlinks(null, taskRepository.findAllByOrderBySeverityAscRegistered()));
         }
         
         // There are query parameters
-        TaskStatus status = null;
-        TaskSeverity severity = null;
-        Long deviceId = null;
-        List<MaintenanceTask> response = new ArrayList<>();
-
-        for(String param : params.keySet()) {
-            if (!this.acceptedQueryParameters.contains(param)) {
-                // No such parameter, return 400 bad request
-                return ResponseEntity.badRequest().body(String.format("Bad request: unknown parameter '%s'", param));
-            }
-            else {
-                // Parameter name exists, now let's check that the data is valid
-                String value = params.get(param);
-                switch(param) {
-                    case Q_STATUS:
-                        try {
-                            status = TaskStatus.valueOf(value);
-                        }
-                        catch(IllegalArgumentException ex) {
-                            // Bad task status, return 400
-                            return ResponseEntity.badRequest().body(
-                                    String.format("Bad request: could not covert status '%s'. Available values are 'OPEN' and 'CLOSED'", value));
-                        }
-                        break;
-                    case Q_SEVERITY:
-                        try { 
-                            severity = TaskSeverity.valueOf(value);
-                        }
-                        catch(IllegalArgumentException ex) {
-                            // Bad severity
-                            return ResponseEntity.badRequest().body(
-                                    String.format("Bad request: could not convert severity '%s'. Available values are 'UNIMPORTANT', 'IMPORTANT', 'CRITICAL'", value));
-                        }
-                        break;
-                    case Q_DEVICEID:
-                        try {
-                            deviceId = Long.parseLong(value);
-                        }
-                        catch(IllegalArgumentException ex) {
-                            // Not a number
-                            return ResponseEntity.badRequest().body(String.format("Bad request: could not convert deviceId '%s'. Must be an integer.", value));
-                        }
-                        break;
-                }
-            }
+        // Create a new QueryResolver object with our task repository and supplied query parameters
+        List<MaintenanceTask> tasks = new ArrayList<>();
+        QueryResolver resolver = new QueryResolver(taskRepository, queryParameters);
+        try {
+            tasks = resolver.resolveQuery();
         }
-        // Now that we've initialized our query parameters, we need to choose which method to call.
-        // Why doesn't Java have a spread operator like Python, or Kotlin :'(
-        if (deviceId == null) {
-            // No device
-            if (status != null && severity != null) {
-                response = all(status, severity);
-            }
-            else if (status != null) {
-                response = all(status);
-            }
-            else {
-                response = all(severity);
-            }
+        catch(QueryParameterException ex) {
+            return ResponseEntity.badRequest().body(ex.getMessage());
         }
-        else {
-            if (status != null && severity != null) {
-                response = all(deviceId, status, severity);
-            }
-            else if (status != null) {
-                response = all(deviceId, status);
-            }
-            else if (severity != null) {
-                response = all(deviceId, severity);
-            }
-            else {
-                response = all(deviceId);
-            }
-        }
-        return ResponseEntity.ok().body(addHyperlinks(deviceId, response));
+        return ResponseEntity.ok().body(addHyperlinks(resolver.getDeviceId(), tasks));
     }
 
-    List<MaintenanceTask> all(TaskStatus status, TaskSeverity severity) {
-        // Filter by both, no device 
-        return taskRepository.findAllByStatusAndSeverityOrderBySeverityAscRegistered(status, severity);
-    }
-
-    List<MaintenanceTask> all(TaskStatus status) {
-        // Filter by status, no device
-        return taskRepository.findAllByStatusOrderBySeverityAscRegistered(status);
-    }
-
-    List<MaintenanceTask> all(TaskSeverity severity) {
-        // Filters by severity, no device
-        return taskRepository.findAllBySeverityOrderBySeverityAscRegistered(severity);
-    }
-    
-    List<MaintenanceTask> all() {
-        // Query with no filter, fetches all existing tasks
-        return taskRepository.findAllByOrderBySeverityAscRegistered();
-    }
-
-    // Filter tasks first by deviceId, then status and severity according to other parameters passed
-    
-    List<MaintenanceTask> all(Long deviceId) {
-        // Fetch all associated with this device 
-        return taskRepository.findAllByDeviceIdOrderBySeverityAscRegistered(deviceId);
-    }
-
-    List<MaintenanceTask> all(Long deviceId, TaskStatus status, TaskSeverity severity) {
-        // Device, status, severity
-        return taskRepository.findAllByDeviceIdAndStatusAndSeverityOrderBySeverityAscRegistered(deviceId, status, severity);
-    }
-
-    List<MaintenanceTask> all(Long deviceId, TaskStatus status) {
-        // Device and status
-        return taskRepository.findAllByDeviceIdAndStatusOrderBySeverityAscRegistered(deviceId, status);
-    }
-
-    List<MaintenanceTask> all(Long deviceId, TaskSeverity severity) {
-        // Device and severity
-        return taskRepository.findAllByDeviceIdAndSeverityOrderBySeverityAscRegistered(deviceId, severity);
-    }
-
-    /* NOTE: all DELETE requests always return 200, even if nothing was actually removed.
-     * This is done to maintain consistency across the API. Rather than treating the device as a special parameter,
-     * it is treated as just another filtration parameter like status and severity.
-     * If no tasks attached to the device are found, the result is simply that nothing happens.
-     * This is consistent with deletion requests filtering without a deviceId, only status and/or severity. */
-
-    // Delete all tasks for this deviceId
     @DeleteMapping(path = "/api/tasks", params = { "deviceId" })
     void deleteTasks(@RequestParam Long deviceId) {
         List<MaintenanceTask> tasks = taskRepository.findAllByDeviceId(deviceId);
