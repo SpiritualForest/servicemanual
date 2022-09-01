@@ -8,32 +8,41 @@ import java.util.Arrays;
 // This class resolves which database query method must be called based
 // on the given query parameter values.
 
-class QueryResolver {
-    
-    private final MaintenanceTaskRepository taskRepository;
+/* The class is instantiated with a MaintenanceTaskRepository and a Map<String, String>
+ * of query parameters for resolution.
+ * After instantiating, we need to explicitly call resolveQuery(), which will resolve the query
+ * and fetch tasks from the database based on the parameters, OR throw a QueryParameterException
+ * in case there was a problem with the parameters. */
 
+class QueryResolver {
+    private final MaintenanceTaskRepository taskRepository;
     // Query parameter names
     private final String Q_DEVICEID = "deviceId";
     private final String Q_STATUS = "status";
     private final String Q_SEVERITY = "severity";
     private final List<String> acceptedQueryParameters = Arrays.asList(Q_DEVICEID, Q_STATUS, Q_SEVERITY);
-    private Map<String, String> parameters;
 
     private Long deviceId = null;
     private TaskStatus status = null;
     private TaskSeverity severity = null;
 
+    private final Map<String, String> parameters;
+
     public Long getDeviceId() {
         return this.deviceId;
     }
 
-    public QueryResolver(MaintenanceTaskRepository taskRepository, Map<String, String> queryParameters) {
+    public QueryResolver(MaintenanceTaskRepository taskRepository, Map<String, String> parameters) { 
         this.taskRepository = taskRepository;
-        this.parameters = queryParameters;
+        this.parameters = parameters;
     }
 
     public List<MaintenanceTask> resolveQuery() throws QueryParameterException {
-        // Resolve the query parameters.
+        if (parameters.size() == 0) {
+            // No parameters were actually supplied. Fetch all tasks.
+            return taskRepository.findAllByOrderBySeverityAscRegistered();
+        }
+        // Parameters were supplied. Resolve.
         
         // Some informational messages in case of an exception.
         String unknown = "Bad request: unknown parameter '%s'";
@@ -77,6 +86,7 @@ class QueryResolver {
                 }
             }
         }
+        // Query the database
         return queryDatabase();
     }
 

@@ -42,6 +42,8 @@ class MaintenanceTaskController {
     private Map<String, String> deviceParam = new HashMap<String, String>();
     private final String Q_DEVICEID = "deviceId";
 
+    private QueryResolver queryResolver;
+
     // Our constructor
     public MaintenanceTaskController(MaintenanceTaskRepository taskRepository, FactoryDeviceRepository deviceRepository, MaintenanceTaskModelAssembler assembler) {
         this.taskRepository = taskRepository;
@@ -72,6 +74,14 @@ class MaintenanceTaskController {
     }
 
     // MAPPING: /api/tasks
+
+    List<MaintenanceTask> fetchTasks(Map<String, String> queryParameters) throws QueryParameterException {
+        // Creates a new instance of our query resolver with our task repository
+        // and the map of parameters for resolving.
+        // An exception will be raised if the parameters are malformed or unknown.
+        this.queryResolver = new QueryResolver(taskRepository, queryParameters);
+        return queryResolver.resolveQuery();
+    }
     
     /* We do our own resolution of queries to validate the request.
      * If a query parameter is bad in some way, such as not convertable to its required type, or unknown,
@@ -79,47 +89,29 @@ class MaintenanceTaskController {
     
     @GetMapping("/api/tasks")
     ResponseEntity<Object> all(@RequestParam Map<String, String> queryParameters) {
-        if (queryParameters.size() == 0) {
-            // No query parameters supplied. Return all tasks.
-            return ResponseEntity.ok().body(addHyperlinks(null, taskRepository.findAllByOrderBySeverityAscRegistered()));
-        }
-        
-        // There are query parameters
-        // Create a new QueryResolver object with our task repository and supplied query parameters
-        List<MaintenanceTask> tasks = new ArrayList<>();
-        QueryResolver resolver = new QueryResolver(taskRepository, queryParameters);
+        // Fetch tasks
         try {
-            tasks = resolver.resolveQuery();
+            List<MaintenanceTask> tasks = fetchTasks(queryParameters);
+            return ResponseEntity.ok().body(addHyperlinks(queryResolver.getDeviceId(), tasks));
         }
         catch(QueryParameterException ex) {
             // Got a bad parameter. We do not proceed.
             return ResponseEntity.badRequest().body(ex.getMessage());
         }
-        return ResponseEntity.ok().body(addHyperlinks(resolver.getDeviceId(), tasks));
     }
     
     @DeleteMapping("/api/tasks")
     ResponseEntity<String> deleteTasks(@RequestParam Map<String, String> queryParameters) {
-        if (queryParameters.size() == 0) {
-            // No query parameters.
-            // NOTE: DANGER, DANGER, DANGER!!!
-            // We delete ALL tasks from the database here.
-            taskRepository.deleteAll();
-            return ResponseEntity.ok().body("All tasks deleted.");
-        }
-        // Resolve our query parameters.
-        List<MaintenanceTask> tasks = new ArrayList<>();
-        QueryResolver resolver = new QueryResolver(taskRepository, queryParameters);
+        // Delete tasks
         try {
-            tasks = resolver.resolveQuery();
+            List<MaintenanceTask> tasks = fetchTasks(queryParameters);
+            taskRepository.deleteAll(tasks);
+            return ResponseEntity.ok().body("Tasks deleted.");
         }
         catch(QueryParameterException ex) {
             // Got a bad parameter.
             return ResponseEntity.badRequest().body(ex.getMessage());
         }
-        // Parameters have been validated, proceed with deletion
-        taskRepository.deleteAll(tasks);
-        return ResponseEntity.ok().body("Tasks deleted.");
     }
 
     // MAPPING: /api/tasks/{taskId}

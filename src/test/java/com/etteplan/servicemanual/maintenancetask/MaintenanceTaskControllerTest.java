@@ -72,6 +72,7 @@ public class MaintenanceTaskControllerTest {
             tasks.add(task);
         }
         taskRepository.saveAll(tasks);
+        assertFalse(taskRepository.findAllByStatus(TaskStatus.CLOSED).isEmpty());
         // Make the request, status closed, severity critical
         MvcResult result = mvc.perform(MockMvcRequestBuilders.get("/api/tasks").param("status", "CLOSED").param("severity", "CRITICAL")
                 .accept(MediaType.APPLICATION_JSON))
@@ -361,6 +362,29 @@ public class MaintenanceTaskControllerTest {
             .andExpect(status().isBadRequest()).andReturn();
     }
 
+    @Test
+    public void modifyTaskNonExistentProperty() throws Exception {    
+        // Create a task and try to modify it, but pass an unknown property in the body
+        // Should return 400 bad request
+        MaintenanceTask newTask = new MaintenanceTask();
+        newTask.setSeverity(TaskSeverity.IMPORTANT);
+        newTask.setStatus(TaskStatus.OPEN);
+        newTask.setDescription("A test task");
+        newTask.setDeviceId(1L);
+        newTask = taskRepository.save(newTask); // to get the id
+        // Now try to modify it
+        String json = "{\"status\": \"CLOSED\", \"description\": \"A test task\", \"deviceId\": 1, \"severity\": \"IMPORTANT\", \"unknownKey\": \"unknownValue\"}"; 
+        MvcResult result = mvc.perform(MockMvcRequestBuilders.put(String.format("/api/tasks/%d", newTask.getId())).accept(MediaType.APPLICATION_JSON)
+                .contentType(MediaType.APPLICATION_JSON).content(json))
+            .andExpect(status().isBadRequest()).andReturn();
+        System.out.println(result.getResponse().getContentAsString());
+        // Now also load up the task object from the repository and compare the status
+        // It should still be OPEN, as the modification should have been aborted
+        MaintenanceTask modifiedTask = taskRepository.findById(newTask.getId()).get();
+        assertEquals(newTask.getId(), modifiedTask.getId());
+        assertEquals(TaskStatus.OPEN, modifiedTask.getStatus());
+    }
+
     // DELETE
 
     @Test
@@ -574,31 +598,68 @@ public class MaintenanceTaskControllerTest {
     @Test
     public void deleteTaskGarbageParams() throws Exception {
         // Delete tasks with garbage parameters - should return 400 bad request
+        MaintenanceTask task = new MaintenanceTask();
+        task.setDeviceId(1L);
+        task.setStatus(TaskStatus.CLOSED);
+        task.setSeverity(TaskSeverity.CRITICAL);
+        task.setDescription("A task created in our tests :)");
+        task = taskRepository.save(task);
         mvc.perform(MockMvcRequestBuilders.delete("/api/tasks").param("deviceId", "lulzbad").accept(MediaType.APPLICATION_JSON))
             .andExpect(status().isBadRequest());
+        // Assert that nothing was deleted
+        assertFalse(taskRepository.findAll().isEmpty());
+        assertTrue(taskRepository.existsById(task.getId()));
     }
 
     @Test
     public void deleteTaskNonExistentParam() throws Exception {
         // Delete a task, but make the query with a non existent parameter name.
         // Should return 400 with the request not being mapped anywhere.
+        MaintenanceTask task = new MaintenanceTask();
+        task.setDeviceId(1L);
+        task.setStatus(TaskStatus.CLOSED);
+        task.setSeverity(TaskSeverity.CRITICAL);
+        task.setDescription("A task created in our tests :)"); 
+        task = taskRepository.save(task);
         mvc.perform(MockMvcRequestBuilders.delete("/api/tasks").param("lolshit", "lulzcrap").accept(MediaType.APPLICATION_JSON))
             .andExpect(status().isBadRequest());
+        // Assert that no tasks were deleted and that our created task still exists
+        assertFalse(taskRepository.findAll().isEmpty());
+        assertTrue(taskRepository.existsById(task.getId()));
     }
 
     @Test
     public void deleteTaskGoodAndGarbageParam() throws Exception {
         // Delete a task, pass one valid parameter, and one garbage parameter
         // It should just delete the tasks with the deviceId.
+        MaintenanceTask task = new MaintenanceTask();
+        task.setDeviceId(1L);
+        task.setStatus(TaskStatus.CLOSED);
+        task.setSeverity(TaskSeverity.CRITICAL);
+        task.setDescription("A task created in our tests :)");
+        task = taskRepository.save(task);
         mvc.perform(MockMvcRequestBuilders.delete("/api/tasks").param("deviceId", "1").param("lolshit", "lulzies").accept(MediaType.APPLICATION_JSON))
             .andExpect(status().isBadRequest());
+        // Assert that no tasks were deleted and that our created task specifically still exists
+        assertFalse(taskRepository.findAllByDeviceId(1L).isEmpty());
+        assertTrue(taskRepository.existsById(task.getId()));
     }
 
     @Test
     public void deleteTaskValidAndInvalidParams() throws Exception {
         // Delete a task, pass one valid parameter, and one invalid parameter (that can't be converted to its type)
+        MaintenanceTask task = new MaintenanceTask();
+        task.setDeviceId(1L);
+        task.setStatus(TaskStatus.CLOSED);
+        task.setSeverity(TaskSeverity.CRITICAL);
+        task.setDescription("A task created in our tests :)");
+        task = taskRepository.save(task);
         mvc.perform(MockMvcRequestBuilders.delete("/api/tasks").param("deviceId", "1").param("status", "FUCKITHAHAHAHAHA").accept(MediaType.APPLICATION_JSON))
             .andExpect(status().isBadRequest());
+        // Assert that no tasks for device ID 1 were deleted
+        assertFalse(taskRepository.findAllByDeviceId(1L).isEmpty());
+        // Assert that our newly created task still exists
+        assertTrue(taskRepository.existsById(task.getId()));
     }
     
     @Test
@@ -606,6 +667,8 @@ public class MaintenanceTaskControllerTest {
         // Should return isOk(), even though nothing happens
         mvc.perform(MockMvcRequestBuilders.delete("/api/tasks").param("deviceId", "123456789").accept(MediaType.APPLICATION_JSON))
             .andExpect(status().isOk());
+        // Assert that no tasks were deleted
+        assertFalse(taskRepository.findAll().isEmpty());
     }
 }
 
