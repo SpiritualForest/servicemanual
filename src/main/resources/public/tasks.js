@@ -1,5 +1,4 @@
-// This JavaScript file interacts with the API using fetch()
-// and whatever else. Coming soon.
+// All of the front-end's interactions with the REST API are handled here.
 
 /* Add task modal functions */
 
@@ -75,6 +74,9 @@ function fetchDevices() {
         if (response.ok) {
             return response.json();
         }
+        else {
+            throw response;
+        }
     })
     .then(devices => {
         for(let device of devices) {
@@ -128,6 +130,9 @@ function fetchTasks() {
         if (response.ok) {
             return response.json();
         }
+        else {
+            throw response;
+        }
     })
     .then(tasks => {
         fillTasksTable(tasks);
@@ -144,6 +149,25 @@ function fillTasksTable(tasks) {
         // 1, not 0, because the first row is all the headers and we want to skip that
         tableElement.deleteRow(1);
     }
+    
+    if (!("_embedded" in tasks)) {
+        // If _embedded is not found in the object, it means no tasks were returned.
+        // We do not proceed.
+        return;
+    }
+
+    // Find the "Severity" cell.
+    // We need to do this so that we can set its text colour to red
+    // in case the severity of the task is critical.
+    let severityCell = 0;
+    let headerRowCells = tableElement.rows[0].cells;
+    for(let i = 0; i < headerRowCells.length; i++) {
+        if (headerRowCells[i].innerHTML.toLowerCase() === "severity") {
+            severityCell = i;
+            break;
+        }
+    }
+    // Forgive me for setting styles through JS :(
     for(let task of tasks["_embedded"]["maintenanceTaskList"]) {
         let id = task.id;
         let deviceId = task.deviceId;
@@ -155,14 +179,13 @@ function fillTasksTable(tasks) {
         let row = tableElement.insertRow();
         let allData = [id, deviceId, taskStatus, taskSeverity, description, registered];
         for(let x in allData) {
-            // FIXME: hard coded values are BAD. Find a better way.
             let cell = row.insertCell(x);
             cell.innerHTML = allData[x];
-            if (x == 3 && allData[x] == "CRITICAL") {
-                // Severity - we want to highlight critical tasks by making them red
-                cell.style.color = "red";
-                cell.style.fontWeight = "bold";
-            }
+        }
+        if (row.cells[severityCell].innerHTML.toLowerCase() == "critical") {
+            // Set bold red font if the severity is critical
+            row.cells[severityCell].style.color = "red";
+            row.cells[severityCell].style.fontWeight = "bold";
         }
         // Now add a cell that contains the actions
         let actionCell = row.insertCell(allData.length);
@@ -333,7 +356,7 @@ function actionMsg(message, isError) {
     // Also shows errors.
     // Displays the check icon or error icon depending on whether the operation
     // succeeded or failed.
-    document.getElementById("information-text").innerHTML = message;
+    document.getElementById("information-text").innerHTML = message; // <p> element
     if (!isError) {
         // Success
         document.getElementById("check-img").style.display = "inline";
