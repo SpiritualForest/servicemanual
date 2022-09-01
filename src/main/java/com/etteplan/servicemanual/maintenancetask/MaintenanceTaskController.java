@@ -70,7 +70,7 @@ class MaintenanceTaskController {
     
     @GetMapping(path = "/api/tasks", params = { "status", "severity" })
     CollectionModel<EntityModel<MaintenanceTask>> all(@RequestParam TaskStatus status, @RequestParam TaskSeverity severity) {
-        // Filter by both, no device
+        // Filter by both, no device 
         List<MaintenanceTask> tasks = taskRepository.findAllByStatusAndSeverityOrderBySeverityAscRegistered(status, severity);
         return addHyperlinks(null, tasks);
     }
@@ -100,7 +100,7 @@ class MaintenanceTaskController {
     
     @GetMapping(path = "/api/tasks", params = { "deviceId" })
     CollectionModel<EntityModel<MaintenanceTask>> all(@RequestParam Long deviceId) {
-        // Fetch all associated with this device
+        // Fetch all associated with this device 
         List<MaintenanceTask> tasks = taskRepository.findAllByDeviceIdOrderBySeverityAscRegistered(deviceId);
         return addHyperlinks(deviceId, tasks);
     }

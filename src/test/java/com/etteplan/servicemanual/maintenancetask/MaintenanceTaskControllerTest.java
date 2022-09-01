@@ -122,6 +122,20 @@ public class MaintenanceTaskControllerTest {
     }
 
     @Test
+    public void getMaintenanceTasksGarbageParam() throws Exception {
+        // Try to get it with a param that can't be converted to its type
+        mvc.perform(MockMvcRequestBuilders.get("/api/tasks").param("status", "NO_SUCH_STATUS").accept(MediaType.APPLICATION_JSON))
+            .andExpect(status().isBadRequest());
+    }
+
+    @Test
+    public void getMaintenanceTasksNonExistentParams() throws Exception {
+        // Get tasks with query params that don't match anything. Should fetch all tasks and return 200
+        mvc.perform(MockMvcRequestBuilders.get("/api/tasks").param("no_such_param", "no_such_value").accept(MediaType.APPLICATION_JSON))
+            .andExpect(status().isOk());
+    }
+
+    @Test
     public void getSingleTask() throws Exception {
         MaintenanceTask task = new MaintenanceTask();
         task.setSeverity(TaskSeverity.UNIMPORTANT);
@@ -134,8 +148,29 @@ public class MaintenanceTaskControllerTest {
     }
 
     @Test
+    public void getSingleTaskWithParams() throws Exception {
+        // Getting a single task doesn't support any query parameters, so they should just be discarded.
+        // The task should be fetched, status 200.
+        MaintenanceTask task = new MaintenanceTask();
+        task.setSeverity(TaskSeverity.IMPORTANT);
+        task.setStatus(TaskStatus.CLOSED);
+        task.setDescription("Some description");
+        task.setDeviceId(1L);
+        task = taskRepository.save(task);
+        mvc.perform(MockMvcRequestBuilders.get(String.format("/api/tasks/%d", task.getId())).param("nosuchparam", "nosuchvalue").accept(MediaType.APPLICATION_JSON))
+            .andExpect(status().isOk());
+    }
+
+    @Test
     public void getSingleTaskNotFound() throws Exception {
         mvc.perform(MockMvcRequestBuilders.get("/api/tasks/123456789").accept(MediaType.APPLICATION_JSON))
+            .andExpect(status().isNotFound());
+    }
+
+    @Test
+    public void getSingleTaskNotFoundWithParams() throws Exception {
+        // Should return isNotFound
+        mvc.perform(MockMvcRequestBuilders.get("/api/tasks/123456789").param("param", "value").accept(MediaType.APPLICATION_JSON))
             .andExpect(status().isNotFound());
     }
 
@@ -215,6 +250,21 @@ public class MaintenanceTaskControllerTest {
         }
     }
 
+    @Test
+    public void getTasksFilterNonExistentParam() throws Exception {
+        // Filter tasks by one good parameter, and one garbage parameter that can't be correctly mapped.
+        // It should just return all tasks filtered by deviceId 1, status 200.
+        mvc.perform(MockMvcRequestBuilders.get("/api/tasks").param("deviceId", "1").param("nosuchparam", "nosuchval").accept(MediaType.APPLICATION_JSON)).
+            andExpect(status().isOk());
+    }
+
+    @Test
+    public void getTasksFilterGarbageParam() throws Exception {
+        // One good param, one garbage param that can't be converted to its correct type. Should return 400
+        mvc.perform(MockMvcRequestBuilders.get("/api/tasks").param("deviceId", "1").param("status", "nosuchstatus").accept(MediaType.APPLICATION_JSON)).
+            andExpect(status().isBadRequest());
+    }
+
     // POST
 
     @Test
@@ -243,6 +293,15 @@ public class MaintenanceTaskControllerTest {
         MvcResult result = mvc.perform(MockMvcRequestBuilders.post("/api/tasks/create").accept(MediaType.APPLICATION_JSON)
                 .contentType(MediaType.APPLICATION_JSON).content(json))
             .andExpect(status().isBadRequest()).andReturn();
+    }
+
+    @Test
+    public void addTaskNonExistentKeyValuePair() throws Exception {
+        // Add it with a non existent key/value pair - should return 400
+        String json = "{\"deviceId\": 1, \"status\": \"OPEN\", \"severity\": \"CRITICAL\", \"description\": \"Major fixes of security holes\", \"randomkey\": \"randomvalue\"}";
+        mvc.perform(MockMvcRequestBuilders.post("/api/tasks/create").accept(MediaType.APPLICATION_JSON)
+                .contentType(MediaType.APPLICATION_JSON).content(json))
+            .andExpect(status().isBadRequest());
     }
 
     @Test
