@@ -16,7 +16,7 @@ body {
     margin-bottom: 20px;
 }
 
-.nav-link {
+.nav-link, .action-msg {
     color: white;
     text-decoration: none;
     font-family: sans-serif;
@@ -28,7 +28,7 @@ body {
     color: #d3d3d3;
 }
 
-.information-text {
+.action-msg {
     display: inline;
 }
 
@@ -37,7 +37,7 @@ body {
     align-items: center;
 }
 
-.check-img {
+.info-img {
     width: 20px;
     height: 20px;
     display: none; /* Hidden until we perform an action */

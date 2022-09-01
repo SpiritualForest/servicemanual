@@ -8,6 +8,7 @@ import javax.persistence.GenerationType;
 import javax.persistence.EnumType;
 import javax.persistence.Id;
 import javax.validation.constraints.NotNull;
+import javax.validation.constraints.NotEmpty;
 import java.time.LocalDateTime;
 
 @Entity
@@ -30,6 +31,7 @@ public class MaintenanceTask {
     private TaskStatus status; // Open or closed
     
     @NotNull
+    @NotEmpty
     private String description;
     
     private LocalDateTime registered; // FIXME: we might have to use int or some other type here, depending on the database

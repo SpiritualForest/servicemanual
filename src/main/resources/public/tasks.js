@@ -24,6 +24,11 @@ function saveNewTask(modalDiv) {
     // Escape the HTML - we don't want XSS attacks :)
     taskDescription = taskDescription.replace(/</g, "&lt;");
     taskDescription = taskDescription.replace(/>/g, "&gt");
+    
+    if (taskDescription == "") {
+        errorMsg("Error creating task: description is required");
+        return;
+    }
 
     let taskObj = {
         deviceId: deviceId,
@@ -40,8 +45,11 @@ function saveNewTask(modalDiv) {
     }).then(response => {
         if (response.status === 201) {
             // Successfully created the resource
-            actionMsg("Task created successfully");
+            successMsg("Task created successfully");
             return response.json();
+        }
+        else {
+            throw response;
         }
     }).then(() => {
         // Close the modal and fetch all the tasks again to refresh the tasks lists.
@@ -49,7 +57,8 @@ function saveNewTask(modalDiv) {
         fetchTasks();
     })
     .catch(err => {
-        console.log("Error: " + err);
+        errorMsg("Error creating task");
+        console.log(err);
     })
 }
 
@@ -88,7 +97,8 @@ function fetchDevices() {
             editTaskSelectDevice.appendChild(optionElementEditTask);
         }
     }).catch(err => {
-        console.log("Error fetching devices: " + err);
+        errorMsg(err);
+        console.log(err);
     })
 }
 
@@ -122,7 +132,8 @@ function fetchTasks() {
     .then(tasks => {
         fillTasksTable(tasks);
     }).catch(err => {
-        console.log("Error: " + err);
+        errorMsg(err);
+        console.log(err);
     })
 }
 
@@ -210,7 +221,12 @@ function saveEditedTask() {
     // Escape the HTML - we don't want XSS attacks :)
     description = description.replace(/</g, "&lt;");
     description = description.replace(/>/g, "&gt");
-
+    
+    if (description == "") {
+        errorMsg("Error saving changes: description is required");
+        return;
+    }
+    
     let endpoint = `/api/tasks/${taskId}`;
 
     let taskObj = {
@@ -228,7 +244,7 @@ function saveEditedTask() {
     }).then(response => {
         if (response.status === 200) {
             // Successfully modified the resource
-            actionMsg("Changes saved successfully");
+            successMsg("Changes saved successfully");
             return response.json();
         }
     }).then(() => {
@@ -237,7 +253,8 @@ function saveEditedTask() {
         fetchTasks();
     })
     .catch(err => {
-        console.log("Error: " + err);
+        errorMsg(err);
+        console.log(err);
     })
 }
 
@@ -252,11 +269,12 @@ function deleteTask(id) {
     }).then(response => {
         if (response.ok) {
             // Task delete, fetch tasks.
-            actionMsg(`Task ${id} deleted`);
+            successMsg(`Task ${id} deleted`);
             fetchTasks();
         }
     }).catch(err => {
-        console.log("Error in task deletion: " + err);
+        errorMsg(err);
+        console.log(err);
     })
 }
 
@@ -291,20 +309,41 @@ function deleteAllTasks() {
     }).then(response => {
         if (response.ok) {
             // Deletion successful.
-            actionMsg("Tasks deleted");
+            successMsg("Tasks deleted");
             fetchTasks();
         }
     }).catch(err => {
-        console.log("Error deleting tasks: " + err);
+        errorMsg(err);
+        console.log(err);
     })
 }
 
-function actionMsg(message) {
-    // Shows the information text about a given action that was performed,
-    // such as modifying or deleting tasks.
-    // Also shows the green checkmark icon next to the text paragraph element.
+function successMsg(message) {
+    // Call actionMsg with isError set to false
+    actionMsg(message, false);
+}
+
+function errorMsg(message) {
+    // Call actionMsg with isError set to true
+    actionMsg(message, true);
+}
+
+function actionMsg(message, isError) {
+    // Shows the information text about a given action that was performed.
+    // Also shows errors.
+    // Displays the check icon or error icon depending on whether the operation
+    // succeeded or failed.
     document.getElementById("information-text").innerHTML = message;
-    document.getElementById("check-img").style.display = "inline";
+    if (!isError) {
+        // Success
+        document.getElementById("check-img").style.display = "inline";
+        document.getElementById("error-img").style.display = "none";
+    }
+    else {
+        // Error
+        document.getElementById("error-img").style.display = "inline";
+        document.getElementById("check-img").style.display = "none";
+    }
 }
 
 function configureFilters() {
@@ -339,11 +378,13 @@ function configureFilters() {
     filterStatus.onchange = function() { fetchTasks(filterDevice.value); }
 }
 
+// Hook up the Delete tasks button's onclick event
 let deleteTasksBtn = document.getElementById("delete-tasks-btn");
 deleteTasksBtn.onclick = function() { deleteAllTasks(); }
+
+// Configure filters and buttons
 configureFilters();
 configureAddTaskModalButtons();
 configureEditTaskModalCancelButton();
 fetchDevices(); // Populate our DeviceID select menus
 fetchTasks(); // Populate the tasks table with all tasks
-

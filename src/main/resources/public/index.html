@@ -13,8 +13,9 @@
                 <button id="delete-tasks-btn" class="nav-btn nav-link">Delete all tasks</button>
             </div>
             <div class="information-text-div">
-                <img src="check_icon.jpg" id="check-img" class="check-img">
-                <p class="nav-link information-text" id="information-text"></p>
+                <img src="check_icon.jpg" id="check-img" class="info-img"> <!-- success icon -->
+                <img src="error_icon.png" id="error-img" class="info-img"> <!-- error icon -->
+                <p class="action-msg" id="information-text"></p>
             </div>
         </div>
 
@@ -25,18 +26,18 @@
                     <h3 class="add-new-task-header">Add new task</h3>
                 	<div class="add-task-modal-attribute">
                     	<p class="modal-paragraph">Device:</p>
-                    	<select id="add-task-select-device" class="add-task-modal-select"></select> <!-- populate this with JS -->
+                    	<select id="add-task-select-device"></select> <!-- populate this with JS -->
                 	</div>
                 	<div class="add-task-modal-attribute">
                     	<p class="modal-paragraph">Status:</p>
-                    	<select id="add-task-select-status" class="add-task-modal-select">
+                        <select id="add-task-select-status"> <!-- Select status -->
                         	<option value="OPEN">Open</option>
                         	<option value="CLOSED">Closed</option>
                     	</select>
                 	</div>
                 	<div class="add-task-modal-attribute">
                     	<p class="modal-paragraph">Severity:</p>
-                    	<select id="add-task-select-severity" class="add-task-modal-select">
+                        <select id="add-task-select-severity"> <!-- Select severity -->
                         	<option value="CRITICAL">Critical</option>
                         	<option value="IMPORTANT">Important</option>
                         	<option value="UNIMPORTANT">Unimportant</option>
@@ -61,18 +62,18 @@
                     </div>
                 	<div class="add-task-modal-attribute">
                     	<p class="modal-paragraph">Device:</p>
-                    	<select id="edit-task-select-device" class="add-task-modal-select"></select> <!-- populate this with JS -->
+                    	<select id="edit-task-select-device"></select> <!-- populate this with JS -->
                 	</div>
                 	<div class="add-task-modal-attribute">
                     	<p class="modal-paragraph">Status:</p>
-                    	<select id="edit-task-select-status" class="add-task-modal-select">
+                    	<select id="edit-task-select-status">
                         	<option value="OPEN">Open</option>
                         	<option value="CLOSED">Closed</option>
                     	</select>
                 	</div>
                 	<div class="add-task-modal-attribute">
                     	<p class="modal-paragraph">Severity:</p>
-                    	<select id="edit-task-select-severity" class="add-task-modal-select">
+                    	<select id="edit-task-select-severity">
                         	<option value="CRITICAL">Critical</option>
                         	<option value="IMPORTANT">Important</option>
                         	<option value="UNIMPORTANT">Unimportant</option>
@@ -92,18 +93,18 @@
                 <input type="checkbox" id="filter-tasks" name="filter-tasks">
                 <label for="filter-tasks" class="filter-paragraph filter-checkbox">Filter</label>
                 <p class="filter-paragraph">Device:</p>
-                <select class="select-filter-tasks" id="select-filter-tasks-device" name="filter-tasks-device">
+                <select id="select-filter-tasks-device" name="filter-tasks-device">
                     <option value="-1">No filter</option>
                 </select>
                 <p class="filter-paragraph">Severity:</p>
-                <select class="select-filter-tasks" id="select-filter-tasks-severity" name="filter-tasks-severity">
+                <select id="select-filter-tasks-severity" name="filter-tasks-severity">
                     <option value="-1">No filter</option>
                     <option value="CRITICAL">Critical</option>
                     <option value="IMPORTANT">Important</option>
                     <option value="UNIMPORTANT">Unimportant</option>
                 </select>
                 <p class="filter-paragraph">Status:</p>
-                <select class="select-filter-tasks" id="select-filter-tasks-status" name="filter-tasks-status">
+                <select id="select-filter-tasks-status" name="filter-tasks-status">
                     <option value="-1">No filter</option>
                     <option value="OPEN">Open</option>
                     <option value="CLOSED">Closed</option>

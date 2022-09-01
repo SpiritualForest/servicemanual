@@ -38,6 +38,7 @@ class MaintenanceTaskController {
     private final MaintenanceTaskModelAssembler assembler;
     
     // We need these param objects for creating hyperlinks in responses
+    // They serve literally no other purpose.
     private final Map<String, String> emptyParams = new HashMap<String, String>();
     private Map<String, String> deviceParam = new HashMap<String, String>();
     private final String Q_DEVICEID = "deviceId";
@@ -62,7 +63,7 @@ class MaintenanceTaskController {
             return CollectionModel.of(tasksModel, linkTo(methodOn(MaintenanceTaskController.class).all(this.emptyParams)).withSelfRel());
         }
         else {
-            // Add links to /api/tasks and the /api/tasks/device/deviceId
+            // Add links to /api/tasks and the /api/tasks?deviceId=
             deviceParam.put(Q_DEVICEID, Long.toString(deviceId));
             List<EntityModel<MaintenanceTask>> tasksModel = tasks.stream()
                     .map(assembler::toModelWithDevice)

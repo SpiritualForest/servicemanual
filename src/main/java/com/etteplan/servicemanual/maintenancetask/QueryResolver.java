@@ -16,7 +16,9 @@ import java.util.Arrays;
 
 class QueryResolver {
     private final MaintenanceTaskRepository taskRepository;
-    // Query parameter names
+    
+    // Query parameter names - any query parameter we encounter
+    // which is not listed here is rejected, with a QueryParameterException thrown.
     private final String Q_DEVICEID = "deviceId";
     private final String Q_STATUS = "status";
     private final String Q_SEVERITY = "severity";
