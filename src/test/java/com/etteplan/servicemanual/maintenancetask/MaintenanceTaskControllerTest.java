@@ -310,7 +310,7 @@ public class MaintenanceTaskControllerTest {
     public void addTaskEmptyDescription() throws Exception {
         // Try to add a task with an empty string as a description.
         // Should return bad request due to the NotEmpty constraint we set on it.
-        String json = "{\"deviceId\": 1, \"status\": \"OPEN\", \"severity\": \"CRITICAL\", \"\": \"Major fixes of security holes\", \"randomkey\": \"randomvalue\"}";
+        String json = "{\"deviceId\": 1, \"status\": \"OPEN\", \"severity\": \"CRITICAL\", \"description\": \"\", \"randomkey\": \"randomvalue\"}";
         mvc.perform(MockMvcRequestBuilders.post("/api/tasks/create").accept(MediaType.APPLICATION_JSON)
                 .contentType(MediaType.APPLICATION_JSON).content(json))
             .andExpect(status().isBadRequest());
