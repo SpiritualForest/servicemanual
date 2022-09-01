@@ -135,6 +135,7 @@ class MaintenanceTaskController {
             }
         }
         // Now that we've initialized our query parameters, we need to choose which method to call.
+        // Why doesn't Java have a spread operator like Python, or Kotlin :'(
         if (deviceId == null) {
             // No device
             if (status != null && severity != null) {
@@ -154,8 +155,11 @@ class MaintenanceTaskController {
             else if (status != null) {
                 response = all(deviceId, status);
             }
-            else {
+            else if (severity != null) {
                 response = all(deviceId, severity);
+            }
+            else {
+                response = all(deviceId);
             }
         }
         return ResponseEntity.ok().body(addHyperlinks(deviceId, response));
