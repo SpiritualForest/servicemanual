@@ -17,8 +17,8 @@ import java.util.Arrays;
 class QueryResolver {
     private final MaintenanceTaskRepository taskRepository;
     
-    // Query parameter names - any query parameter we encounter
-    // which is not listed here is rejected, with a QueryParameterException thrown.
+    // Query parameter names
+    // Any query parameter we encounter which is not listed here is rejected, with a QueryParameterException thrown.
     private final String Q_DEVICEID = "deviceId";
     private final String Q_STATUS = "status";
     private final String Q_SEVERITY = "severity";
@@ -47,14 +47,16 @@ class QueryResolver {
         // Parameters were supplied. Resolve.
         
         // Some informational messages in case of an exception.
-        String unknown = "Bad request: unknown parameter '%s'";
+        String unknown = "Bad request: unknown parameter '%s'. %s";
+        String availableParams = String.format("Available query parameters: '%s', '%s', '%s'", Q_DEVICEID, Q_STATUS, Q_SEVERITY);
         String notConvertable = "Bad request: could not convert parameter '%s'. %s";
-        String availableStatus = "Available parameters for status: 'OPEN', 'CLOSED'";
-        String availableSeverity = "Available parameters for severity: 'UNIMPORTANT', 'IMPORTANT', 'CRITICAL'";
+        String availableStatus = "Available values for status: 'OPEN', 'CLOSED'";
+        String availableSeverity = "Available values for severity: 'UNIMPORTANT', 'IMPORTANT', 'CRITICAL'";
 
         for(String param : parameters.keySet()) {
             if (!acceptedQueryParameters.contains(param)) {
-                throw new QueryParameterException(String.format(unknown, param));
+                // "Bad request, unknown param '%s'. Available params: ..."
+                throw new QueryParameterException(String.format(unknown, param, availableParams));
             }
             else {
                 // Parameter is correct, validate the data
@@ -96,32 +98,32 @@ class QueryResolver {
         // Here we check which database query we should perform, based on the values
         // of our private fields, which were set by our resolve() method.
         List<MaintenanceTask> tasks = new ArrayList<>();
-        if (this.deviceId == null) {
+        if (deviceId == null) {
             // Only status and severity
-            if (this.status != null && this.severity != null) {
-                tasks = taskRepository.findAllByStatusAndSeverityOrderBySeverityAscRegistered(this.status, this.severity);
+            if (status != null && severity != null) {
+                tasks = taskRepository.findAllByStatusAndSeverityOrderBySeverityAscRegistered(status, severity);
             }
-            else if (this.status != null) {
-                tasks = taskRepository.findAllByStatusOrderBySeverityAscRegistered(this.status);
+            else if (status != null) {
+                tasks = taskRepository.findAllByStatusOrderBySeverityAscRegistered(status);
             }
-            else if (this.severity != null) {
-                tasks = taskRepository.findAllBySeverityOrderBySeverityAscRegistered(this.severity);
+            else if (severity != null) {
+                tasks = taskRepository.findAllBySeverityOrderBySeverityAscRegistered(severity);
             }
         }
         else {
             // device, status, severity
-            if (this.status != null && this.severity != null) {
-                tasks = taskRepository.findAllByDeviceIdAndStatusAndSeverityOrderBySeverityAscRegistered(this.deviceId, this.status, this.severity);
+            if (status != null && severity != null) {
+                tasks = taskRepository.findAllByDeviceIdAndStatusAndSeverityOrderBySeverityAscRegistered(deviceId, status, severity);
             }
             else if (status != null) {
-                tasks = taskRepository.findAllByDeviceIdAndStatusOrderBySeverityAscRegistered(this.deviceId, this.status);
+                tasks = taskRepository.findAllByDeviceIdAndStatusOrderBySeverityAscRegistered(deviceId, status);
             }
             else if (severity != null) {
-                tasks = taskRepository.findAllByDeviceIdAndSeverityOrderBySeverityAscRegistered(this.deviceId, this.severity);
+                tasks = taskRepository.findAllByDeviceIdAndSeverityOrderBySeverityAscRegistered(deviceId, severity);
             }
             else {
                 // Only device
-                tasks = taskRepository.findAllByDeviceIdOrderBySeverityAscRegistered(this.deviceId);
+                tasks = taskRepository.findAllByDeviceIdOrderBySeverityAscRegistered(deviceId);
             }
         }
         return tasks;
