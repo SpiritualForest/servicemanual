@@ -138,7 +138,7 @@ class MaintenanceTaskController {
 
     // Update a single task
     @PutMapping("/api/tasks/{taskId}")
-    MaintenanceTask updateTask(@RequestBody @Valid MaintenanceTask modifiedTask, @PathVariable Long taskId) {
+    EntityModel<MaintenanceTask> updateTask(@RequestBody @Valid MaintenanceTask modifiedTask, @PathVariable Long taskId) {
         if (!taskRepository.existsById(taskId)) {
             // No such task
             throw new MaintenanceTaskNotFoundException(taskId);
@@ -160,17 +160,18 @@ class MaintenanceTaskController {
         task.setSeverity(modifiedTask.getSeverity());
         task.setDescription(modifiedTask.getDescription());
         task.setDeviceId(modifiedTask.getDeviceId());
-        return taskRepository.save(task);
+        task = taskRepository.save(task);
+        return assembler.toModel(task);
     }
  
     // Create a new task
     @PostMapping("/api/tasks/create")
     @ResponseStatus(HttpStatus.CREATED)
-    MaintenanceTask createTask(@RequestBody @Valid MaintenanceTask task) {
+    EntityModel<MaintenanceTask> createTask(@RequestBody @Valid MaintenanceTask task) {
         if (!deviceRepository.existsById(task.getDeviceId())) {
             // Error, no such device.
             throw new FactoryDeviceNotFoundException(task.getDeviceId());
         }
-        return taskRepository.save(task);
+        return assembler.toModel(taskRepository.save(task));
     }
 }
