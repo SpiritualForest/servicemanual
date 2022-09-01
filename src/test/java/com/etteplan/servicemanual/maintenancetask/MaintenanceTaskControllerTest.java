@@ -305,6 +305,15 @@ public class MaintenanceTaskControllerTest {
                 .contentType(MediaType.APPLICATION_JSON).content(json))
             .andExpect(status().isBadRequest());
     }
+    
+    @Test
+    public void addTaskGarbageStatus() throws Exception {
+        // Add it with an invalid status - should return 400
+        String json = "{\"deviceId\": 1, \"status\": \"NOSUCHSTATUS\", \"severity\": \"CRITICAL\", \"description\": \"Major fixes of security holes\", \"randomkey\": \"randomvalue\"}";
+        mvc.perform(MockMvcRequestBuilders.post("/api/tasks/create").accept(MediaType.APPLICATION_JSON)
+                .contentType(MediaType.APPLICATION_JSON).content(json))
+            .andExpect(status().isBadRequest());
+    }
 
     @Test
     public void addTaskEmptyDescription() throws Exception {
@@ -358,7 +367,7 @@ public class MaintenanceTaskControllerTest {
     }
 
     @Test
-    public void modifyTaskNullValue() throws Exception {
+    public void modifyTaskNoStatus() throws Exception {
         // Try to modify a task, but pass null values. Should return BadRequest.
         String json = "{\"description\": \"A test task\", \"deviceId\": 1, \"severity\": \"IMPORTANT\"}"; 
         MaintenanceTask newTask = new MaintenanceTask();
@@ -393,6 +402,21 @@ public class MaintenanceTaskControllerTest {
         MaintenanceTask modifiedTask = taskRepository.findById(newTask.getId()).get();
         assertEquals(newTask.getId(), modifiedTask.getId());
         assertEquals(TaskStatus.OPEN, modifiedTask.getStatus());
+    }
+    
+    @Test
+    public void modifyTaskEmptyDescription() throws Exception {
+        // Try to modify a task, pass empty description. Should return BadRequest.
+        String json = "{\"description\": \"\", \"deviceId\": 1, \"severity\": \"IMPORTANT\", \"status\": \"OPEN\"}"; 
+        MaintenanceTask newTask = new MaintenanceTask();
+        newTask.setSeverity(TaskSeverity.IMPORTANT);
+        newTask.setStatus(TaskStatus.OPEN);
+        newTask.setDescription("A test task");
+        newTask.setDeviceId(1L);
+        newTask = taskRepository.save(newTask); // to get the id
+        MvcResult result = mvc.perform(MockMvcRequestBuilders.put(String.format("/api/tasks/%d", newTask.getId())).accept(MediaType.APPLICATION_JSON)
+                .contentType(MediaType.APPLICATION_JSON).content(json))
+            .andExpect(status().isBadRequest()).andReturn();
     }
 
     // DELETE

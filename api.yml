@@ -94,14 +94,17 @@ paths:
         name: deviceId
         type: integer
         description: The device by which to filter the tasks
+        required: false
       - in: query
         name: status
         type: string
         description: The status by which to filter tasks (OPEN/CLOSED)
+        required: false
       - in: query
         name: severity
         type: string
         description: The severity by which to filter tasks (UNIMPORTANT / IMPORTANT / CRITICAL)
+        required: false
     get:
       summary: Returns a list of maintenance tasks, filtered according to query parameters
       produces: application/json
