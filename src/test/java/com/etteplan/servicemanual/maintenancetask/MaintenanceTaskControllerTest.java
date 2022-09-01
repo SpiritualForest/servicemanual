@@ -130,9 +130,10 @@ public class MaintenanceTaskControllerTest {
 
     @Test
     public void getMaintenanceTasksNonExistentParams() throws Exception {
-        // Get tasks with query params that don't match anything. Should fetch all tasks and return 200
+        // Get tasks with query params that don't match anything.
+        // Should fail, return status 400
         mvc.perform(MockMvcRequestBuilders.get("/api/tasks").param("no_such_param", "no_such_value").accept(MediaType.APPLICATION_JSON))
-            .andExpect(status().isOk());
+            .andExpect(status().isBadRequest());
     }
 
     @Test
@@ -253,9 +254,9 @@ public class MaintenanceTaskControllerTest {
     @Test
     public void getTasksFilterNonExistentParam() throws Exception {
         // Filter tasks by one good parameter, and one garbage parameter that can't be correctly mapped.
-        // It should just return all tasks filtered by deviceId 1, status 200.
+        // Should return 400
         mvc.perform(MockMvcRequestBuilders.get("/api/tasks").param("deviceId", "1").param("nosuchparam", "nosuchval").accept(MediaType.APPLICATION_JSON)).
-            andExpect(status().isOk());
+            andExpect(status().isBadRequest());
     }
 
     @Test

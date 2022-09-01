@@ -25,8 +25,11 @@ import javax.validation.Valid;
 // MaintenanceTask and its Repository already exist in this package, that's why we don't have to import them.
 
 import java.util.List;
+import java.util.Map;
+import java.util.HashMap;
 import java.util.stream.Collectors;
 import java.util.ArrayList;
+import java.lang.reflect.Array;
 
 @RestController
 class MaintenanceTaskController {
@@ -34,7 +37,18 @@ class MaintenanceTaskController {
     private final MaintenanceTaskRepository taskRepository;
     private final FactoryDeviceRepository deviceRepository;
     private final MaintenanceTaskModelAssembler assembler;
+    // We need these param objects for creating hyperlinks in responses
+    private final Map<String, String> emptyParams = new HashMap<String, String>();
+    private Map<String, String> deviceParam = new HashMap<String, String>();
 
+    // Accepted query parameter names
+    // We need to know these so that we can return 400 in case we encounter unknown params
+    private final String Q_DEVICEID = "deviceId";
+    private final String Q_STATUS = "status";
+    private final String Q_SEVERITY = "severity";
+    private final List<String> acceptedQueryParameters = new ArrayList<String>(List.of(Q_DEVICEID, Q_STATUS, Q_SEVERITY));
+    
+    // Our constructor
     public MaintenanceTaskController(MaintenanceTaskRepository taskRepository, FactoryDeviceRepository deviceRepository, MaintenanceTaskModelAssembler assembler) {
         this.taskRepository = taskRepository;
         this.deviceRepository = deviceRepository;
@@ -49,81 +63,144 @@ class MaintenanceTaskController {
         if (deviceId == null) {
             // Add links to /api/tasks
             List<EntityModel<MaintenanceTask>> tasksModel = tasks.stream().map(assembler::toModel).collect(Collectors.toList());
-            return CollectionModel.of(tasksModel, linkTo(methodOn(MaintenanceTaskController.class).all()).withSelfRel());
+            return CollectionModel.of(tasksModel, linkTo(methodOn(MaintenanceTaskController.class).all(this.emptyParams)).withSelfRel());
         }
         else {
             // Add links to /api/tasks and the /api/tasks/device/deviceId
+            deviceParam.put(Q_DEVICEID, Long.toString(deviceId));
             List<EntityModel<MaintenanceTask>> tasksModel = tasks.stream()
                     .map(assembler::toModelWithDevice)
                     .collect(Collectors.toList());
             return CollectionModel.of(tasksModel, 
-                    linkTo(methodOn(MaintenanceTaskController.class).all(deviceId)).withRel("device"),
-                    linkTo(methodOn(MaintenanceTaskController.class).all()).withRel("tasks"));
+                    linkTo(methodOn(MaintenanceTaskController.class).all(deviceParam)).withRel("device"),
+                    linkTo(methodOn(MaintenanceTaskController.class).all(this.emptyParams)).withRel("tasks"));
         }
     }
 
     // MAPPING: /api/tasks
-    
-    /* NOTE: requests are mapped according to whatever query parameters best fit the request.
-     * If a request has one matching parameter, and one garbage parameter, the function which
-     * mapped the valid parameter will be executed. */
-    
-    @GetMapping(path = "/api/tasks", params = { "status", "severity" })
-    CollectionModel<EntityModel<MaintenanceTask>> all(@RequestParam TaskStatus status, @RequestParam TaskSeverity severity) {
-        // Filter by both, no device 
-        List<MaintenanceTask> tasks = taskRepository.findAllByStatusAndSeverityOrderBySeverityAscRegistered(status, severity);
-        return addHyperlinks(null, tasks);
-    }
-
-    @GetMapping(path = "/api/tasks", params = { "status" })
-    CollectionModel<EntityModel<MaintenanceTask>> all(@RequestParam TaskStatus status) {
-        // Filter by status, no device
-        List<MaintenanceTask> tasks = taskRepository.findAllByStatusOrderBySeverityAscRegistered(status);
-        return addHyperlinks(null, tasks);
-    }
-
-    @GetMapping(path = "/api/tasks", params = { "severity" })
-    CollectionModel<EntityModel<MaintenanceTask>> all(@RequestParam TaskSeverity severity) {
-        // Filters by severity, no device
-        List<MaintenanceTask> tasks = taskRepository.findAllBySeverityOrderBySeverityAscRegistered(severity);
-        return addHyperlinks(null, tasks);
-    }
+    // TODO: clean this mess up. This is horrible.
     
     @GetMapping("/api/tasks")
-    CollectionModel<EntityModel<MaintenanceTask>> all() {
+    ResponseEntity<Object> all(@RequestParam Map<String, String> params) {
+        if (params.size() == 0) {
+            // No query parameters supplied. Return all tasks.
+            return ResponseEntity.ok().body(addHyperlinks(null, taskRepository.findAllByOrderBySeverityAscRegistered()));
+        }
+        
+        // There are query parameters
+        TaskStatus status = null;
+        TaskSeverity severity = null;
+        Long deviceId = null;
+        List<MaintenanceTask> response = new ArrayList<>();
+
+        for(String param : params.keySet()) {
+            if (!this.acceptedQueryParameters.contains(param)) {
+                // No such parameter, return 400 bad request
+                return ResponseEntity.badRequest().body(String.format("Bad request: unknown parameter '%s'", param));
+            }
+            else {
+                // Parameter name exists, now let's check that the data is valid
+                String value = params.get(param);
+                switch(param) {
+                    case Q_STATUS:
+                        try {
+                            status = TaskStatus.valueOf(value);
+                        }
+                        catch(IllegalArgumentException ex) {
+                            // Bad task status, return 400
+                            return ResponseEntity.badRequest().body(
+                                    String.format("Bad request: could not covert status '%s'. Available values are 'OPEN' and 'CLOSED'", value));
+                        }
+                        break;
+                    case Q_SEVERITY:
+                        try { 
+                            severity = TaskSeverity.valueOf(value);
+                        }
+                        catch(IllegalArgumentException ex) {
+                            // Bad severity
+                            return ResponseEntity.badRequest().body(
+                                    String.format("Bad request: could not convert severity '%s'. Available values are 'UNIMPORTANT', 'IMPORTANT', 'CRITICAL'", value));
+                        }
+                        break;
+                    case Q_DEVICEID:
+                        try {
+                            deviceId = Long.parseLong(value);
+                        }
+                        catch(IllegalArgumentException ex) {
+                            // Not a number
+                            return ResponseEntity.badRequest().body(String.format("Bad request: could not convert deviceId '%s'. Must be an integer.", value));
+                        }
+                        break;
+                }
+            }
+        }
+        // Now that we've initialized our query parameters, we need to choose which method to call.
+        if (deviceId == null) {
+            // No device
+            if (status != null && severity != null) {
+                response = all(status, severity);
+            }
+            else if (status != null) {
+                response = all(status);
+            }
+            else {
+                response = all(severity);
+            }
+        }
+        else {
+            if (status != null && severity != null) {
+                response = all(deviceId, status, severity);
+            }
+            else if (status != null) {
+                response = all(deviceId, status);
+            }
+            else {
+                response = all(deviceId, severity);
+            }
+        }
+        return ResponseEntity.ok().body(addHyperlinks(deviceId, response));
+    }
+
+    List<MaintenanceTask> all(TaskStatus status, TaskSeverity severity) {
+        // Filter by both, no device 
+        return taskRepository.findAllByStatusAndSeverityOrderBySeverityAscRegistered(status, severity);
+    }
+
+    List<MaintenanceTask> all(TaskStatus status) {
+        // Filter by status, no device
+        return taskRepository.findAllByStatusOrderBySeverityAscRegistered(status);
+    }
+
+    List<MaintenanceTask> all(TaskSeverity severity) {
+        // Filters by severity, no device
+        return taskRepository.findAllBySeverityOrderBySeverityAscRegistered(severity);
+    }
+    
+    List<MaintenanceTask> all() {
         // Query with no filter, fetches all existing tasks
-        List<MaintenanceTask> tasks = taskRepository.findAllByOrderBySeverityAscRegistered();
-        return addHyperlinks(null, tasks);
+        return taskRepository.findAllByOrderBySeverityAscRegistered();
     }
 
     // Filter tasks first by deviceId, then status and severity according to other parameters passed
     
-    @GetMapping(path = "/api/tasks", params = { "deviceId" })
-    CollectionModel<EntityModel<MaintenanceTask>> all(@RequestParam Long deviceId) {
+    List<MaintenanceTask> all(Long deviceId) {
         // Fetch all associated with this device 
-        List<MaintenanceTask> tasks = taskRepository.findAllByDeviceIdOrderBySeverityAscRegistered(deviceId);
-        return addHyperlinks(deviceId, tasks);
+        return taskRepository.findAllByDeviceIdOrderBySeverityAscRegistered(deviceId);
     }
 
-    @GetMapping(path = "/api/tasks", params = { "deviceId", "status", "severity" })
-    CollectionModel<EntityModel<MaintenanceTask>> all(@RequestParam Long deviceId, @RequestParam TaskStatus status, @RequestParam TaskSeverity severity) {
+    List<MaintenanceTask> all(Long deviceId, TaskStatus status, TaskSeverity severity) {
         // Device, status, severity
-        List<MaintenanceTask> tasks = taskRepository.findAllByDeviceIdAndStatusAndSeverityOrderBySeverityAscRegistered(deviceId, status, severity);
-        return addHyperlinks(deviceId, tasks);
+        return taskRepository.findAllByDeviceIdAndStatusAndSeverityOrderBySeverityAscRegistered(deviceId, status, severity);
     }
 
-    @GetMapping(path = "/api/tasks", params = { "deviceId", "status" })
-    CollectionModel<EntityModel<MaintenanceTask>> all(@RequestParam Long deviceId, @RequestParam TaskStatus status) {
+    List<MaintenanceTask> all(Long deviceId, TaskStatus status) {
         // Device and status
-        List<MaintenanceTask> tasks = taskRepository.findAllByDeviceIdAndStatusOrderBySeverityAscRegistered(deviceId, status);
-        return addHyperlinks(deviceId, tasks);
+        return taskRepository.findAllByDeviceIdAndStatusOrderBySeverityAscRegistered(deviceId, status);
     }
 
-    @GetMapping(path = "/api/tasks", params = { "deviceId", "severity" })
-    CollectionModel<EntityModel<MaintenanceTask>> all(@RequestParam Long deviceId, @RequestParam TaskSeverity severity) {
+    List<MaintenanceTask> all(Long deviceId, TaskSeverity severity) {
         // Device and severity
-        List<MaintenanceTask> tasks = taskRepository.findAllByDeviceIdAndSeverityOrderBySeverityAscRegistered(deviceId, severity);
-        return addHyperlinks(deviceId, tasks);
+        return taskRepository.findAllByDeviceIdAndSeverityOrderBySeverityAscRegistered(deviceId, severity);
     }
 
     /* NOTE: all DELETE requests always return 200, even if nothing was actually removed.
