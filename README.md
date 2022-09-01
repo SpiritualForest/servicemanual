@@ -14,10 +14,14 @@ Short version:
 
 Endpoints:
 
-/api/tasks - GET, DELETE to get all or delete all tasks according to the given parameters. Accepted query parameters: deviceId=integer, status=string, severity=string.   
+/api/tasks - GET, DELETE to get all or delete all tasks according to the given parameters. Accepted query parameters: deviceId=integer, status=string, severity=string.
+If no query parameters are supplied to the request, it will either fetch all, or _**DELETE ALL TASKS**_.  
+_**Exercise caution**_ with the _**DELETE**_ method on this endpoint.  
+  
 /api/tasks/create - POST. Create a new task. View the api.yml file's definition for MaintenanceTask to see the body content to pass in the request.  
+
 /api/tasks/taskId - GET, PUT, DELETE. Retrieve, update, or delete the task with the given taskId. taskId is an integer. The body for the PUT request is the same as in the /api/tasks/create POST request. View the definition for 'MaintenanceTask' in api.yml.  
-/api/tasks/all - DELETE. Special endpoint to delete all tasks from the database.
+
 
 MaintenanceTask object example:
 ```

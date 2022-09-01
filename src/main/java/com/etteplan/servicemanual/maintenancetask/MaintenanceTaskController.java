@@ -79,6 +79,10 @@ class MaintenanceTaskController {
 
     // MAPPING: /api/tasks
     
+    /* We do our own resolution of queries to validate the request.
+     * If a query parameter is bad in some way, such as not convertable to its required type, or unknown,
+     * then QueryParameterException is thrown, and our response status is 400 bad request. */
+    
     @GetMapping("/api/tasks")
     ResponseEntity<Object> all(@RequestParam Map<String, String> queryParameters) {
         if (queryParameters.size() == 0) {
@@ -94,63 +98,36 @@ class MaintenanceTaskController {
             tasks = resolver.resolveQuery();
         }
         catch(QueryParameterException ex) {
+            // Got a bad parameter. We do not proceed.
             return ResponseEntity.badRequest().body(ex.getMessage());
         }
         return ResponseEntity.ok().body(addHyperlinks(resolver.getDeviceId(), tasks));
     }
-
-    @DeleteMapping(path = "/api/tasks", params = { "deviceId" })
-    void deleteTasks(@RequestParam Long deviceId) {
-        List<MaintenanceTask> tasks = taskRepository.findAllByDeviceId(deviceId);
-        taskRepository.deleteAll(tasks);
-    }
-
-    // Delete all tasks for deviceId with status
-    @DeleteMapping(path = "/api/tasks", params = { "deviceId", "status" })
-    void deleteTasks(@RequestParam Long deviceId, @RequestParam TaskStatus status) {
-        List<MaintenanceTask> tasks = taskRepository.findAllByDeviceIdAndStatus(deviceId, status);
-        taskRepository.deleteAll(tasks);
-    }
     
-    // Delete by deviceId, status, severity
-    @DeleteMapping(path = "/api/tasks", params = { "deviceId", "status", "severity" })
-    void deleteTasks(@RequestParam Long deviceId, TaskStatus status, TaskSeverity severity) {
-        List<MaintenanceTask> tasks = taskRepository.findAllByDeviceIdAndStatusAndSeverity(deviceId, status, severity);
+    @DeleteMapping("/api/tasks")
+    ResponseEntity<String> deleteTasks(@RequestParam Map<String, String> queryParameters) {
+        if (queryParameters.size() == 0) {
+            // No query parameters.
+            // NOTE: DANGER, DANGER, DANGER!!!
+            // We delete ALL tasks from the database here.
+            taskRepository.deleteAll();
+            return ResponseEntity.ok().body("All tasks deleted.");
+        }
+        // Resolve our query parameters.
+        List<MaintenanceTask> tasks = new ArrayList<>();
+        QueryResolver resolver = new QueryResolver(taskRepository, queryParameters);
+        try {
+            tasks = resolver.resolveQuery();
+        }
+        catch(QueryParameterException ex) {
+            // Got a bad parameter.
+            return ResponseEntity.badRequest().body(ex.getMessage());
+        }
+        // Parameters have been validated, proceed with deletion
         taskRepository.deleteAll(tasks);
+        return ResponseEntity.ok().body("Tasks deleted.");
     }
 
-    // Delete by deviceId and severity
-    @DeleteMapping(path = "/api/tasks", params = { "deviceId", "severity" })
-    void deleteTasks(@RequestParam Long deviceId, @RequestParam TaskSeverity severity) {
-        List<MaintenanceTask> tasks = taskRepository.findAllByDeviceIdAndSeverity(deviceId, severity);
-        taskRepository.deleteAll(tasks);
-    }
-
-    // Delete by status and severity (no device)
-    @DeleteMapping(path = "/api/tasks", params = { "status", "severity" })
-    void deleteTasks(@RequestParam TaskStatus status, @RequestParam TaskSeverity severity) {
-        List<MaintenanceTask> tasks = taskRepository.findAllByStatusAndSeverity(status, severity);
-        taskRepository.deleteAll(tasks);
-    }
-
-    // Delete by status only
-    @DeleteMapping(path = "/api/tasks", params = { "status" })
-    void deleteTasks(@RequestParam TaskStatus status) {
-        taskRepository.deleteAll(taskRepository.findAllByStatus(status));
-    }
-
-    // Delete by severity only
-    @DeleteMapping(path = "/api/tasks", params = { "severity" })
-    void deleteTasks(@RequestParam TaskSeverity severity) {
-        taskRepository.deleteAll(taskRepository.findAllBySeverity(severity));
-    }
-
-    // Delete all tasks from the database, no filter
-    @DeleteMapping("/api/tasks/all")
-    void deleteTasks() {
-        taskRepository.deleteAll();
-    }
-    
     // MAPPING: /api/tasks/{taskId}
 
     // Show a unique task by its id
