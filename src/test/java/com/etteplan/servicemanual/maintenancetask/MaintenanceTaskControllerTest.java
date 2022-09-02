@@ -117,6 +117,14 @@ public class MaintenanceTaskControllerTest {
     }
 
     @Test
+    public void getMaintenanceTasksNoSuchDevice() throws Exception {
+        // Get a task for a device that doesn't exist.
+        // Should just return 200 and no task objects.
+        mvc.perform(MockMvcRequestBuilders.get("/api/tasks").param("deviceId", "123456789").accept(MediaType.APPLICATION_JSON))
+            .andExpect(status().isOk());
+    }
+
+    @Test
     public void getMaintenanceTaskNotFound() throws Exception {
         mvc.perform(MockMvcRequestBuilders.get("/api/tasks/123456789").accept(MediaType.APPLICATION_JSON))
             .andExpect(status().isNotFound());
@@ -309,7 +317,7 @@ public class MaintenanceTaskControllerTest {
     @Test
     public void addTaskGarbageStatus() throws Exception {
         // Add it with an invalid status - should return 400
-        String json = "{\"deviceId\": 1, \"status\": \"NOSUCHSTATUS\", \"severity\": \"CRITICAL\", \"description\": \"Major fixes of security holes\", \"randomkey\": \"randomvalue\"}";
+        String json = "{\"deviceId\": 1, \"status\": \"NOSUCHSTATUS\", \"severity\": \"CRITICAL\", \"description\": \"Major fixes of security holes\"}";
         mvc.perform(MockMvcRequestBuilders.post("/api/tasks/create").accept(MediaType.APPLICATION_JSON)
                 .contentType(MediaType.APPLICATION_JSON).content(json))
             .andExpect(status().isBadRequest());
@@ -648,7 +656,7 @@ public class MaintenanceTaskControllerTest {
     @Test
     public void deleteTaskNonExistentParam() throws Exception {
         // Delete a task, but make the query with a non existent parameter name.
-        // Should return 400 with the request not being mapped anywhere.
+        // Should return 400 due to a bad parameter
         MaintenanceTask task = new MaintenanceTask();
         task.setDeviceId(1L);
         task.setStatus(TaskStatus.CLOSED);
@@ -665,7 +673,7 @@ public class MaintenanceTaskControllerTest {
     @Test
     public void deleteTaskGoodAndGarbageParam() throws Exception {
         // Delete a task, pass one valid parameter, and one garbage parameter
-        // It should just delete the tasks with the deviceId.
+        // It should return 400 bad request and not delete anything
         MaintenanceTask task = new MaintenanceTask();
         task.setDeviceId(1L);
         task.setStatus(TaskStatus.CLOSED);
@@ -682,6 +690,7 @@ public class MaintenanceTaskControllerTest {
     @Test
     public void deleteTaskValidAndInvalidParams() throws Exception {
         // Delete a task, pass one valid parameter, and one invalid parameter (that can't be converted to its type)
+        // Should return 400
         MaintenanceTask task = new MaintenanceTask();
         task.setDeviceId(1L);
         task.setStatus(TaskStatus.CLOSED);
@@ -699,10 +708,18 @@ public class MaintenanceTaskControllerTest {
     @Test
     public void deleteTasksDeviceNotFound() throws Exception {
         // Should return isOk(), even though nothing happens
+        MaintenanceTask task = new MaintenanceTask();
+        task.setDeviceId(1L);
+        task.setStatus(TaskStatus.CLOSED);
+        task.setSeverity(TaskSeverity.CRITICAL);
+        task.setDescription("A task created in our tests :)");
+        task = taskRepository.save(task); 
         mvc.perform(MockMvcRequestBuilders.delete("/api/tasks").param("deviceId", "123456789").accept(MediaType.APPLICATION_JSON))
             .andExpect(status().isOk());
         // Assert that no tasks were deleted
         assertFalse(taskRepository.findAll().isEmpty());
+        // Assert that our new task still exists
+        assertTrue(taskRepository.existsById(task.getId()));
     }
 }
 
