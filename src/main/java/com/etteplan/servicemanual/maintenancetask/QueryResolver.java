@@ -60,36 +60,35 @@ public final class QueryResolver {
                 // "Bad request, unknown param '%s'. Available params: ..."
                 throw new QueryParameterException(String.format(unknownParam, param, availableParams));
             }
-            else {
-                // Parameter is correct, validate the data
-                String value = parameters.get(param);
-                if (param.equals(Q_STATUS)) {
-                    try { 
-                        status = TaskStatus.valueOf(value);
-                    }
-                    catch(IllegalArgumentException ex) {
-                        // Bad parameter for status. Throw exception, show which statuses are available
-                        throw new QueryParameterException(String.format(notConvertable, value, availableStatus));
-                    }
+            // If we reached here, no exception was thrown.
+            // Parameter is correct, validate the data
+            String value = parameters.get(param);
+            if (param.equals(Q_STATUS)) {
+                try { 
+                    status = TaskStatus.valueOf(value);
                 }
-                else if (param.equals(Q_SEVERITY)) {
-                    try {
-                        severity = TaskSeverity.valueOf(value);
-                    }
-                    catch(IllegalArgumentException ex) {
-                        // Bad parameter for severity.
-                        throw new QueryParameterException(String.format(notConvertable, value, availableSeverity));
-                    }
+                catch(IllegalArgumentException ex) {
+                    // Bad parameter for status. Throw exception, show which statuses are available
+                    throw new QueryParameterException(String.format(notConvertable, value, availableStatus));
                 }
-                else if (param.equals(Q_DEVICEID)) {
-                    try {
-                        deviceId = Long.parseLong(value);
-                        QueryResolver.deviceId = deviceId;
-                    }
-                    catch(IllegalArgumentException ex) {
-                        // Bad parameter for deviceId
-                        throw new QueryParameterException(String.format(notConvertable, value, "Must be an integer."));
-                    }
+            }
+            else if (param.equals(Q_SEVERITY)) {
+                try {
+                    severity = TaskSeverity.valueOf(value);
+                }
+                catch(IllegalArgumentException ex) {
+                    // Bad parameter for severity.
+                    throw new QueryParameterException(String.format(notConvertable, value, availableSeverity));
+                }
+            }
+            else if (param.equals(Q_DEVICEID)) {
+                try {
+                    deviceId = Long.parseLong(value);
+                    QueryResolver.deviceId = deviceId; // Stored for hyperlink creation in the controller
+                }
+                catch(IllegalArgumentException ex) {
+                    // Bad parameter for deviceId
+                    throw new QueryParameterException(String.format(notConvertable, value, "Must be an integer."));
                 }
             }
         }
@@ -98,18 +97,19 @@ public final class QueryResolver {
     }
 
     private static List<MaintenanceTask> queryDatabase(MaintenanceTaskRepository taskRepository, Long deviceId, TaskStatus status, TaskSeverity severity) {
-        // Here we check which database query we should perform, based on the values
-        // of our private fields, which were set by our resolve() method.
+        // Query the database based on the parameters we received
         List<MaintenanceTask> tasks = new ArrayList<>();
         if (deviceId == null) {
-            // Only status and severity
+            // Status and severity
             if (status != null && severity != null) {
                 tasks = taskRepository.findAllByStatusAndSeverityOrderBySeverityAscRegistered(status, severity);
             }
             else if (status != null) {
+                // Status only
                 tasks = taskRepository.findAllByStatusOrderBySeverityAscRegistered(status);
             }
             else if (severity != null) {
+                // Severity only
                 tasks = taskRepository.findAllBySeverityOrderBySeverityAscRegistered(severity);
             }
         }
@@ -119,9 +119,11 @@ public final class QueryResolver {
                 tasks = taskRepository.findAllByDeviceIdAndStatusAndSeverityOrderBySeverityAscRegistered(deviceId, status, severity);
             }
             else if (status != null) {
+                // Device and status
                 tasks = taskRepository.findAllByDeviceIdAndStatusOrderBySeverityAscRegistered(deviceId, status);
             }
             else if (severity != null) {
+                // Device and severity
                 tasks = taskRepository.findAllByDeviceIdAndSeverityOrderBySeverityAscRegistered(deviceId, severity);
             }
             else {
