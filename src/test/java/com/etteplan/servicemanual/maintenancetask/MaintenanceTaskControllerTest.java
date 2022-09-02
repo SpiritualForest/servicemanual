@@ -350,6 +350,30 @@ public class MaintenanceTaskControllerTest {
             .andExpect(status().isNotFound()).andReturn();
     }
 
+    @Test
+    public void addTaskWrongEndpoint() throws Exception {
+        // Try to add a task through /api/tasks/{taskId}
+        // Should say that the method is not allowed (405)
+        MaintenanceTask task = new MaintenanceTask();
+        task.setSeverity(TaskSeverity.CRITICAL);
+        task.setStatus(TaskStatus.CLOSED);
+        task.setDescription("Hello lulz");
+        task.setDeviceId(1L);
+        task = taskRepository.save(task);
+        String json = "{\"deviceId\": 1, \"status\": \"OPEN\", \"severity\": \"CRITICAL\", \"description\": \"Major fixes of security holes\"}";
+        mvc.perform(MockMvcRequestBuilders.post("/api/tasks/" + task.getId()).accept(MediaType.APPLICATION_JSON)
+                .contentType(MediaType.APPLICATION_JSON).content(json))
+            .andExpect(status().isMethodNotAllowed());
+    }
+
+    @Test
+    public void addTaskEmptyBody() throws Exception {
+        // Try to add a task without providing a task object body in the request
+        // Should be 400 bad request
+        mvc.perform(MockMvcRequestBuilders.post("/api/tasks/create").accept(MediaType.APPLICATION_JSON))
+            .andExpect(status().isBadRequest());
+    }
+
     // PUT
 
     @Test
@@ -433,6 +457,16 @@ public class MaintenanceTaskControllerTest {
         MvcResult result = mvc.perform(MockMvcRequestBuilders.put(String.format("/api/tasks/%d", newTask.getId())).accept(MediaType.APPLICATION_JSON)
                 .contentType(MediaType.APPLICATION_JSON).content(json))
             .andExpect(status().isBadRequest()).andReturn();
+    }
+
+    @Test
+    public void modifyTaskWrongEndpoint() throws Exception {
+        // Make the PUT request on /api/tasks/create
+        // Should return 400 bad request because it tries to convert "create" into an integer as a taskId
+        String json = "{\"description\": \"testing\", \"deviceId\": 1, \"severity\": \"IMPORTANT\", \"status\": \"OPEN\"}"; 
+        mvc.perform(MockMvcRequestBuilders.put("/api/tasks/create").accept(MediaType.APPLICATION_JSON)
+                .contentType(MediaType.APPLICATION_JSON).content(json))
+            .andExpect(status().isBadRequest());
     }
 
     // DELETE
