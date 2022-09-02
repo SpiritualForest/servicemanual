@@ -76,4 +76,4 @@ Object returned by GET on /api/tasks, which returns an array of MaintenanceTask 
 ```
 If the query didn't match anything, only the links portion of the object will exist.  
 
-Object returned by GET on /api/task/{taskId}: see the MaintenanceTask object example above.
+Object returned by GET on /api/tasks/{taskId}: see the MaintenanceTask object example above.
