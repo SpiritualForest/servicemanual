@@ -185,6 +185,14 @@ public class MaintenanceTaskControllerTest {
     }
 
     @Test
+    public void getSingleTaskBadTaskId() throws Exception {
+        // Try to get a task with a taskID that's not an integer.
+        // Should return bad request
+        mvc.perform(MockMvcRequestBuilders.get("/api/tasks/hellolulz").accept(MediaType.APPLICATION_JSON))
+            .andExpect(status().isBadRequest());
+    }
+
+    @Test
     public void getTasksByDeviceId() throws Exception {
         // Get all the tasks associated with a deviceId.
         // This should always return status 200.

@@ -35,8 +35,9 @@ DELETE /api/tasks?deviceId=10
   
 /api/tasks/create - POST. Create a new task. View the api.yml file's definition for MaintenanceTask to see the body content to pass in the request.  
 
-/api/tasks/taskId - GET, PUT, DELETE. Retrieve, update, or delete the task with the given taskId. taskId is an integer. The body for the PUT request is the same as in the /api/tasks/create POST request. View the definition for 'MaintenanceTask' in api.yml.  
-Query parameters passed to this endpoint are **discarded**, and have no effect on the request or response.  
+/api/tasks/{taskId} - GET, PUT, DELETE. Retrieve, update, or delete the task with the given taskId. taskId is an integer. The body for the PUT request is the same as in the /api/tasks/create POST request. View the definition for 'MaintenanceTask' in api.yml.  
+Query parameters passed to this endpoint are **discarded**, and have no effect on the request or response. 
+Passing a taskId value that is not an integer will result in a 400 "bad request" response.  
 
 MaintenanceTask object example:
 ```
