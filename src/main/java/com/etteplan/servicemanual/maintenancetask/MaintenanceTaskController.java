@@ -23,6 +23,7 @@ import com.etteplan.servicemanual.factorydevice.FactoryDeviceNotFoundException;
 import javax.validation.Valid;
 
 // MaintenanceTask and its Repository already exist in this package, that's why we don't have to import them.
+// QueryResolver is a static class used to resolve query parameters. View QueryResolver.java
 
 import java.util.List;
 import java.util.Map;
@@ -37,13 +38,11 @@ class MaintenanceTaskController {
     private final FactoryDeviceRepository deviceRepository;
     private final MaintenanceTaskModelAssembler assembler;
     
-    // We need these param objects for creating hyperlinks in responses
+    // We need these param HashMaps for creating hyperlinks in responses
     // They serve literally no other purpose.
     private final Map<String, String> emptyParams = new HashMap<String, String>();
     private Map<String, String> deviceParam = new HashMap<String, String>();
     private final String Q_DEVICEID = "deviceId";
-
-    private QueryResolver queryResolver;
 
     // Our constructor
     public MaintenanceTaskController(MaintenanceTaskRepository taskRepository, FactoryDeviceRepository deviceRepository, MaintenanceTaskModelAssembler assembler) {
@@ -75,14 +74,6 @@ class MaintenanceTaskController {
     }
 
     // MAPPING: /api/tasks
-
-    List<MaintenanceTask> fetchTasks(Map<String, String> queryParameters) throws QueryParameterException {
-        // Creates a new instance of our query resolver with our task repository
-        // and the map of parameters for resolving.
-        // An exception will be raised if the parameters are malformed or unknown.
-        this.queryResolver = new QueryResolver(taskRepository, queryParameters);
-        return queryResolver.resolveQuery();
-    }
     
     /* We do our own resolution of queries to validate the request.
      * If a query parameter is bad in some way, such as not convertable to its required type, or unknown,
@@ -92,8 +83,8 @@ class MaintenanceTaskController {
     ResponseEntity<Object> all(@RequestParam Map<String, String> queryParameters) {
         // Fetch tasks
         try {
-            List<MaintenanceTask> tasks = fetchTasks(queryParameters);
-            return ResponseEntity.ok().body(addHyperlinks(queryResolver.getDeviceId(), tasks));
+            List<MaintenanceTask> tasks = QueryResolver.resolveQuery(taskRepository, queryParameters);
+            return ResponseEntity.ok().body(addHyperlinks(QueryResolver.getDeviceId(), tasks));
         }
         catch(QueryParameterException ex) {
             // Got a bad parameter. We do not proceed.
@@ -105,7 +96,7 @@ class MaintenanceTaskController {
     ResponseEntity<String> deleteTasks(@RequestParam Map<String, String> queryParameters) {
         // Delete tasks
         try {
-            List<MaintenanceTask> tasks = fetchTasks(queryParameters);
+            List<MaintenanceTask> tasks = QueryResolver.resolveQuery(taskRepository, queryParameters);
             taskRepository.deleteAll(tasks);
             return ResponseEntity.ok().body("Tasks deleted.");
         }

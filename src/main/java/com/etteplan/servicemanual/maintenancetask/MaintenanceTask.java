@@ -1,6 +1,5 @@
 package com.etteplan.servicemanual.maintenancetask;
 
-import com.etteplan.servicemanual.factorydevice.FactoryDevice;
 import javax.persistence.Entity;
 import javax.persistence.Enumerated;
 import javax.persistence.GeneratedValue;
