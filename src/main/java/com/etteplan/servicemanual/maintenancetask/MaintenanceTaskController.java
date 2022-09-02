@@ -52,10 +52,7 @@ class MaintenanceTaskController {
     }
 
     CollectionModel<EntityModel<MaintenanceTask>> addHyperlinks(Long deviceId, List<MaintenanceTask> tasks) {
-        // Helper function to organize our code better.
-        // Filters the tasks based on the given parameters.
-        // The tasks list comes from the various mapped methods that call this function.
-        // This function just serves to add the necessary hyperlinks to all the task objects.
+        // Helper function to create hyperlinks to the supplied MaintenanceTask objects
         if (deviceId == null) {
             // Add links to /api/tasks
             List<EntityModel<MaintenanceTask>> tasksModel = tasks.stream().map(assembler::toModel).collect(Collectors.toList());
@@ -131,6 +128,9 @@ class MaintenanceTaskController {
     // Update a single task
     @PutMapping("/api/tasks/{taskId}")
     EntityModel<MaintenanceTask> updateTask(@RequestBody @Valid MaintenanceTask modifiedTask, @PathVariable Long taskId) {
+        // Returns 400 bad request if the modifiedTask body contains null values, 
+        // empty description, garbage parameters,
+        // or is in some way malformed or incorrect.
         if (!taskRepository.existsById(taskId)) {
             // No such task
             throw new MaintenanceTaskNotFoundException(taskId);
@@ -139,7 +139,6 @@ class MaintenanceTaskController {
             // The supplied deviceId doesn't actually exist in the database. Abort.
             throw new FactoryDeviceNotFoundException(modifiedTask.getDeviceId());
         }
-        // Will return BadRequest if it contains null values
         
         /* We must load up the appropriate MaintenanceTask entity
          * and update all of its relevant fields ourselves, otherwise

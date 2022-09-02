@@ -155,29 +155,28 @@ function fillTasksTable(tasks) {
         // We do not proceed.
         return;
     }
-
-    // Find the "Severity" cell.
-    // We need to do this so that we can set its text colour to red
-    // in case the severity of the task is critical.
-    let severityCell = 0;
+    
+    let severityCell; // We need this to set the red bold font in case severity is critical
     let headerRowCells = tableElement.rows[0].cells;
     for(let i = 0; i < headerRowCells.length; i++) {
-        if (headerRowCells[i].innerHTML.toLowerCase() === "severity") {
+        if (headerRowCells[i].innerHTML.toLowerCase() == "severity") {
             severityCell = i;
-            break;
         }
     }
     // Forgive me for setting styles through JS :(
     for(let task of tasks["_embedded"]["maintenanceTaskList"]) {
+
         let id = task.id;
         let deviceId = task.deviceId;
         let taskStatus = task.status;
         let taskSeverity = task.severity;
         let description = task.description;
         let registered = task.registered;
+        
         // Task, device, status, severity, description, registered, action
         let row = tableElement.insertRow();
         let allData = [id, deviceId, taskStatus, taskSeverity, description, registered];
+        
         for(let x in allData) {
             let cell = row.insertCell(x);
             cell.innerHTML = allData[x];
@@ -193,12 +192,10 @@ function fillTasksTable(tasks) {
         let deleteBtn = document.createElement("button");
         editBtn.id = `edit-task-btn-${id}`; // edit-btn-task-112
         editBtn.innerHTML = "Edit";
-        editBtn.style.fontSize = "14px";
-        editBtn.style.margin = "5px";
+        editBtn.className = "task-btn";
         deleteBtn.id = `delete-task-btn-${id}`; // delete-btn-task-112
         deleteBtn.innerHTML = "Delete";
-        deleteBtn.style.fontSize = "14px";
-        deleteBtn.style.margin = "5px";
+        deleteBtn.className = "task-btn";
         actionCell.appendChild(editBtn);
         actionCell.appendChild(deleteBtn);
         // Add the functions to edit and delete the tasks
@@ -263,7 +260,7 @@ function saveEditedTask() {
     fetch(endpoint,  {
         method: "PUT",
         body: JSON.stringify(taskObj),
-        headers: {"Content-type": "application/json; charset=UTF-8"}
+        headers: { "Content-type": "application/json; charset=UTF-8" }
     }).then(response => {
         if (response.status === 200) {
             // Successfully modified the resource
