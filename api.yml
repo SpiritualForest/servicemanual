@@ -11,12 +11,13 @@ definitions:
   _embedded:
     type: object
     properties:
-      $ref: '#/definitions/MaintenanceTaskList'
+      _embedded:
+        $ref: '#/definitions/MaintenanceTaskList'
 
   maintenanceTaskList:
     type: array
     items:
-      $ref: '#/definitions/MaintenanceTask'
+      $ref: '#/definitions/MaintenanceTaskResponse'
 
   MaintenanceTask:
     type: object
@@ -143,8 +144,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/definitions/MaintenanceTask'
-                $ref: '#/definitions/MaintenanceTaskLinks'
+                $ref: '#/definitions/MaintenanceTaskResponse'
         404:
           description: Task not found
     put:
@@ -168,7 +168,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/definitions/MaintenanceTask'
+                $ref: '#/definitions/MaintenanceTaskResponse'
         404:
           description: Task not found
         404:
@@ -205,7 +205,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/definitions/MaintenanceTask'
+                $ref: '#/definitions/MaintenanceTaskResponse'
         404:
           description: Factory device not found
         400:

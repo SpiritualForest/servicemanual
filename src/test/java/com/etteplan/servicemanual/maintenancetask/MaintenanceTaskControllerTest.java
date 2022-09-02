@@ -764,4 +764,3 @@ public class MaintenanceTaskControllerTest {
         assertTrue(taskRepository.existsById(task.getId()));
     }
 }
-
