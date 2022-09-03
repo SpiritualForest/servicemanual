@@ -39,6 +39,22 @@ public class MaintenanceTaskControllerTest {
     @Autowired
     private MaintenanceTaskRepository taskRepository;
 
+    private MaintenanceTask createMaintenanceTask(Long deviceId, TaskStatus status, TaskSeverity severity) {
+        // Create a new task, save it, and return it.
+        MaintenanceTask task = new MaintenanceTask();
+        task.setDeviceId(deviceId);
+        task.setStatus(status);
+        task.setSeverity(severity);
+        task.setDescription("A task created in the unit tests");
+        return taskRepository.save(task);
+    }
+
+    private JSONArray getTaskArray(JSONObject jsonResult) throws JSONException {
+        JSONObject em = jsonResult.getJSONObject("_embedded");
+        JSONArray taskArray = em.getJSONArray("maintenanceTaskList");
+        return taskArray;
+    }
+
     // GET tests
     
     @Test
@@ -52,67 +68,58 @@ public class MaintenanceTaskControllerTest {
     public void getMaintenanceTaskFilterByStatusAndSeverity() throws Exception {
         // All tasks where status == <status> and severity == <severity>
         // First let's create some tasks
-        List<MaintenanceTask> tasks = new ArrayList<>();
+        Long deviceId = 1L;
         for(int i = 0; i < 5; i++) {
             // Status closed, severity critical
-            MaintenanceTask task = new MaintenanceTask();
-            task.setDeviceId(1L);
-            task.setSeverity(TaskSeverity.CRITICAL);
-            task.setStatus(TaskStatus.CLOSED);
-            task.setDescription("A description");
-            tasks.add(task);
+            createMaintenanceTask(deviceId, TaskStatus.CLOSED, TaskSeverity.CRITICAL);
         }
-        for(int i = 0; i < 5; i++) {
-            // Status open, severity unimportant
-            MaintenanceTask task = new MaintenanceTask();
-            task.setDeviceId(1L);
-            task.setSeverity(TaskSeverity.UNIMPORTANT);
-            task.setStatus(TaskStatus.OPEN);
-            task.setDescription("A description");
-            tasks.add(task);
-        }
-        taskRepository.saveAll(tasks);
-        assertFalse(taskRepository.findAllByStatus(TaskStatus.CLOSED).isEmpty());
         // Make the request, status closed, severity critical
         MvcResult result = mvc.perform(MockMvcRequestBuilders.get("/api/tasks").param("status", "CLOSED").param("severity", "CRITICAL")
                 .accept(MediaType.APPLICATION_JSON))
             .andExpect(status().isOk()).andReturn();
         // Parse JSON so that we can assert that only open status and critical severity have been returned
-        JSONObject jsonResult = new JSONObject(result.getResponse().getContentAsString());
-        JSONObject em = jsonResult.getJSONObject("_embedded");
-        JSONArray taskArray = em.getJSONArray("maintenanceTaskList");
+        JSONArray taskArray = getTaskArray(new JSONObject(result.getResponse().getContentAsString()));
         for(int i = 0; i < taskArray.length(); i++) {
             JSONObject taskObj = taskArray.getJSONObject(i);
-            String severity = taskObj.getString("severity");
-            String status = taskObj.getString("status");
-            assertEquals("CRITICAL", severity);
-            assertEquals("CLOSED", status);
+            assertEquals("CRITICAL", taskObj.getString("severity"));
+            assertEquals("CLOSED", taskObj.getString("status"));
         }
+    }
+
+    @Test
+    public void getMaintenanceTaskFilterByStatus() throws Exception {
+        for(int i = 0; i < 5; i++) {
+            // Status open, severity unimportant
+            createMaintenanceTask(1L, TaskStatus.OPEN, TaskSeverity.UNIMPORTANT);
+        }
+        
         // Make the request, status open
-        result = mvc.perform(MockMvcRequestBuilders.get("/api/tasks").param("status", "OPEN")
+        MvcResult result = mvc.perform(MockMvcRequestBuilders.get("/api/tasks").param("status", "OPEN")
                 .accept(MediaType.APPLICATION_JSON))
             .andExpect(status().isOk()).andReturn();
         // Parse JSON so that we can assert that only open status has been returned
-        jsonResult = new JSONObject(result.getResponse().getContentAsString());
-        em = jsonResult.getJSONObject("_embedded");
-        taskArray = em.getJSONArray("maintenanceTaskList");
+        JSONArray taskArray = getTaskArray(new JSONObject(result.getResponse().getContentAsString()));
         for(int i = 0; i < taskArray.length(); i++) {
             JSONObject taskObj = taskArray.getJSONObject(i);
-            String status = taskObj.getString("status");
-            assertEquals("OPEN", status);
+            assertEquals("OPEN", taskObj.getString("status"));
+        }
+    }
+
+    @Test
+    public void getMaintenanceTaskFilterBySeverity() throws Exception {
+        for(int i = 0; i < 5; i++) {
+            // Status open, severity unimportant
+            createMaintenanceTask(1L, TaskStatus.OPEN, TaskSeverity.UNIMPORTANT);
         }
         // Make the request, severity unimportant
-        result = mvc.perform(MockMvcRequestBuilders.get("/api/tasks").param("severity", "UNIMPORTANT")
+        MvcResult result = mvc.perform(MockMvcRequestBuilders.get("/api/tasks").param("severity", "UNIMPORTANT")
                 .accept(MediaType.APPLICATION_JSON))
             .andExpect(status().isOk()).andReturn();
         // Parse JSON so that we can assert that only unimportant severity has been returned
-        jsonResult = new JSONObject(result.getResponse().getContentAsString());
-        em = jsonResult.getJSONObject("_embedded");
-        taskArray = em.getJSONArray("maintenanceTaskList");
+        JSONArray taskArray = getTaskArray(new JSONObject(result.getResponse().getContentAsString()));
         for(int i = 0; i < taskArray.length(); i++) {
             JSONObject taskObj = taskArray.getJSONObject(i);
-            String severity = taskObj.getString("severity");
-            assertEquals("UNIMPORTANT", severity);
+            assertEquals("UNIMPORTANT", taskObj.getString("severity"));
         }
     }
 
@@ -154,12 +161,7 @@ public class MaintenanceTaskControllerTest {
 
     @Test
     public void getSingleTask() throws Exception {
-        MaintenanceTask task = new MaintenanceTask();
-        task.setSeverity(TaskSeverity.UNIMPORTANT);
-        task.setStatus(TaskStatus.CLOSED);
-        task.setDescription("Some description");
-        task.setDeviceId(1L);
-        task = taskRepository.save(task);
+        MaintenanceTask task = createMaintenanceTask(2L, TaskStatus.CLOSED, TaskSeverity.CRITICAL);
         mvc.perform(MockMvcRequestBuilders.get(String.format("/api/tasks/%d", task.getId())).accept(MediaType.APPLICATION_JSON))
             .andExpect(status().isOk());
     }
@@ -168,12 +170,7 @@ public class MaintenanceTaskControllerTest {
     public void getSingleTaskWithParams() throws Exception {
         // Getting a single task doesn't support any query parameters, so they should just be discarded.
         // The task should be fetched, status 200.
-        MaintenanceTask task = new MaintenanceTask();
-        task.setSeverity(TaskSeverity.IMPORTANT);
-        task.setStatus(TaskStatus.CLOSED);
-        task.setDescription("Some description");
-        task.setDeviceId(1L);
-        task = taskRepository.save(task);
+        MaintenanceTask task = createMaintenanceTask(2L, TaskStatus.CLOSED, TaskSeverity.IMPORTANT);
         mvc.perform(MockMvcRequestBuilders.get(String.format("/api/tasks/%d", task.getId())).param("nosuchparam", "nosuchvalue").accept(MediaType.APPLICATION_JSON))
             .andExpect(status().isOk());
     }
@@ -204,74 +201,74 @@ public class MaintenanceTaskControllerTest {
         // Get all the tasks associated with a deviceId.
         // This should always return status 200.
         // If the device doesn't exist, it should just return an empty collection.
-        mvc.perform(MockMvcRequestBuilders.get("/api/tasks").param("deviceId", "1").accept(MediaType.APPLICATION_JSON))
-            .andExpect(status().isOk());
+        for(int i = 0; i < 5; i++) {
+            createMaintenanceTask(5L, TaskStatus.OPEN, TaskSeverity.IMPORTANT);
+        }
+        MvcResult result = mvc.perform(MockMvcRequestBuilders.get("/api/tasks").param("deviceId", "5").accept(MediaType.APPLICATION_JSON))
+            .andExpect(status().isOk()).andReturn();
+        // Parse JSON
+        JSONArray taskArray = getTaskArray(new JSONObject(result.getResponse().getContentAsString()));
+        for(int i = 0; i < taskArray.length(); i++) {
+            JSONObject taskObj = taskArray.getJSONObject(i);
+            assertEquals(5L, taskObj.getLong("deviceId"));
+        }
     }
 
     @Test
-    public void getTasksByDeviceIdFilter() throws Exception {
+    public void getTasksByDeviceIdAndStatusAndSeverity() throws Exception {
         // Get all the tasks associated with a device, while applying filters to the query
         // Filters: severity and status
-        List<MaintenanceTask> tasks = new ArrayList<>();
         for(int i = 0; i < 5; i++) {
             // Status closed, severity critical
-            MaintenanceTask task = new MaintenanceTask();
-            task.setDeviceId(1L);
-            task.setSeverity(TaskSeverity.CRITICAL);
-            task.setStatus(TaskStatus.CLOSED);
-            task.setDescription("A description");
-            tasks.add(task);
+            createMaintenanceTask(3L, TaskStatus.CLOSED, TaskSeverity.CRITICAL);
         }
-        for(int i = 0; i < 5; i++) {
-            // Status open, severity unimportant
-            MaintenanceTask task = new MaintenanceTask();
-            task.setDeviceId(1L);
-            task.setSeverity(TaskSeverity.UNIMPORTANT);
-            task.setStatus(TaskStatus.OPEN);
-            task.setDescription("A description");
-            tasks.add(task);
-        }
-        taskRepository.saveAll(tasks);
         // Make the request, status closed, severity critical
-        MvcResult result = mvc.perform(MockMvcRequestBuilders.get("/api/tasks").param("deviceId", "1").param("status", "CLOSED").param("severity", "CRITICAL")
+        MvcResult result = mvc.perform(MockMvcRequestBuilders.get("/api/tasks").param("deviceId", "3").param("status", "CLOSED").param("severity", "CRITICAL")
                 .accept(MediaType.APPLICATION_JSON))
             .andExpect(status().isOk()).andReturn();
         // Parse JSON so that we can assert that only open status and critical severity have been returned
-        JSONObject jsonResult = new JSONObject(result.getResponse().getContentAsString());
-        JSONObject em = jsonResult.getJSONObject("_embedded");
-        JSONArray taskArray = em.getJSONArray("maintenanceTaskList");
+        JSONArray taskArray = getTaskArray(new JSONObject(result.getResponse().getContentAsString()));
         for(int i = 0; i < taskArray.length(); i++) {
             JSONObject taskObj = taskArray.getJSONObject(i);
-            String severity = taskObj.getString("severity");
-            String status = taskObj.getString("status");
-            assertEquals("CRITICAL", severity);
-            assertEquals("CLOSED", status);
+            assertEquals(3L, taskObj.getLong("deviceId"));
+            assertEquals("CRITICAL", taskObj.getString("severity"));
+            assertEquals("CLOSED", taskObj.getString("status"));
+        }
+    }
+
+    @Test
+    public void getTasksByDeviceIdAndStatus() throws Exception {
+        for(int i = 0; i < 5; i++) {
+            createMaintenanceTask(6L, TaskStatus.OPEN, TaskSeverity.CRITICAL);
         }
         // Make the request, status open
-        result = mvc.perform(MockMvcRequestBuilders.get("/api/tasks").param("deviceId", "1").param("status", "OPEN")
+        MvcResult result = mvc.perform(MockMvcRequestBuilders.get("/api/tasks").param("deviceId", "6").param("status", "OPEN")
                 .accept(MediaType.APPLICATION_JSON))
             .andExpect(status().isOk()).andReturn();
         // Parse JSON so that we can assert that only open status has been returned
-        jsonResult = new JSONObject(result.getResponse().getContentAsString());
-        em = jsonResult.getJSONObject("_embedded");
-        taskArray = em.getJSONArray("maintenanceTaskList");
+        JSONArray taskArray = getTaskArray(new JSONObject(result.getResponse().getContentAsString()));
         for(int i = 0; i < taskArray.length(); i++) {
             JSONObject taskObj = taskArray.getJSONObject(i);
-            String status = taskObj.getString("status");
-            assertEquals("OPEN", status);
+            assertEquals(6L, taskObj.getLong("deviceId"));
+            assertEquals("OPEN", taskObj.getString("status"));
+        }
+    }
+
+    @Test
+    public void getTasksByDeviceIdAndSeverity() throws Exception {
+        for(int i = 0; i < 5; i++) {
+            createMaintenanceTask(4L, TaskStatus.CLOSED, TaskSeverity.UNIMPORTANT);
         }
         // Make the request, severity unimportant
-        result = mvc.perform(MockMvcRequestBuilders.get("/api/tasks").param("deviceId", "1").param("severity", "UNIMPORTANT")
+        MvcResult result = mvc.perform(MockMvcRequestBuilders.get("/api/tasks").param("deviceId", "4").param("severity", "UNIMPORTANT")
                 .accept(MediaType.APPLICATION_JSON))
             .andExpect(status().isOk()).andReturn();
         // Parse JSON so that we can assert that only unimportant severity has been returned
-        jsonResult = new JSONObject(result.getResponse().getContentAsString());
-        em = jsonResult.getJSONObject("_embedded");
-        taskArray = em.getJSONArray("maintenanceTaskList");
+        JSONArray taskArray = getTaskArray(new JSONObject(result.getResponse().getContentAsString()));
         for(int i = 0; i < taskArray.length(); i++) {
             JSONObject taskObj = taskArray.getJSONObject(i);
-            String severity = taskObj.getString("severity");
-            assertEquals("UNIMPORTANT", severity);
+            assertEquals(4L, taskObj.getLong("deviceId"));
+            assertEquals("UNIMPORTANT", taskObj.getString("severity"));
         }
     }
 
@@ -361,12 +358,7 @@ public class MaintenanceTaskControllerTest {
     public void addTaskWrongEndpoint() throws Exception {
         // Try to add a task through /api/tasks/{taskId}
         // Should say that the method is not allowed (405)
-        MaintenanceTask task = new MaintenanceTask();
-        task.setSeverity(TaskSeverity.CRITICAL);
-        task.setStatus(TaskStatus.CLOSED);
-        task.setDescription("Hello lulz");
-        task.setDeviceId(1L);
-        task = taskRepository.save(task);
+        MaintenanceTask task = createMaintenanceTask(1L, TaskStatus.CLOSED, TaskSeverity.CRITICAL);
         String json = "{\"deviceId\": 1, \"status\": \"OPEN\", \"severity\": \"CRITICAL\", \"description\": \"Major fixes of security holes\"}";
         mvc.perform(MockMvcRequestBuilders.post("/api/tasks/" + task.getId()).accept(MediaType.APPLICATION_JSON)
                 .contentType(MediaType.APPLICATION_JSON).content(json))
@@ -386,18 +378,12 @@ public class MaintenanceTaskControllerTest {
     @Test
     public void modifyTask() throws Exception {
         // Modify a task, set its status to closed
-        MaintenanceTask newTask = new MaintenanceTask();
-        newTask.setSeverity(TaskSeverity.IMPORTANT);
-        newTask.setStatus(TaskStatus.OPEN);
-        newTask.setDescription("A test task");
-        newTask.setDeviceId(1L);
-        newTask = taskRepository.save(newTask); // to get the id
+        MaintenanceTask newTask = createMaintenanceTask(1L, TaskStatus.OPEN, TaskSeverity.IMPORTANT);
         // Now modify it
         String json = "{\"status\": \"CLOSED\", \"description\": \"A test task\", \"deviceId\": 1, \"severity\": \"IMPORTANT\"}"; 
         MvcResult result = mvc.perform(MockMvcRequestBuilders.put(String.format("/api/tasks/%d", newTask.getId())).accept(MediaType.APPLICATION_JSON)
                 .contentType(MediaType.APPLICATION_JSON).content(json))
             .andExpect(status().isOk()).andReturn();
-        System.out.println(result.getResponse().getContentAsString());
         // Now also load up the task object from the repository and compare the status
         MaintenanceTask modifiedTask = taskRepository.findById(newTask.getId()).get();
         assertEquals(newTask.getId(), modifiedTask.getId());
@@ -415,35 +401,13 @@ public class MaintenanceTaskControllerTest {
 
     @Test
     public void modifyTaskNoStatus() throws Exception {
-        // Try to modify a task, but pass null values. Should return BadRequest.
+        // Try to modify a task, but don't pass a status in the body. Should return BadRequest.
         String json = "{\"description\": \"A test task\", \"deviceId\": 1, \"severity\": \"IMPORTANT\"}"; 
-        MaintenanceTask newTask = new MaintenanceTask();
-        newTask.setSeverity(TaskSeverity.IMPORTANT);
-        newTask.setStatus(TaskStatus.OPEN);
-        newTask.setDescription("A test task");
-        newTask.setDeviceId(1L);
-        newTask = taskRepository.save(newTask); // to get the id
-        MvcResult result = mvc.perform(MockMvcRequestBuilders.put(String.format("/api/tasks/%d", newTask.getId())).accept(MediaType.APPLICATION_JSON)
-                .contentType(MediaType.APPLICATION_JSON).content(json))
-            .andExpect(status().isBadRequest()).andReturn();
-    }
-
-    @Test
-    public void modifyTaskNonExistentProperty() throws Exception {    
-        // Create a task and try to modify it, but pass an unknown property in the body
-        // Should return 400 bad request
-        MaintenanceTask newTask = new MaintenanceTask();
-        newTask.setSeverity(TaskSeverity.IMPORTANT);
-        newTask.setStatus(TaskStatus.OPEN);
-        newTask.setDescription("A test task");
-        newTask.setDeviceId(1L);
-        newTask = taskRepository.save(newTask); // to get the id
+        MaintenanceTask newTask = createMaintenanceTask(1L, TaskStatus.OPEN, TaskSeverity.IMPORTANT);
         // Now try to modify it
-        String json = "{\"status\": \"CLOSED\", \"description\": \"A test task\", \"deviceId\": 1, \"severity\": \"IMPORTANT\", \"unknownKey\": \"unknownValue\"}"; 
-        MvcResult result = mvc.perform(MockMvcRequestBuilders.put(String.format("/api/tasks/%d", newTask.getId())).accept(MediaType.APPLICATION_JSON)
+        mvc.perform(MockMvcRequestBuilders.put(String.format("/api/tasks/%d", newTask.getId())).accept(MediaType.APPLICATION_JSON)
                 .contentType(MediaType.APPLICATION_JSON).content(json))
-            .andExpect(status().isBadRequest()).andReturn();
-        System.out.println(result.getResponse().getContentAsString());
+            .andExpect(status().isBadRequest());
         // Now also load up the task object from the repository and compare the status
         // It should still be OPEN, as the modification should have been aborted
         MaintenanceTask modifiedTask = taskRepository.findById(newTask.getId()).get();
@@ -455,15 +419,10 @@ public class MaintenanceTaskControllerTest {
     public void modifyTaskEmptyDescription() throws Exception {
         // Try to modify a task, pass empty description. Should return BadRequest.
         String json = "{\"description\": \"\", \"deviceId\": 1, \"severity\": \"IMPORTANT\", \"status\": \"OPEN\"}"; 
-        MaintenanceTask newTask = new MaintenanceTask();
-        newTask.setSeverity(TaskSeverity.IMPORTANT);
-        newTask.setStatus(TaskStatus.OPEN);
-        newTask.setDescription("A test task");
-        newTask.setDeviceId(1L);
-        newTask = taskRepository.save(newTask); // to get the id
-        MvcResult result = mvc.perform(MockMvcRequestBuilders.put(String.format("/api/tasks/%d", newTask.getId())).accept(MediaType.APPLICATION_JSON)
+        MaintenanceTask newTask = createMaintenanceTask(1L, TaskStatus.OPEN, TaskSeverity.IMPORTANT);
+        mvc.perform(MockMvcRequestBuilders.put(String.format("/api/tasks/%d", newTask.getId())).accept(MediaType.APPLICATION_JSON)
                 .contentType(MediaType.APPLICATION_JSON).content(json))
-            .andExpect(status().isBadRequest()).andReturn();
+            .andExpect(status().isBadRequest());
     }
 
     @Test
@@ -480,12 +439,7 @@ public class MaintenanceTaskControllerTest {
 
     @Test
     public void deleteAllTasks() throws Exception {
-        MaintenanceTask task = new MaintenanceTask();
-        task.setSeverity(TaskSeverity.IMPORTANT);
-        task.setStatus(TaskStatus.CLOSED);
-        task.setDescription("Some description");
-        task.setDeviceId(1L);
-        task = taskRepository.save(task);
+        MaintenanceTask task = createMaintenanceTask(1L, TaskStatus.CLOSED, TaskSeverity.IMPORTANT);
         assertTrue(taskRepository.existsById(task.getId()));
         // Delete
         mvc.perform(MockMvcRequestBuilders.delete("/api/tasks").accept(MediaType.APPLICATION_JSON))
@@ -496,12 +450,7 @@ public class MaintenanceTaskControllerTest {
     
     @Test
     public void deleteSingleTask() throws Exception {
-        MaintenanceTask task = new MaintenanceTask();
-        task.setSeverity(TaskSeverity.UNIMPORTANT);
-        task.setStatus(TaskStatus.CLOSED);
-        task.setDescription("Meaningless drivel");
-        task.setDeviceId(1L);
-        task = taskRepository.save(task);
+        MaintenanceTask task = createMaintenanceTask(1L, TaskStatus.CLOSED, TaskSeverity.UNIMPORTANT);
         // Confirm its existence in the database
         assertTrue(taskRepository.existsById(task.getId()));
         // Delete
@@ -523,16 +472,9 @@ public class MaintenanceTaskControllerTest {
         // Delete all the tasks associated with a given device.
         
         // First, create a bunch of new tasks
-        List<MaintenanceTask> tasks = new ArrayList<>();
         for(int i = 0; i < 10; i++) {
-            MaintenanceTask task = new MaintenanceTask();
-            task.setSeverity(TaskSeverity.IMPORTANT);
-            task.setStatus(TaskStatus.CLOSED);
-            task.setDeviceId(1L);
-            task.setDescription("This task is about to be deleted lulz");
-            tasks.add(task);
+            createMaintenanceTask(1L, TaskStatus.CLOSED, TaskSeverity.IMPORTANT);
         }
-        taskRepository.saveAll(tasks);
         // Assert the existence of the newly created tasks
         assertFalse(taskRepository.findAllByDeviceId(1L).isEmpty());
         // Now delete
@@ -546,16 +488,9 @@ public class MaintenanceTaskControllerTest {
     public void deleteTasksByDeviceIdAndStatusAndSeverity() throws Exception {
         // Delete all the tasks associated with the deviceId, where status is <status> and severity is <severity>
         // First, create a bunch of new tasks
-        List<MaintenanceTask> tasks = new ArrayList<>();
         for(int i = 0; i < 10; i++) {
-            MaintenanceTask task = new MaintenanceTask();
-            task.setSeverity(TaskSeverity.IMPORTANT);
-            task.setStatus(TaskStatus.CLOSED);
-            task.setDeviceId(1L);
-            task.setDescription("This task is about to be deleted lulz");
-            tasks.add(task);
-        }
-        taskRepository.saveAll(tasks);
+            createMaintenanceTask(1L, TaskStatus.CLOSED, TaskSeverity.IMPORTANT);
+        } 
         // Assert the existence of the newly created tasks
         assertFalse(taskRepository.findAllByDeviceIdAndStatusAndSeverity(1L, TaskStatus.CLOSED, TaskSeverity.IMPORTANT).isEmpty());
         // Delete
@@ -570,16 +505,9 @@ public class MaintenanceTaskControllerTest {
     public void deleteTasksByDeviceIdAndStatus() throws Exception {
         // Delete all the tasks associated with the deviceId, where status is <status>
         // First, create a bunch of new tasks
-        List<MaintenanceTask> tasks = new ArrayList<>();
         for(int i = 0; i < 10; i++) {
-            MaintenanceTask task = new MaintenanceTask();
-            task.setSeverity(TaskSeverity.IMPORTANT);
-            task.setStatus(TaskStatus.CLOSED);
-            task.setDeviceId(1L);
-            task.setDescription("This task is about to be deleted lulz");
-            tasks.add(task);
-        }
-        taskRepository.saveAll(tasks);
+            createMaintenanceTask(1L, TaskStatus.CLOSED, TaskSeverity.IMPORTANT);
+        } 
         // Assert the existence of the newly created tasks
         assertFalse(taskRepository.findAllByDeviceIdAndStatus(1L, TaskStatus.CLOSED).isEmpty());
         // Delete
@@ -594,16 +522,9 @@ public class MaintenanceTaskControllerTest {
     public void deleteTasksByDeviceIdAndSeverity() throws Exception {
         // Delete all the tasks associated with the deviceId, where severity is <severity>
         // First, create a bunch of new tasks
-        List<MaintenanceTask> tasks = new ArrayList<>();
         for(int i = 0; i < 10; i++) {
-            MaintenanceTask task = new MaintenanceTask();
-            task.setSeverity(TaskSeverity.IMPORTANT);
-            task.setStatus(TaskStatus.CLOSED);
-            task.setDeviceId(1L);
-            task.setDescription("This task is about to be deleted lulz");
-            tasks.add(task);
-        }
-        taskRepository.saveAll(tasks);
+            createMaintenanceTask(1L, TaskStatus.CLOSED, TaskSeverity.IMPORTANT);
+        } 
         // Assert the existence of the newly created tasks
         assertFalse(taskRepository.findAllByDeviceIdAndSeverity(1L, TaskSeverity.IMPORTANT).isEmpty());
         // Delete
@@ -618,16 +539,9 @@ public class MaintenanceTaskControllerTest {
     public void deleteTasksByStatusAndSeverity() throws Exception {
         // Delete all the tasks where status is <status> and severity is <severity>
         // First, create a bunch of new tasks
-        List<MaintenanceTask> tasks = new ArrayList<>();
         for(int i = 0; i < 10; i++) {
-            MaintenanceTask task = new MaintenanceTask();
-            task.setSeverity(TaskSeverity.IMPORTANT);
-            task.setStatus(TaskStatus.CLOSED);
-            task.setDeviceId(1L);
-            task.setDescription("This task is about to be deleted lulz");
-            tasks.add(task);
-        }
-        taskRepository.saveAll(tasks);
+            createMaintenanceTask(1L, TaskStatus.CLOSED, TaskSeverity.IMPORTANT);
+        } 
         // Assert the existence of the newly created tasks
         assertFalse(taskRepository.findAllByStatusAndSeverity(TaskStatus.CLOSED, TaskSeverity.IMPORTANT).isEmpty());
         // Delete
@@ -642,16 +556,9 @@ public class MaintenanceTaskControllerTest {
     public void deleteTasksByStatus() throws Exception {
         // Delete all the tasks where status is <status>
         // First, create a bunch of new tasks
-        List<MaintenanceTask> tasks = new ArrayList<>();
         for(int i = 0; i < 10; i++) {
-            MaintenanceTask task = new MaintenanceTask();
-            task.setSeverity(TaskSeverity.IMPORTANT);
-            task.setStatus(TaskStatus.CLOSED);
-            task.setDeviceId(1L);
-            task.setDescription("This task is about to be deleted lulz");
-            tasks.add(task);
+            createMaintenanceTask(1L, TaskStatus.CLOSED, TaskSeverity.IMPORTANT);
         }
-        taskRepository.saveAll(tasks);
         // Assert the existence of the newly created tasks
         assertFalse(taskRepository.findAllByStatus(TaskStatus.CLOSED).isEmpty());
         // Delete
@@ -666,16 +573,9 @@ public class MaintenanceTaskControllerTest {
     public void deleteTasksBySeverity() throws Exception {
         // Delete all the tasks where severity is <severity>
         // First, create a bunch of new tasks
-        List<MaintenanceTask> tasks = new ArrayList<>();
         for(int i = 0; i < 10; i++) {
-            MaintenanceTask task = new MaintenanceTask();
-            task.setSeverity(TaskSeverity.IMPORTANT);
-            task.setStatus(TaskStatus.CLOSED);
-            task.setDeviceId(1L);
-            task.setDescription("This task is about to be deleted lulz");
-            tasks.add(task);
-        }
-        taskRepository.saveAll(tasks);
+            createMaintenanceTask(1L, TaskStatus.CLOSED, TaskSeverity.IMPORTANT);
+        } 
         // Assert the existence of the newly created tasks
         assertFalse(taskRepository.findAllBySeverity(TaskSeverity.IMPORTANT).isEmpty());
         // Delete
@@ -689,12 +589,7 @@ public class MaintenanceTaskControllerTest {
     @Test
     public void deleteTaskGarbageParams() throws Exception {
         // Delete tasks with garbage parameters - should return 400 bad request
-        MaintenanceTask task = new MaintenanceTask();
-        task.setDeviceId(1L);
-        task.setStatus(TaskStatus.CLOSED);
-        task.setSeverity(TaskSeverity.CRITICAL);
-        task.setDescription("A task created in our tests :)");
-        task = taskRepository.save(task);
+        MaintenanceTask task = createMaintenanceTask(1L, TaskStatus.CLOSED, TaskSeverity.CRITICAL);
         mvc.perform(MockMvcRequestBuilders.delete("/api/tasks").param("deviceId", "lulzbad").accept(MediaType.APPLICATION_JSON))
             .andExpect(status().isBadRequest());
         // Assert that nothing was deleted
@@ -706,12 +601,7 @@ public class MaintenanceTaskControllerTest {
     public void deleteTaskNonExistentParam() throws Exception {
         // Delete a task, but make the query with a non existent parameter name.
         // Should return 400 due to a bad parameter
-        MaintenanceTask task = new MaintenanceTask();
-        task.setDeviceId(1L);
-        task.setStatus(TaskStatus.CLOSED);
-        task.setSeverity(TaskSeverity.CRITICAL);
-        task.setDescription("A task created in our tests :)"); 
-        task = taskRepository.save(task);
+        MaintenanceTask task = createMaintenanceTask(2L, TaskStatus.OPEN, TaskSeverity.CRITICAL);
         mvc.perform(MockMvcRequestBuilders.delete("/api/tasks").param("lolshit", "lulzcrap").accept(MediaType.APPLICATION_JSON))
             .andExpect(status().isBadRequest());
         // Assert that no tasks were deleted and that our created task still exists
@@ -723,16 +613,11 @@ public class MaintenanceTaskControllerTest {
     public void deleteTaskGoodAndGarbageParam() throws Exception {
         // Delete a task, pass one valid parameter, and one garbage parameter
         // It should return 400 bad request and not delete anything
-        MaintenanceTask task = new MaintenanceTask();
-        task.setDeviceId(1L);
-        task.setStatus(TaskStatus.CLOSED);
-        task.setSeverity(TaskSeverity.CRITICAL);
-        task.setDescription("A task created in our tests :)");
-        task = taskRepository.save(task);
-        mvc.perform(MockMvcRequestBuilders.delete("/api/tasks").param("deviceId", "1").param("lolshit", "lulzies").accept(MediaType.APPLICATION_JSON))
+        MaintenanceTask task = createMaintenanceTask(2L, TaskStatus.OPEN, TaskSeverity.CRITICAL); 
+        mvc.perform(MockMvcRequestBuilders.delete("/api/tasks").param("deviceId", "2").param("lolshit", "lulzies").accept(MediaType.APPLICATION_JSON))
             .andExpect(status().isBadRequest());
         // Assert that no tasks were deleted and that our created task specifically still exists
-        assertFalse(taskRepository.findAllByDeviceId(1L).isEmpty());
+        assertFalse(taskRepository.findAllByDeviceId(2L).isEmpty());
         assertTrue(taskRepository.existsById(task.getId()));
     }
 
@@ -740,12 +625,7 @@ public class MaintenanceTaskControllerTest {
     public void deleteTaskValidAndInvalidParams() throws Exception {
         // Delete a task, pass one valid parameter, and one invalid parameter (that can't be converted to its type)
         // Should return 400
-        MaintenanceTask task = new MaintenanceTask();
-        task.setDeviceId(1L);
-        task.setStatus(TaskStatus.CLOSED);
-        task.setSeverity(TaskSeverity.CRITICAL);
-        task.setDescription("A task created in our tests :)");
-        task = taskRepository.save(task);
+        MaintenanceTask task = createMaintenanceTask(1L, TaskStatus.OPEN, TaskSeverity.CRITICAL);  
         mvc.perform(MockMvcRequestBuilders.delete("/api/tasks").param("deviceId", "1").param("status", "FUCKITHAHAHAHAHA").accept(MediaType.APPLICATION_JSON))
             .andExpect(status().isBadRequest());
         // Assert that no tasks for device ID 1 were deleted
@@ -764,12 +644,7 @@ public class MaintenanceTaskControllerTest {
     @Test
     public void deleteTasksDeviceNotFound() throws Exception {
         // Should return isOk(), even though nothing happens
-        MaintenanceTask task = new MaintenanceTask();
-        task.setDeviceId(1L);
-        task.setStatus(TaskStatus.CLOSED);
-        task.setSeverity(TaskSeverity.CRITICAL);
-        task.setDescription("A task created in our tests :)");
-        task = taskRepository.save(task); 
+        MaintenanceTask task = createMaintenanceTask(3L, TaskStatus.CLOSED, TaskSeverity.UNIMPORTANT);
         mvc.perform(MockMvcRequestBuilders.delete("/api/tasks").param("deviceId", "123456789").accept(MediaType.APPLICATION_JSON))
             .andExpect(status().isOk());
         // Assert that no tasks were deleted
