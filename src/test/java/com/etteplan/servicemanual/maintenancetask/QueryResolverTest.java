@@ -19,7 +19,7 @@ public class QueryResolverTest {
     @Autowired
     private MaintenanceTaskRepository taskRepository;
 
-    private Map<String, String> params;
+    private Map<String, String> params = new HashMap<String, String>();
     
     private final Random random = new Random();
 
@@ -53,8 +53,8 @@ public class QueryResolverTest {
 
     @BeforeEach
     private void setUp() {
-        // Before each test, create a new hash map for parameters
-        params = new HashMap<String, String>();
+        // Before each test, clear the parameters hashmap
+        params.clear();
     }
 
     @Test
@@ -68,6 +68,24 @@ public class QueryResolverTest {
     @Test
     public void resolveQueryBadValue() throws Exception {
         params.put("deviceId", "hello");
+        assertThrows(QueryParameterException.class, () -> {
+            QueryResolver.resolveQuery(params);
+        });
+    }
+
+    @Test
+    public void resolveQueryGoodValueBadValue() throws Exception {
+        params.put("deviceId", "1");
+        params.put("status", "hello");
+        assertThrows(QueryParameterException.class, () -> {
+            QueryResolver.resolveQuery(params);
+        });
+    }
+
+    @Test
+    public void resolveQueryKnownAndUnknownParams() throws Exception {
+        params.put("deviceId", "1");
+        params.put("imaginary", "value");
         assertThrows(QueryParameterException.class, () -> {
             QueryResolver.resolveQuery(params);
         });

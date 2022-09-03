@@ -64,7 +64,7 @@ public final class QueryResolver {
     // Private constructor because we want a static class
     private QueryResolver() {}
 
-    // Input parameters: the MaintenanceTaskRepository, Map<String, String> of query parameters.
+    // Input parameters: Map<String, String> of query parameters.
     // Output: a list of MaintenanceTask objects retrieved from the database
     // according to the query parameters.
     protected static List<MaintenanceTask> resolveQuery(Map<String, String> parameters) throws QueryParameterException {
@@ -87,11 +87,8 @@ public final class QueryResolver {
             // If we reached here, no exception was thrown.
             // Parameter is correct, validate the data
 
-            // We perform the bitwise AND operations here
-            // to ensure that we don't get duplicate parameters.
-            
             String value = parameters.get(param);
-            if (param.equals(Q_DEVICEID) && ((databaseMethod & DQP_DEVICEID) == 0)) {
+            if (param.equals(Q_DEVICEID)) {
                 try {
                     deviceId = Long.parseLong(value);
                     databaseMethod += DQP_DEVICEID; // Indicate that we found the deviceId parameter
@@ -102,7 +99,7 @@ public final class QueryResolver {
                     throw new QueryParameterException(String.format(notConvertable, value, "Must be an integer."));
                 }
             }
-            else if (param.equals(Q_STATUS) && ((databaseMethod & DQP_STATUS) == 0)) {
+            else if (param.equals(Q_STATUS)) {
                 try { 
                     status = TaskStatus.valueOf(value);
                     databaseMethod += DQP_STATUS; // Indicate that we found the status parameter
@@ -112,7 +109,7 @@ public final class QueryResolver {
                     throw new QueryParameterException(String.format(notConvertable, value, availableStatus));
                 }
             }
-            else if (param.equals(Q_SEVERITY) && ((databaseMethod & DQP_SEVERITY) == 0)) {
+            else if (param.equals(Q_SEVERITY)) {
                 try {
                     severity = TaskSeverity.valueOf(value);
                     databaseMethod += DQP_SEVERITY; // Indicate that we found the severity parameter
