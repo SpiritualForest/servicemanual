@@ -30,15 +30,16 @@ public final class QueryResolver {
     private static final String availableStatus = "Available values for status: 'OPEN', 'CLOSED'";
     private static final String availableSeverity = "Available values for severity: 'UNIMPORTANT', 'IMPORTANT', 'CRITICAL'";
     
-    /* Database Query parameters represent a combined value between 1 and 7.
+    /* Database Query Parameters represent a combined value between 1 and 7.
      * Based on this value, we decide which database query function to call
      * in order to retrieve tasks.
-     * Each different query parameter has been assigned its own numerical value:
-     * deviceId: 1, status: 2, severity: 4. The combination of these values tell us
+     * Each query parameter has been assigned its own numerical value:
+     * deviceId: 1, status: 2, severity: 4. The combination of these values tells us
      * which parameters we need to pass to the JPA repository function.
      * So for example, if we encounter the deviceId and status parameters in our query,
-     * the combined value will become 3. So we know then to pass only parameters deviceId and status.
-     * This works similarly to Linux's filesystem permissions system.
+     * the combined value will become 3. So we know then to call the function
+     * that retrieves tasks by deviceId and status, and pass to it only the parameters deviceId and status.
+     * This works similarly to Linux's filesystem permissions numbering system.
      * So if we got a total combined value of 7, it means we filter with all 3 parameters. */
     
     private static final int DQP_DEVICEID = 1;
@@ -79,8 +80,8 @@ public final class QueryResolver {
             // If we reached here, no exception was thrown.
             // Parameter is correct, validate the data
 
-            // We perform the bitwise AND operations here to ensure that we don't get
-            // multiple parameters of the same name.
+            // We perform the bitwise AND operations here
+            // to ensure that we don't get duplicate parameters.
             
             String value = parameters.get(param);
             if (param.equals(Q_DEVICEID) && ((databaseMethod & DQP_DEVICEID) == 0)) {
@@ -121,20 +122,20 @@ public final class QueryResolver {
         return queryDatabase(taskRepository, databaseMethod, deviceId, status, severity);
     }
 
-    private static List<MaintenanceTask> queryDatabase(MaintenanceTaskRepository taskRepository, int method, Long deviceId, TaskStatus status, TaskSeverity severity) {
+    private static List<MaintenanceTask> queryDatabase(MaintenanceTaskRepository taskRepository, int databaseMethod, Long deviceId, TaskStatus status, TaskSeverity severity) {
         // Query the database based on the parameters we received
-        // The method parameter contains a value between 1 and 7
+        // The databaseMethod parameter is a value between 1 and 7
         // DQ_DEVICEID = 1, DQ_STATUS = 2, DQ_SEVERITY = 4.
         // The combination of these values determine which database query method to call
         // from our task repository. This way we don't have to perform null checks on parameters :)
         List<MaintenanceTask> tasks = new ArrayList<>();
-        switch(method) {
+        switch(databaseMethod) {
             case DQP_DEVICEID:
-                // 1: Only device
+                // 1: only device
                 tasks = taskRepository.findAllByDeviceIdOrderBySeverityAscRegistered(deviceId);
                 break;
             case DQP_STATUS:
-                // 2: Only status
+                // 2: only status
                 tasks = taskRepository.findAllByStatusOrderBySeverityAscRegistered(status);
                 break;
             case DQP_DEVICEID + DQP_STATUS:
@@ -154,7 +155,7 @@ public final class QueryResolver {
                 tasks = taskRepository.findAllByStatusAndSeverityOrderBySeverityAscRegistered(status, severity);
                 break;
             case DQP_DEVICEID + DQP_STATUS + DQP_SEVERITY:
-                // 7: everything, device, status, severity
+                // 7: device, status, severity
                 tasks = taskRepository.findAllByDeviceIdAndStatusAndSeverityOrderBySeverityAscRegistered(deviceId, status, severity);
                 break;
         }
