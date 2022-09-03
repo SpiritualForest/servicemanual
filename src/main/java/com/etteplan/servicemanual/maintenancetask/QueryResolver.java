@@ -3,7 +3,6 @@ package com.etteplan.servicemanual.maintenancetask;
 import java.util.Map;
 import java.util.List;
 import java.util.ArrayList;
-import java.util.Arrays;
 
 /* This class resolves which database query method must be called based
  * on the given query parameter values.
@@ -21,7 +20,6 @@ public final class QueryResolver {
     private static final String Q_DEVICEID = "deviceId";
     private static final String Q_STATUS = "status";
     private static final String Q_SEVERITY = "severity";
-    private static final List<String> acceptedQueryParameters = Arrays.asList(Q_DEVICEID, Q_STATUS, Q_SEVERITY);
     
     // Some informational messages in case of an exception.
     private static final String unknownParam = "Bad request: unknown parameter '%s'. %s";
@@ -68,7 +66,7 @@ public final class QueryResolver {
     // Output: a list of MaintenanceTask objects retrieved from the database
     // according to the query parameters.
     protected static List<MaintenanceTask> resolveQuery(Map<String, String> parameters) throws QueryParameterException {
-        if (parameters.size() == 0) {
+        if (parameters.isEmpty()) {
             // No parameters were actually supplied. Fetch all tasks.
             return taskRepository.findAllByOrderBySeverityAscRegistered();
         }
@@ -79,45 +77,43 @@ public final class QueryResolver {
         TaskStatus status = null;
         TaskSeverity severity = null;
 
-        for(String param : parameters.keySet()) {
-            if (!acceptedQueryParameters.contains(param)) {
-                // "Bad request, unknown param '%s'. Available params: ..."
-                throw new QueryParameterException(String.format(unknownParam, param, availableParams));
-            }
-            // If we reached here, no exception was thrown.
-            // Parameter is correct, validate the data
-
+        for (String param : parameters.keySet()) {
             String value = parameters.get(param);
-            if (param.equals(Q_DEVICEID)) {
-                try {
-                    deviceId = Long.parseLong(value);
-                    databaseMethod += DQP_DEVICEID; // Indicate that we found the deviceId parameter
-                    QueryResolver.deviceId = deviceId; // Stored for hyperlink creation in the controller
-                }
-                catch(IllegalArgumentException ex) {
-                    // Bad parameter for deviceId
-                    throw new QueryParameterException(String.format(notConvertable, value, "Must be an integer."));
-                }
-            }
-            else if (param.equals(Q_STATUS)) {
-                try { 
-                    status = TaskStatus.valueOf(value);
-                    databaseMethod += DQP_STATUS; // Indicate that we found the status parameter
-                }
-                catch(IllegalArgumentException ex) {
-                    // Bad parameter for status. Throw exception, show which statuses are available
-                    throw new QueryParameterException(String.format(notConvertable, value, availableStatus));
-                }
-            }
-            else if (param.equals(Q_SEVERITY)) {
-                try {
-                    severity = TaskSeverity.valueOf(value);
-                    databaseMethod += DQP_SEVERITY; // Indicate that we found the severity parameter
-                }
-                catch(IllegalArgumentException ex) {
-                    // Bad parameter for severity.
-                    throw new QueryParameterException(String.format(notConvertable, value, availableSeverity));
-                }
+            switch (param) {
+                case Q_DEVICEID:
+                    try {
+                        deviceId = Long.parseLong(value);
+                        databaseMethod += DQP_DEVICEID; // Indicate that we found the deviceId parameter
+                        QueryResolver.deviceId = deviceId; // Stored for hyperlink creation in the controller
+                    }
+                    catch (IllegalArgumentException ex) {
+                        // Bad parameter for deviceId
+                        throw new QueryParameterException(String.format(notConvertable, value, "Must be an integer."));
+                    }
+                    break;
+                case Q_STATUS:
+                    try { 
+                        status = TaskStatus.valueOf(value);
+                        databaseMethod += DQP_STATUS; // Indicate that we found the status parameter
+                    }
+                    catch (IllegalArgumentException ex) {
+                        // Bad parameter for status. Throw exception, show which statuses are available
+                        throw new QueryParameterException(String.format(notConvertable, value, availableStatus));
+                    }
+                    break;
+                case Q_SEVERITY:
+                    try {
+                        severity = TaskSeverity.valueOf(value);
+                        databaseMethod += DQP_SEVERITY; // Indicate that we found the severity parameter
+                    }
+                    catch (IllegalArgumentException ex) {
+                        // Bad parameter for severity.
+                        throw new QueryParameterException(String.format(notConvertable, value, availableSeverity));
+                    }
+                    break;
+                default:
+                    // Unknown parameter, throw an exception
+                    throw new QueryParameterException(String.format(unknownParam, param, availableParams));
             }
         }
         // Now we call the database query resolution function with all 3 parameters, and pass our databaseMethod variable
@@ -133,7 +129,7 @@ public final class QueryResolver {
         // The combination of these values determine which database query method to call
         // from our task repository. This way we don't have to perform null checks on parameters :)
         List<MaintenanceTask> tasks = new ArrayList<>();
-        switch(databaseMethod) {
+        switch (databaseMethod) {
             case DQP_DEVICEID:
                 // 1: only device
                 tasks = taskRepository.findAllByDeviceIdOrderBySeverityAscRegistered(deviceId);
