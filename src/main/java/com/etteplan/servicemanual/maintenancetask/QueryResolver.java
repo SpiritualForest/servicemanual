@@ -41,9 +41,9 @@ public final class QueryResolver {
      * This works similarly to Linux's filesystem permissions system.
      * So if we got a total combined value of 7, it means we filter with all 3 parameters. */
     
-    private static final int DQ_DEVICEID = 1;
-    private static final int DQ_STATUS = 2;
-    private static final int DQ_SEVERITY = 4;
+    private static final int DQP_DEVICEID = 1;
+    private static final int DQP_STATUS = 2;
+    private static final int DQP_SEVERITY = 4;
 
     // We store this field because we need it for creating "/api/tasks?deviceId=<id>" hyperlinks
     // in the controller that uses this class, when responding to GET requests.
@@ -81,36 +81,37 @@ public final class QueryResolver {
 
             // We perform the bitwise AND operations here to ensure that we don't get
             // multiple parameters of the same name.
+            
             String value = parameters.get(param);
-            if (param.equals(Q_STATUS) && ((databaseMethod & DQ_STATUS) != DQ_SEVERITY)) {
+            if (param.equals(Q_DEVICEID) && ((databaseMethod & DQP_DEVICEID) == 0)) {
+                try {
+                    deviceId = Long.parseLong(value);
+                    databaseMethod += DQP_DEVICEID; // Indicate that we found the deviceId parameter
+                    QueryResolver.deviceId = deviceId; // Stored for hyperlink creation in the controller
+                }
+                catch(IllegalArgumentException ex) {
+                    // Bad parameter for deviceId
+                    throw new QueryParameterException(String.format(notConvertable, value, "Must be an integer."));
+                }
+            }
+            else if (param.equals(Q_STATUS) && ((databaseMethod & DQP_STATUS) == 0)) {
                 try { 
                     status = TaskStatus.valueOf(value);
-                    databaseMethod += DQ_STATUS; // Indicate that we found the status parameter
+                    databaseMethod += DQP_STATUS; // Indicate that we found the status parameter
                 }
                 catch(IllegalArgumentException ex) {
                     // Bad parameter for status. Throw exception, show which statuses are available
                     throw new QueryParameterException(String.format(notConvertable, value, availableStatus));
                 }
             }
-            else if (param.equals(Q_SEVERITY) && ((databaseMethod & DQ_SEVERITY) != DQ_SEVERITY)) {
+            else if (param.equals(Q_SEVERITY) && ((databaseMethod & DQP_SEVERITY) == 0)) {
                 try {
                     severity = TaskSeverity.valueOf(value);
-                    databaseMethod += DQ_SEVERITY; // Indicate that we found the severity parameter
+                    databaseMethod += DQP_SEVERITY; // Indicate that we found the severity parameter
                 }
                 catch(IllegalArgumentException ex) {
                     // Bad parameter for severity.
                     throw new QueryParameterException(String.format(notConvertable, value, availableSeverity));
-                }
-            }
-            else if (param.equals(Q_DEVICEID) && ((databaseMethod & DQ_DEVICEID) != DQ_DEVICEID)) {
-                try {
-                    deviceId = Long.parseLong(value);
-                    databaseMethod += DQ_DEVICEID; // Indicate that we found the deviceId parameter
-                    QueryResolver.deviceId = deviceId; // Stored for hyperlink creation in the controller
-                }
-                catch(IllegalArgumentException ex) {
-                    // Bad parameter for deviceId
-                    throw new QueryParameterException(String.format(notConvertable, value, "Must be an integer."));
                 }
             }
         }
@@ -128,31 +129,31 @@ public final class QueryResolver {
         // from our task repository. This way we don't have to perform null checks on parameters :)
         List<MaintenanceTask> tasks = new ArrayList<>();
         switch(method) {
-            case DQ_DEVICEID:
+            case DQP_DEVICEID:
                 // 1: Only device
                 tasks = taskRepository.findAllByDeviceIdOrderBySeverityAscRegistered(deviceId);
                 break;
-            case DQ_STATUS:
+            case DQP_STATUS:
                 // 2: Only status
                 tasks = taskRepository.findAllByStatusOrderBySeverityAscRegistered(status);
                 break;
-            case DQ_DEVICEID + DQ_STATUS:
+            case DQP_DEVICEID + DQP_STATUS:
                 // 3: device and status
                 tasks = taskRepository.findAllByDeviceIdAndStatusOrderBySeverityAscRegistered(deviceId, status);
                 break;
-            case DQ_SEVERITY:
+            case DQP_SEVERITY:
                 // 4: only severity
                 tasks = taskRepository.findAllBySeverityOrderBySeverityAscRegistered(severity);
                 break;
-            case DQ_DEVICEID + DQ_SEVERITY:
+            case DQP_DEVICEID + DQP_SEVERITY:
                 // 5: device and severity
                 tasks = taskRepository.findAllByDeviceIdAndSeverityOrderBySeverityAscRegistered(deviceId, severity);
                 break;
-            case DQ_STATUS + DQ_SEVERITY:
+            case DQP_STATUS + DQP_SEVERITY:
                 // 6: status and severity
                 tasks = taskRepository.findAllByStatusAndSeverityOrderBySeverityAscRegistered(status, severity);
                 break;
-            case DQ_DEVICEID + DQ_STATUS + DQ_SEVERITY:
+            case DQP_DEVICEID + DQP_STATUS + DQP_SEVERITY:
                 // 7: everything, device, status, severity
                 tasks = taskRepository.findAllByDeviceIdAndStatusAndSeverityOrderBySeverityAscRegistered(deviceId, status, severity);
                 break;
