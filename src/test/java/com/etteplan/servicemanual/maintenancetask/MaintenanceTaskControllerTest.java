@@ -146,6 +146,13 @@ public class MaintenanceTaskControllerTest {
     }
 
     @Test
+    public void getMaintenanceTasksEmptyParam() throws Exception {
+        // Pass an query parameter. Should return 400
+        mvc.perform(MockMvcRequestBuilders.get("/api/tasks").param("status", "").accept(MediaType.APPLICATION_JSON))
+            .andExpect(status().isBadRequest());
+    }
+
+    @Test
     public void getSingleTask() throws Exception {
         MaintenanceTask task = new MaintenanceTask();
         task.setSeverity(TaskSeverity.UNIMPORTANT);
@@ -745,6 +752,13 @@ public class MaintenanceTaskControllerTest {
         assertFalse(taskRepository.findAllByDeviceId(1L).isEmpty());
         // Assert that our newly created task still exists
         assertTrue(taskRepository.existsById(task.getId()));
+    }
+
+    @Test
+    public void deleteTasksEmptyQueryParam() throws Exception {
+        // Pass an empty query parameter. Should return 400
+        mvc.perform(MockMvcRequestBuilders.delete("/api/tasks").param("status", "").accept(MediaType.APPLICATION_JSON))
+            .andExpect(status().isBadRequest());
     }
     
     @Test

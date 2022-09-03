@@ -125,7 +125,7 @@ public final class QueryResolver {
     private static List<MaintenanceTask> queryDatabase(MaintenanceTaskRepository taskRepository, int databaseMethod, Long deviceId, TaskStatus status, TaskSeverity severity) {
         // Query the database based on the parameters we received
         // The databaseMethod parameter is a value between 1 and 7
-        // DQ_DEVICEID = 1, DQ_STATUS = 2, DQ_SEVERITY = 4.
+        // DQP_DEVICEID = 1, DQP_STATUS = 2, DQP_SEVERITY = 4.
         // The combination of these values determine which database query method to call
         // from our task repository. This way we don't have to perform null checks on parameters :)
         List<MaintenanceTask> tasks = new ArrayList<>();
