@@ -53,6 +53,16 @@ public final class QueryResolver {
     protected static Long getDeviceId() {
         return deviceId;
     }
+
+    private static MaintenanceTaskRepository taskRepository;
+
+    protected static void setTaskRepository(MaintenanceTaskRepository repository) {
+        QueryResolver.taskRepository = repository;
+    }
+
+    protected static MaintenanceTaskRepository getTaskRepository() {
+        return taskRepository;
+    }
     
     // Private constructor because we want a static class
     private QueryResolver() {}
@@ -60,7 +70,7 @@ public final class QueryResolver {
     // Input parameters: the MaintenanceTaskRepository, Map<String, String> of query parameters.
     // Output: a list of MaintenanceTask objects retrieved from the database
     // according to the query parameters.
-    protected static List<MaintenanceTask> resolveQuery(MaintenanceTaskRepository taskRepository, Map<String, String> parameters) throws QueryParameterException {
+    protected static List<MaintenanceTask> resolveQuery(Map<String, String> parameters) throws QueryParameterException {
         if (parameters.size() == 0) {
             // No parameters were actually supplied. Fetch all tasks.
             return taskRepository.findAllByOrderBySeverityAscRegistered();
@@ -119,10 +129,10 @@ public final class QueryResolver {
         // Now we call the database query resolution function with all 3 parameters, and pass our databaseMethod variable
         // to tell it which query it should use. Based on this, it will know which JPA repository function to call
         // and which query parameters to pass along.
-        return queryDatabase(taskRepository, databaseMethod, deviceId, status, severity);
+        return queryDatabase(databaseMethod, deviceId, status, severity);
     }
 
-    private static List<MaintenanceTask> queryDatabase(MaintenanceTaskRepository taskRepository, int databaseMethod, Long deviceId, TaskStatus status, TaskSeverity severity) {
+    private static List<MaintenanceTask> queryDatabase(int databaseMethod, Long deviceId, TaskStatus status, TaskSeverity severity) {
         // Query the database based on the parameters we received
         // The databaseMethod parameter is a value between 1 and 7
         // DQP_DEVICEID = 1, DQP_STATUS = 2, DQP_SEVERITY = 4.

@@ -49,6 +49,7 @@ class MaintenanceTaskController {
         this.taskRepository = taskRepository;
         this.deviceRepository = deviceRepository;
         this.assembler = assembler;
+        QueryResolver.setTaskRepository(taskRepository);
     }
 
     CollectionModel<EntityModel<MaintenanceTask>> addHyperlinks(Long deviceId, List<MaintenanceTask> tasks) {
@@ -80,7 +81,7 @@ class MaintenanceTaskController {
     ResponseEntity<Object> all(@RequestParam Map<String, String> queryParameters) {
         // Fetch tasks
         try {
-            List<MaintenanceTask> tasks = QueryResolver.resolveQuery(taskRepository, queryParameters);
+            List<MaintenanceTask> tasks = QueryResolver.resolveQuery(queryParameters);
             return ResponseEntity.ok().body(addHyperlinks(QueryResolver.getDeviceId(), tasks));
         }
         catch(QueryParameterException ex) {
@@ -93,7 +94,7 @@ class MaintenanceTaskController {
     ResponseEntity<String> deleteTasks(@RequestParam Map<String, String> queryParameters) {
         // Delete tasks
         try {
-            List<MaintenanceTask> tasks = QueryResolver.resolveQuery(taskRepository, queryParameters);
+            List<MaintenanceTask> tasks = QueryResolver.resolveQuery(queryParameters);
             taskRepository.deleteAll(tasks);
             return ResponseEntity.ok().body("Tasks deleted.");
         }
