@@ -40,7 +40,7 @@ public class QueryResolverTest {
         // Creates a list of <amount> of maintenance tasks
         String desc = taskDescriptions.get(random.nextInt(taskDescriptions.size())); // Random description 
         List<MaintenanceTask> tasks = new ArrayList<>();
-        for(int i = 0; i < amount; i++) {
+        for (int i = 0; i < amount; i++) {
             MaintenanceTask task = new MaintenanceTask();
             task.setDeviceId(deviceId);
             task.setStatus(status);
@@ -97,7 +97,7 @@ public class QueryResolverTest {
         params.put("status", "OPEN");
         List<MaintenanceTask> tasks = QueryResolver.resolveQuery(params);
         // Assert that each task's status is OPEN
-        for(MaintenanceTask task : tasks) {
+        for (MaintenanceTask task : tasks) {
             assertEquals(TaskStatus.OPEN, task.getStatus());
         }
     }
@@ -107,7 +107,7 @@ public class QueryResolverTest {
         createTasks(3, 5L, TaskStatus.CLOSED, TaskSeverity.IMPORTANT);
         params.put("severity", "IMPORTANT");
         List<MaintenanceTask> tasks = QueryResolver.resolveQuery(params);
-        for(MaintenanceTask task : tasks) {
+        for (MaintenanceTask task : tasks) {
             assertEquals(TaskSeverity.IMPORTANT, task.getSeverity());
         }
     }
@@ -117,7 +117,7 @@ public class QueryResolverTest {
         createTasks(2, 1L, TaskStatus.OPEN, TaskSeverity.UNIMPORTANT);
         params.put("deviceId", "1");
         List<MaintenanceTask> tasks = QueryResolver.resolveQuery(params);
-        for(MaintenanceTask task : tasks) {
+        for (MaintenanceTask task : tasks) {
             assertEquals(1L, task.getDeviceId());
         }
     }
@@ -127,7 +127,7 @@ public class QueryResolverTest {
         createTasks(2, 2L, TaskStatus.OPEN, TaskSeverity.CRITICAL);
         params.put("status", "OPEN");
         params.put("severity", "CRITICAL");
-        for(MaintenanceTask task : QueryResolver.resolveQuery(params)) {
+        for (MaintenanceTask task : QueryResolver.resolveQuery(params)) {
             // Assert the status and severity
             assertEquals(TaskStatus.OPEN, task.getStatus());
             assertEquals(TaskSeverity.CRITICAL, task.getSeverity());
@@ -140,7 +140,7 @@ public class QueryResolverTest {
         params.put("deviceId", "6");
         params.put("status", "CLOSED");
         params.put("severity", "CRITICAL");
-        for(MaintenanceTask task : QueryResolver.resolveQuery(params)) {
+        for (MaintenanceTask task : QueryResolver.resolveQuery(params)) {
             assertEquals(6L, task.getDeviceId());
             assertEquals(TaskStatus.CLOSED, task.getStatus());
             assertEquals(TaskSeverity.IMPORTANT, task.getSeverity());
@@ -152,7 +152,7 @@ public class QueryResolverTest {
         createTasks(2, 7L, TaskStatus.OPEN, TaskSeverity.UNIMPORTANT);
         params.put("deviceId", "7");
         params.put("status", "OPEN");
-        for(MaintenanceTask task : QueryResolver.resolveQuery(params)) {
+        for (MaintenanceTask task : QueryResolver.resolveQuery(params)) {
             assertEquals(TaskStatus.OPEN, task.getStatus());
             assertEquals(7L, task.getDeviceId());
         }
@@ -163,7 +163,7 @@ public class QueryResolverTest {
         createTasks(2, 4L, TaskStatus.CLOSED, TaskSeverity.CRITICAL);
         params.put("deviceId", "4");
         params.put("severity", "CRITICAL");
-        for(MaintenanceTask task : QueryResolver.resolveQuery(params)) {
+        for (MaintenanceTask task : QueryResolver.resolveQuery(params)) {
             assertEquals(4L, task.getDeviceId());
             assertEquals(TaskSeverity.CRITICAL, task.getSeverity());
         }

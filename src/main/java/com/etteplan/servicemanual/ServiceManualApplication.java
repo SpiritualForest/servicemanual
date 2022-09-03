@@ -38,11 +38,11 @@ public class ServiceManualApplication {
             // Create 100 random devices
             List<FactoryDevice> devices = new ArrayList<>();
             List<MaintenanceTask> tasks = new ArrayList<>();
-            for(int i = 0; i < 100; i++) {
+            for (int i = 0; i < 100; i++) {
                 FactoryDevice device = db.createRandomDevice();
                 device = deviceRepository.save(device); // Save individual to generate an ID for it
                 // Create 3 tasks per device
-                for(int x = 0; x < 3; x++) {
+                for (int x = 0; x < 3; x++) {
                     MaintenanceTask task = db.createRandomTask(device.getId());
                     tasks.add(task);
                 }

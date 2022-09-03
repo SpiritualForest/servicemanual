@@ -80,6 +80,7 @@ public final class QueryResolver {
         for (String param : parameters.keySet()) {
             String value = parameters.get(param);
             switch (param) {
+                
                 case Q_DEVICEID:
                     try {
                         deviceId = Long.parseLong(value);
@@ -91,6 +92,7 @@ public final class QueryResolver {
                         throw new QueryParameterException(String.format(notConvertable, value, "Must be an integer."));
                     }
                     break;
+
                 case Q_STATUS:
                     try { 
                         status = TaskStatus.valueOf(value);
@@ -101,6 +103,7 @@ public final class QueryResolver {
                         throw new QueryParameterException(String.format(notConvertable, value, availableStatus));
                     }
                     break;
+                
                 case Q_SEVERITY:
                     try {
                         severity = TaskSeverity.valueOf(value);
@@ -111,6 +114,7 @@ public final class QueryResolver {
                         throw new QueryParameterException(String.format(notConvertable, value, availableSeverity));
                     }
                     break;
+                
                 default:
                     // Unknown parameter, throw an exception
                     throw new QueryParameterException(String.format(unknownParam, param, availableParams));

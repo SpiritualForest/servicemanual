@@ -84,7 +84,7 @@ class MaintenanceTaskController {
             List<MaintenanceTask> tasks = QueryResolver.resolveQuery(queryParameters);
             return ResponseEntity.ok().body(addHyperlinks(QueryResolver.getDeviceId(), tasks));
         }
-        catch(QueryParameterException ex) {
+        catch (QueryParameterException ex) {
             // Got a bad parameter. We do not proceed.
             return ResponseEntity.badRequest().body(ex.getMessage());
         }
@@ -98,7 +98,7 @@ class MaintenanceTaskController {
             taskRepository.deleteAll(tasks);
             return ResponseEntity.ok().body("Tasks deleted.");
         }
-        catch(QueryParameterException ex) {
+        catch (QueryParameterException ex) {
             // Got a bad parameter.
             return ResponseEntity.badRequest().body(ex.getMessage());
         }

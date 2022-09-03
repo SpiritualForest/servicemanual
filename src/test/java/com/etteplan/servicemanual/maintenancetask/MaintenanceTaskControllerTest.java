@@ -88,7 +88,7 @@ public class MaintenanceTaskControllerTest {
         // All tasks where status == <status> and severity == <severity>
         // First let's create some tasks
         Long deviceId = 1L;
-        for(int i = 0; i < 5; i++) {
+        for (int i = 0; i < 5; i++) {
             // Status closed, severity critical
             createMaintenanceTask(deviceId, TaskStatus.CLOSED, TaskSeverity.CRITICAL);
         }
@@ -98,7 +98,7 @@ public class MaintenanceTaskControllerTest {
             .andExpect(status().isOk()).andReturn();
         // Parse JSON so that we can assert that only open status and critical severity have been returned
         JSONArray taskArray = getTaskArray(new JSONObject(result.getResponse().getContentAsString()));
-        for(int i = 0; i < taskArray.length(); i++) {
+        for (int i = 0; i < taskArray.length(); i++) {
             JSONObject taskObj = taskArray.getJSONObject(i);
             assertEquals("CRITICAL", taskObj.getString("severity"));
             assertEquals("CLOSED", taskObj.getString("status"));
@@ -107,7 +107,7 @@ public class MaintenanceTaskControllerTest {
 
     @Test
     public void getMaintenanceTaskFilterByStatus() throws Exception {
-        for(int i = 0; i < 5; i++) {
+        for (int i = 0; i < 5; i++) {
             // Status open, severity unimportant
             createMaintenanceTask(1L, TaskStatus.OPEN, TaskSeverity.UNIMPORTANT);
         }
@@ -118,7 +118,7 @@ public class MaintenanceTaskControllerTest {
             .andExpect(status().isOk()).andReturn();
         // Parse JSON so that we can assert that only open status has been returned
         JSONArray taskArray = getTaskArray(new JSONObject(result.getResponse().getContentAsString()));
-        for(int i = 0; i < taskArray.length(); i++) {
+        for (int i = 0; i < taskArray.length(); i++) {
             JSONObject taskObj = taskArray.getJSONObject(i);
             assertEquals("OPEN", taskObj.getString("status"));
         }
@@ -126,7 +126,7 @@ public class MaintenanceTaskControllerTest {
 
     @Test
     public void getMaintenanceTaskFilterBySeverity() throws Exception {
-        for(int i = 0; i < 5; i++) {
+        for (int i = 0; i < 5; i++) {
             // Status open, severity unimportant
             createMaintenanceTask(1L, TaskStatus.OPEN, TaskSeverity.UNIMPORTANT);
         }
@@ -136,7 +136,7 @@ public class MaintenanceTaskControllerTest {
             .andExpect(status().isOk()).andReturn();
         // Parse JSON so that we can assert that only unimportant severity has been returned
         JSONArray taskArray = getTaskArray(new JSONObject(result.getResponse().getContentAsString()));
-        for(int i = 0; i < taskArray.length(); i++) {
+        for (int i = 0; i < taskArray.length(); i++) {
             JSONObject taskObj = taskArray.getJSONObject(i);
             assertEquals("UNIMPORTANT", taskObj.getString("severity"));
         }
@@ -220,14 +220,14 @@ public class MaintenanceTaskControllerTest {
         // Get all the tasks associated with a deviceId.
         // This should always return status 200.
         // If the device doesn't exist, it should just return an empty collection.
-        for(int i = 0; i < 5; i++) {
+        for (int i = 0; i < 5; i++) {
             createMaintenanceTask(5L, TaskStatus.OPEN, TaskSeverity.IMPORTANT);
         }
         MvcResult result = mvc.perform(MockMvcRequestBuilders.get("/api/tasks").param("deviceId", "5").accept(MediaType.APPLICATION_JSON))
             .andExpect(status().isOk()).andReturn();
         // Parse JSON
         JSONArray taskArray = getTaskArray(new JSONObject(result.getResponse().getContentAsString()));
-        for(int i = 0; i < taskArray.length(); i++) {
+        for (int i = 0; i < taskArray.length(); i++) {
             JSONObject taskObj = taskArray.getJSONObject(i);
             assertEquals(5L, taskObj.getLong("deviceId"));
         }
@@ -237,7 +237,7 @@ public class MaintenanceTaskControllerTest {
     public void getTasksByDeviceIdAndStatusAndSeverity() throws Exception {
         // Get all the tasks associated with a device, while applying filters to the query
         // Filters: severity and status
-        for(int i = 0; i < 5; i++) {
+        for (int i = 0; i < 5; i++) {
             // Status closed, severity critical
             createMaintenanceTask(3L, TaskStatus.CLOSED, TaskSeverity.CRITICAL);
         }
@@ -247,7 +247,7 @@ public class MaintenanceTaskControllerTest {
             .andExpect(status().isOk()).andReturn();
         // Parse JSON so that we can assert that only open status and critical severity have been returned
         JSONArray taskArray = getTaskArray(new JSONObject(result.getResponse().getContentAsString()));
-        for(int i = 0; i < taskArray.length(); i++) {
+        for (int i = 0; i < taskArray.length(); i++) {
             JSONObject taskObj = taskArray.getJSONObject(i);
             assertEquals(3L, taskObj.getLong("deviceId"));
             assertEquals("CRITICAL", taskObj.getString("severity"));
@@ -257,7 +257,7 @@ public class MaintenanceTaskControllerTest {
 
     @Test
     public void getTasksByDeviceIdAndStatus() throws Exception {
-        for(int i = 0; i < 5; i++) {
+        for (int i = 0; i < 5; i++) {
             createMaintenanceTask(6L, TaskStatus.OPEN, TaskSeverity.CRITICAL);
         }
         // Make the request, status open
@@ -266,7 +266,7 @@ public class MaintenanceTaskControllerTest {
             .andExpect(status().isOk()).andReturn();
         // Parse JSON so that we can assert that only open status has been returned
         JSONArray taskArray = getTaskArray(new JSONObject(result.getResponse().getContentAsString()));
-        for(int i = 0; i < taskArray.length(); i++) {
+        for (int i = 0; i < taskArray.length(); i++) {
             JSONObject taskObj = taskArray.getJSONObject(i);
             assertEquals(6L, taskObj.getLong("deviceId"));
             assertEquals("OPEN", taskObj.getString("status"));
@@ -275,7 +275,7 @@ public class MaintenanceTaskControllerTest {
 
     @Test
     public void getTasksByDeviceIdAndSeverity() throws Exception {
-        for(int i = 0; i < 5; i++) {
+        for (int i = 0; i < 5; i++) {
             createMaintenanceTask(4L, TaskStatus.CLOSED, TaskSeverity.UNIMPORTANT);
         }
         // Make the request, severity unimportant
@@ -284,7 +284,7 @@ public class MaintenanceTaskControllerTest {
             .andExpect(status().isOk()).andReturn();
         // Parse JSON so that we can assert that only unimportant severity has been returned
         JSONArray taskArray = getTaskArray(new JSONObject(result.getResponse().getContentAsString()));
-        for(int i = 0; i < taskArray.length(); i++) {
+        for (int i = 0; i < taskArray.length(); i++) {
             JSONObject taskObj = taskArray.getJSONObject(i);
             assertEquals(4L, taskObj.getLong("deviceId"));
             assertEquals("UNIMPORTANT", taskObj.getString("severity"));
@@ -311,18 +311,18 @@ public class MaintenanceTaskControllerTest {
     @Test
     public void addTask() throws Exception {
         String json = "{\"deviceId\": 1, \"status\": \"OPEN\", \"severity\": \"CRITICAL\", \"description\": \"Major fixes of security holes\"}";
-        MvcResult result = mvc.perform(MockMvcRequestBuilders.post("/api/tasks/create").accept(MediaType.APPLICATION_JSON)
+        mvc.perform(MockMvcRequestBuilders.post("/api/tasks/create").accept(MediaType.APPLICATION_JSON)
                 .contentType(MediaType.APPLICATION_JSON).content(json))
-            .andExpect(status().isCreated()).andReturn();
+            .andExpect(status().isCreated());
     }
     
     @Test
     public void addTaskNullValue() throws Exception {
         // Try adding a task with a null device ID. Should return bad request
         String json = "{\"deviceId\": null, \"status\": \"OPEN\", \"severity\": \"CRITICAL\", \"description\": \"Major fixes of security holes\"}";
-        MvcResult result = mvc.perform(MockMvcRequestBuilders.post("/api/tasks/create").accept(MediaType.APPLICATION_JSON)
+        mvc.perform(MockMvcRequestBuilders.post("/api/tasks/create").accept(MediaType.APPLICATION_JSON)
                 .contentType(MediaType.APPLICATION_JSON).content(json))
-            .andExpect(status().isBadRequest()).andReturn();
+            .andExpect(status().isBadRequest());
     }
 
     @Test
@@ -331,9 +331,9 @@ public class MaintenanceTaskControllerTest {
         // Result should a disregard of this value altogether, with a replacement by LocalDateTime.now()
         // in the TaskMaintenance's default constructor.
         String json = "{\"deviceId\": 1, \"status\": \"OPEN\", \"severity\": \"CRITICAL\", \"description\": \"Major fixes of security holes\", \"registered\": \"some random value lol\"}";
-        MvcResult result = mvc.perform(MockMvcRequestBuilders.post("/api/tasks/create").accept(MediaType.APPLICATION_JSON)
+        mvc.perform(MockMvcRequestBuilders.post("/api/tasks/create").accept(MediaType.APPLICATION_JSON)
                 .contentType(MediaType.APPLICATION_JSON).content(json))
-            .andExpect(status().isBadRequest()).andReturn();
+            .andExpect(status().isBadRequest());
     }
 
     @Test
@@ -368,9 +368,9 @@ public class MaintenanceTaskControllerTest {
     public void addTaskDeviceNotFound() throws Exception {
         // Add a task with a deviceId that doesn't exist.
         String json = "{\"deviceId\": 123456789, \"status\": \"OPEN\", \"severity\": \"CRITICAL\", \"description\": \"Major fixes of security holes\"}";
-        MvcResult result = mvc.perform(MockMvcRequestBuilders.post("/api/tasks/create").accept(MediaType.APPLICATION_JSON)
+        mvc.perform(MockMvcRequestBuilders.post("/api/tasks/create").accept(MediaType.APPLICATION_JSON)
                 .contentType(MediaType.APPLICATION_JSON).content(json))
-            .andExpect(status().isNotFound()).andReturn();
+            .andExpect(status().isNotFound());
     }
 
     @Test
@@ -400,9 +400,9 @@ public class MaintenanceTaskControllerTest {
         MaintenanceTask newTask = createMaintenanceTask(1L, TaskStatus.OPEN, TaskSeverity.IMPORTANT);
         // Now modify it
         String json = "{\"status\": \"CLOSED\", \"description\": \"A test task\", \"deviceId\": 1, \"severity\": \"IMPORTANT\"}"; 
-        MvcResult result = mvc.perform(MockMvcRequestBuilders.put(String.format("/api/tasks/%d", newTask.getId())).accept(MediaType.APPLICATION_JSON)
+        mvc.perform(MockMvcRequestBuilders.put(String.format("/api/tasks/%d", newTask.getId())).accept(MediaType.APPLICATION_JSON)
                 .contentType(MediaType.APPLICATION_JSON).content(json))
-            .andExpect(status().isOk()).andReturn();
+            .andExpect(status().isOk());
         // Now also load up the task object from the repository and compare the status
         MaintenanceTask modifiedTask = taskRepository.findById(newTask.getId()).get();
         assertEquals(newTask.getId(), modifiedTask.getId());
@@ -491,7 +491,7 @@ public class MaintenanceTaskControllerTest {
         // Delete all the tasks associated with a given device.
         
         // First, create a bunch of new tasks
-        for(int i = 0; i < 10; i++) {
+        for (int i = 0; i < 10; i++) {
             createMaintenanceTask(1L, TaskStatus.CLOSED, TaskSeverity.IMPORTANT);
         }
         // Assert the existence of the newly created tasks
@@ -507,7 +507,7 @@ public class MaintenanceTaskControllerTest {
     public void deleteTasksByDeviceIdAndStatusAndSeverity() throws Exception {
         // Delete all the tasks associated with the deviceId, where status is <status> and severity is <severity>
         // First, create a bunch of new tasks
-        for(int i = 0; i < 10; i++) {
+        for (int i = 0; i < 10; i++) {
             createMaintenanceTask(1L, TaskStatus.CLOSED, TaskSeverity.IMPORTANT);
         } 
         // Assert the existence of the newly created tasks
@@ -524,7 +524,7 @@ public class MaintenanceTaskControllerTest {
     public void deleteTasksByDeviceIdAndStatus() throws Exception {
         // Delete all the tasks associated with the deviceId, where status is <status>
         // First, create a bunch of new tasks
-        for(int i = 0; i < 10; i++) {
+        for (int i = 0; i < 10; i++) {
             createMaintenanceTask(1L, TaskStatus.CLOSED, TaskSeverity.IMPORTANT);
         } 
         // Assert the existence of the newly created tasks
@@ -541,7 +541,7 @@ public class MaintenanceTaskControllerTest {
     public void deleteTasksByDeviceIdAndSeverity() throws Exception {
         // Delete all the tasks associated with the deviceId, where severity is <severity>
         // First, create a bunch of new tasks
-        for(int i = 0; i < 10; i++) {
+        for (int i = 0; i < 10; i++) {
             createMaintenanceTask(1L, TaskStatus.CLOSED, TaskSeverity.IMPORTANT);
         } 
         // Assert the existence of the newly created tasks
@@ -558,7 +558,7 @@ public class MaintenanceTaskControllerTest {
     public void deleteTasksByStatusAndSeverity() throws Exception {
         // Delete all the tasks where status is <status> and severity is <severity>
         // First, create a bunch of new tasks
-        for(int i = 0; i < 10; i++) {
+        for (int i = 0; i < 10; i++) {
             createMaintenanceTask(1L, TaskStatus.CLOSED, TaskSeverity.IMPORTANT);
         } 
         // Assert the existence of the newly created tasks
@@ -575,7 +575,7 @@ public class MaintenanceTaskControllerTest {
     public void deleteTasksByStatus() throws Exception {
         // Delete all the tasks where status is <status>
         // First, create a bunch of new tasks
-        for(int i = 0; i < 10; i++) {
+        for (int i = 0; i < 10; i++) {
             createMaintenanceTask(1L, TaskStatus.CLOSED, TaskSeverity.IMPORTANT);
         }
         // Assert the existence of the newly created tasks
@@ -592,7 +592,7 @@ public class MaintenanceTaskControllerTest {
     public void deleteTasksBySeverity() throws Exception {
         // Delete all the tasks where severity is <severity>
         // First, create a bunch of new tasks
-        for(int i = 0; i < 10; i++) {
+        for (int i = 0; i < 10; i++) {
             createMaintenanceTask(1L, TaskStatus.CLOSED, TaskSeverity.IMPORTANT);
         } 
         // Assert the existence of the newly created tasks
