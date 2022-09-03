@@ -20,6 +20,9 @@ import com.etteplan.servicemanual.maintenancetask.TaskSeverity;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Arrays;
+import java.util.Random; // For random task descriptions
+
 
 import org.json.*; // For parsing specific JSON results when filtering tasks
 
@@ -39,13 +42,29 @@ public class MaintenanceTaskControllerTest {
     @Autowired
     private MaintenanceTaskRepository taskRepository;
 
+    private final Random random = new Random();
+
+    private List<String> taskDescriptions = Arrays.asList(
+            "Fixing CPU cooling mechanism",
+            "Cleaning",
+            "Bug fixes",
+            "Glueing everything back together",
+            "General fixes",
+            "Casual cleanup",
+            "A bad description",
+            "Fix nuclear meltdown",
+            "Device was overheating",
+            "Replaced a transistor"
+        );
+
     private MaintenanceTask createMaintenanceTask(Long deviceId, TaskStatus status, TaskSeverity severity) {
         // Create a new task, save it, and return it.
+        String desc = taskDescriptions.get(random.nextInt(taskDescriptions.size())); // Random description
         MaintenanceTask task = new MaintenanceTask();
         task.setDeviceId(deviceId);
         task.setStatus(status);
         task.setSeverity(severity);
-        task.setDescription("A task created in the unit tests");
+        task.setDescription(desc);
         return taskRepository.save(task);
     }
 
