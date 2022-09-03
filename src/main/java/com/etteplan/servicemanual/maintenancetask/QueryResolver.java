@@ -57,13 +57,10 @@ public final class QueryResolver {
     private static MaintenanceTaskRepository taskRepository;
 
     protected static void setTaskRepository(MaintenanceTaskRepository repository) {
+        // Set the task repository so that we won't have to always pass it as a parameter
         QueryResolver.taskRepository = repository;
     }
-
-    protected static MaintenanceTaskRepository getTaskRepository() {
-        return taskRepository;
-    }
-    
+ 
     // Private constructor because we want a static class
     private QueryResolver() {}
 
