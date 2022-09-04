@@ -18,7 +18,6 @@ function saveNewTask(modalDiv) {
     let taskStatus = document.getElementById("add-task-select-status").value; // Select
     let taskSeverity = document.getElementById("add-task-select-severity").value; // Select
     let taskDescription = document.getElementById("add-task-description").value; // Textarea
-    let endpoint = "/api/tasks/create"
 
     // Escape the HTML - we don't want XSS attacks :)
     taskDescription = taskDescription.replace(/</g, "&lt;");
@@ -37,10 +36,11 @@ function saveNewTask(modalDiv) {
         // We don't add task ID or registration time, those are added automatically in the backend.
     }
     // Perform the request
+    let endpoint = "/api/tasks/create"
     fetch(endpoint,  {
         method: "POST",
         body: JSON.stringify(taskObj),
-        headers: {"Content-type": "application/json; charset=UTF-8"}
+        headers: { "Content-type": "application/json; charset=UTF-8" }
     }).then(response => {
         if (response.status === 201) {
             // Successfully created the resource
@@ -61,7 +61,6 @@ function saveNewTask(modalDiv) {
     })
 }
 
-// TODO: error checks here?
 function fetchDevices() {
     /* This function fetches all the devices and populates the Device ID selection menus
      * for filtering, adding, and editing tasks.
@@ -134,8 +133,8 @@ function fetchTasks() {
             throw response;
         }
     })
-    .then(tasks => {
-        fillTasksTable(tasks);
+    .then(responseTasks => {
+        fillTasksTable(responseTasks);
     }).catch(err => {
         errorMsg(err);
         console.log(err);
@@ -161,6 +160,7 @@ function fillTasksTable(tasks) {
     for(let i = 0; i < headerRowCells.length; i++) {
         if (headerRowCells[i].innerHTML.toLowerCase() == "severity") {
             severityCell = i;
+            break;
         }
     }
     // Forgive me for setting styles through JS :(
@@ -177,9 +177,9 @@ function fillTasksTable(tasks) {
         let row = tableElement.insertRow();
         let allData = [id, deviceId, taskStatus, taskSeverity, description, registered];
         
-        for(let x in allData) {
-            let cell = row.insertCell(x);
-            cell.innerHTML = allData[x];
+        for(let i in allData) {
+            let cell = row.insertCell(i);
+            cell.innerHTML = allData[i];
         }
         if (row.cells[severityCell].innerHTML.toLowerCase() == "critical") {
             // Set bold red font if the severity is critical
@@ -204,7 +204,7 @@ function fillTasksTable(tasks) {
     }
 }
 
-function configureEditTaskModalCancelButton() {
+function configureEditTaskModalSaveAndCancelButtons() {
     let editTaskDiv = document.getElementById("edit-task");
     let cancelEditBtn = document.getElementById("edit-task-modal-cancel-btn");
     cancelEditBtn.onclick = function() { editTaskDiv.style.display = "none"; }
@@ -267,6 +267,9 @@ function saveEditedTask() {
             successMsg("Changes saved successfully");
             return response.json();
         }
+        else {
+            throw response;
+        }
     }).then(() => {
         // Close the modal and fetch all the tasks again to refresh the tasks lists.
         editTaskDiv.style.display = "none";
@@ -291,6 +294,9 @@ function deleteTask(id) {
             // Task delete, fetch tasks.
             successMsg(`Task ${id} deleted`);
             fetchTasks();
+        }
+        else {
+            throw response;
         }
     }).catch(err => {
         errorMsg(err);
@@ -331,6 +337,9 @@ function deleteAllTasks() {
             // Deletion successful.
             successMsg("Tasks deleted");
             fetchTasks();
+        }
+        else {
+            throw response;
         }
     }).catch(err => {
         errorMsg(err);
@@ -374,16 +383,13 @@ function configureFilters() {
         if (filterCheckbox.checked) {
             // Filters apply to the Delete tasks function now
             document.getElementById("delete-tasks-btn").innerHTML = "Delete tasks (filters apply)";
-            // Fetch filtered
-            let deviceId = document.getElementById("select-filter-tasks-device").value;
-            fetchTasks(deviceId);
         }
         else {
             // Filters don't apply to deletion: ALL tasks will be removed
             document.getElementById("delete-tasks-btn").innerHTML = "Delete all tasks";
             // Fetch all
-            fetchTasks(-1);
         }
+        fetchTasks();
     }
     // Filtration select menus
     let filterDevice = document.getElementById("select-filter-tasks-device");
@@ -393,9 +399,9 @@ function configureFilters() {
     // Now we hook up the onchange event to all these bastards - all it does is call fetchTasks with the filterDevice's value
     // fetchTasks() issues the fetch() request with the appropriate URLSearchParams based on the values
     // obtained from these select menus.
-    filterDevice.onchange = function() { fetchTasks(filterDevice.value); }
-    filterSeverity.onchange = function() { fetchTasks(filterDevice.value); }
-    filterStatus.onchange = function() { fetchTasks(filterDevice.value); }
+    filterDevice.onchange = function() { fetchTasks(); }
+    filterSeverity.onchange = function() { fetchTasks(); }
+    filterStatus.onchange = function() { fetchTasks(); }
 }
 
 // Hook up the Delete tasks button's onclick event
@@ -405,6 +411,6 @@ deleteTasksBtn.onclick = function() { deleteAllTasks(); }
 // Configure filters and buttons
 configureFilters();
 configureAddTaskModalButtons();
-configureEditTaskModalCancelButton();
+configureEditTaskModalSaveAndCancelButtons();
 fetchDevices(); // Populate our DeviceID select menus
 fetchTasks(); // Populate the tasks table with all tasks

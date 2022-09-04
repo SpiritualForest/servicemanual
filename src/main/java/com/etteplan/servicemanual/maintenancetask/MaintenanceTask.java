@@ -33,7 +33,7 @@ public class MaintenanceTask {
     @NotEmpty
     private String description;
     
-    private LocalDateTime registered; // FIXME: we might have to use int or some other type here, depending on the database
+    private LocalDateTime registered;
 
     protected MaintenanceTask() {
         // Default constructor

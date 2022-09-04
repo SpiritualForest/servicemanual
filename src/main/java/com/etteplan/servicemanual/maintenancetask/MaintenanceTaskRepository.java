@@ -15,16 +15,16 @@ public interface MaintenanceTaskRepository extends JpaRepository<MaintenanceTask
     // ... order by severity asc, registered
     List<MaintenanceTask> findAllByOrderBySeverityAscRegistered();
     
-    // ... where deviceId = <deviceId>
+    // ... where deviceId = <deviceId> (NO sorting)
     List<MaintenanceTask> findAllByDeviceId(Long deviceId);
 
-    // where status = <status> and severity = <severity> order by severity
+    // where status = <status> and severity = <severity> order by severity ASC registered
     List<MaintenanceTask> findAllByStatusAndSeverityOrderBySeverityAscRegistered(TaskStatus status, TaskSeverity severity);
 
-    // where status = <status>
+    // where status = <status> order by severity ASC registered
     List<MaintenanceTask> findAllByStatusOrderBySeverityAscRegistered(TaskStatus status);
 
-    // where severity = <severity>
+    // where severity = <severity> order by severity ASC registered
     List<MaintenanceTask> findAllBySeverityOrderBySeverityAscRegistered(TaskSeverity severity);
 
     // where deviceId = <deviceId> AND status = <status> AND severity = <severity> order by severity ASC, registered

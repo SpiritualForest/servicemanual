@@ -122,7 +122,7 @@ class MaintenanceTaskController {
             taskRepository.deleteById(taskId);
             return ResponseEntity.ok("Task deleted successfully.");
         }
-        // If we reached here, there was an error
+        // If we reached here, the task was not found
         throw new MaintenanceTaskNotFoundException(taskId);
     }
 
@@ -160,6 +160,7 @@ class MaintenanceTaskController {
     @PostMapping("/api/tasks/create")
     @ResponseStatus(HttpStatus.CREATED)
     EntityModel<MaintenanceTask> createTask(@RequestBody @Valid MaintenanceTask task) {
+        // Returns 400 bad request if the supplied task object is not valid in some way.
         if (!deviceRepository.existsById(task.getDeviceId())) {
             // Error, no such device.
             throw new FactoryDeviceNotFoundException(task.getDeviceId());
