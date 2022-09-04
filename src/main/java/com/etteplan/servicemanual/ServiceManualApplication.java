@@ -8,6 +8,7 @@ import org.springframework.boot.CommandLineRunner;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.context.annotation.Bean;
+import org.springframework.beans.factory.annotation.Value;
 
 import com.etteplan.servicemanual.factorydevice.FactoryDevice;
 import com.etteplan.servicemanual.factorydevice.FactoryDeviceRepository;
@@ -25,6 +26,9 @@ public class ServiceManualApplication {
     @Autowired
     private MaintenanceTaskRepository taskRepository;
 
+    @Value("${server.port}")
+    private String port;
+
     private DatabaseInitializer db = new DatabaseInitializer();
 
     public static void main(final String[] args) {
@@ -33,7 +37,6 @@ public class ServiceManualApplication {
 
     @Bean
     public CommandLineRunner initDatabase(String... args) {
-        // FIXME: command line arguments.
         if (deviceRepository.findAll().isEmpty() && taskRepository.findAll().isEmpty()) {
             // Create 100 random devices
             List<FactoryDevice> devices = new ArrayList<>();
@@ -51,7 +54,7 @@ public class ServiceManualApplication {
             System.out.println("Database initialized");
         }
         return (params) -> {
-            System.out.println("Running on http://localhost:8080/");
+            System.out.format("Running on http://localhost:%s/\n", port);
         };
     }
 }
