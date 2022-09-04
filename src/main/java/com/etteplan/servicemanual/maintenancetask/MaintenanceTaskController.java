@@ -23,7 +23,7 @@ import com.etteplan.servicemanual.factorydevice.FactoryDeviceNotFoundException;
 import javax.validation.Valid;
 
 // MaintenanceTask and its Repository already exist in this package, that's why we don't have to import them.
-// TaskFetcher is a static class used to resolve query parameters. View TaskFetcher.java
+// TaskFetcher is a static class used to resolve query parameters and fetch task accordingly. View TaskFetcher.java
 
 import java.util.List;
 import java.util.Map;
