@@ -7,13 +7,13 @@ import java.util.ArrayList;
 /* This class resolves which database query method must be called based
  * on the given query parameter values.
  * This class is static. It cannot be instantiated or extended, and has no instance members, only static
- * class members. I decided to design it this way because we don't need a QueryResolver instance
+ * class members. I decided to design it this way because we don't need a TaskFetcher instance
  * in the controller. We just need to call the function that resolves the query parameters
  * and fetches the appropriate tasks from the database. An instance is not needed for this.
  * Plus, when this class needed to be instantiated, the unit tests failed
  * when I tried to instantiate it in the controller's constructor. */
 
-public final class QueryResolver {
+public final class TaskFetcher {
  
     // Query parameter names
     // Any query parameter we encounter which is not listed here is rejected, with a QueryParameterException thrown.
@@ -56,16 +56,17 @@ public final class QueryResolver {
 
     protected static void setTaskRepository(MaintenanceTaskRepository repository) {
         // Set the task repository so that we won't have to always pass it as a parameter
-        QueryResolver.taskRepository = repository;
+        TaskFetcher.taskRepository = repository;
     }
  
     // Private constructor because we want a static class
-    private QueryResolver() {}
+    private TaskFetcher() {}
 
     // Input parameters: Map<String, String> of query parameters.
     // Output: a list of MaintenanceTask objects retrieved from the database
     // according to the query parameters.
-    protected static List<MaintenanceTask> resolveQuery(Map<String, String> parameters) throws QueryParameterException {
+    
+    protected static List<MaintenanceTask> fetchTasks(Map<String, String> parameters) throws QueryParameterException {
         if (parameters.isEmpty()) {
             // No parameters were actually supplied. Fetch all tasks.
             return taskRepository.findAllByOrderBySeverityAscRegistered();
@@ -85,7 +86,7 @@ public final class QueryResolver {
                     try {
                         deviceId = Long.parseLong(value);
                         databaseMethod += DQP_DEVICEID; // Indicate that we found the deviceId parameter
-                        QueryResolver.deviceId = deviceId; // Stored for hyperlink creation in the controller
+                        TaskFetcher.deviceId = deviceId; // Stored for hyperlink creation in the controller
                     }
                     catch (IllegalArgumentException ex) {
                         // Bad parameter for deviceId
