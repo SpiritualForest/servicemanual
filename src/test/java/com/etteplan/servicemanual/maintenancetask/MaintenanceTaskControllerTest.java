@@ -392,6 +392,23 @@ public class MaintenanceTaskControllerTest {
             .andExpect(status().isBadRequest());
     }
 
+    @Test
+    public void addTaskHTMLDescription() throws Exception {
+        // Add a task with HTML in the description. This should be escaped.
+        String json = "{ \"status\": \"CLOSED\", \"severity\": \"CRITICAL\", \"deviceId\": 1, \"description\": \"<script type=\\\"text/javascript\\\">alert(\\\"XSS!\\\");</script>\"}";
+        MvcResult result = mvc.perform(MockMvcRequestBuilders.post("/api/tasks/create").accept(MediaType.APPLICATION_JSON)
+                .contentType(MediaType.APPLICATION_JSON).content(json))
+            .andExpect(status().isCreated()).andReturn();
+        JSONObject response = new JSONObject(result.getResponse().getContentAsString());
+        Long taskId = response.getLong("id");
+        MaintenanceTask task = taskRepository.findById(taskId).get();
+        String desc = task.getDescription();
+        assertTrue(desc.contains("&gt;"));
+        assertTrue(desc.contains("&lt;"));
+        assertFalse(desc.contains("<"));
+        assertFalse(desc.contains(">"));
+    }
+
     // PUT
 
     @Test
@@ -452,6 +469,24 @@ public class MaintenanceTaskControllerTest {
         mvc.perform(MockMvcRequestBuilders.put("/api/tasks/create").accept(MediaType.APPLICATION_JSON)
                 .contentType(MediaType.APPLICATION_JSON).content(json))
             .andExpect(status().isBadRequest());
+    }
+    
+    @Test
+    public void modifyTaskHTMLDescription() throws Exception {
+        // Modify a task with HTML in the description. This should be escaped.
+        MaintenanceTask task = createMaintenanceTask(1L, TaskStatus.OPEN, TaskSeverity.IMPORTANT);
+        String json = "{ \"status\": \"CLOSED\", \"severity\": \"CRITICAL\", \"deviceId\": 1, \"description\": \"<script type=\\\"text/javascript\\\">alert(\\\"XSS!\\\");</script>\"}";
+        MvcResult result = mvc.perform(MockMvcRequestBuilders.put(String.format("/api/tasks/%d", task.getId())).accept(MediaType.APPLICATION_JSON)
+                .contentType(MediaType.APPLICATION_JSON).content(json))
+            .andExpect(status().isOk()).andReturn();
+        JSONObject response = new JSONObject(result.getResponse().getContentAsString());
+        // Assert that HTML was escaped
+        task = taskRepository.findById(task.getId()).get();
+        String desc = task.getDescription();
+        assertTrue(desc.contains("&gt;"));
+        assertTrue(desc.contains("&lt;"));
+        assertFalse(desc.contains("<"));
+        assertFalse(desc.contains(">"));
     }
 
     // DELETE

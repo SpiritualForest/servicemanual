@@ -146,11 +146,14 @@ class MaintenanceTaskController {
          * a new one will be created in its place with these fields,
          * and the original one will remain unmodified.
          * God bless the people who developed this. */
-
+        String escapedDesc = modifiedTask.getDescription();
+        // Escape HTML in the description string
+        escapedDesc = escapedDesc.replaceAll("<", "&lt;");
+        escapedDesc = escapedDesc.replaceAll(">", "&gt;");
         MaintenanceTask task = taskRepository.findById(taskId).get();
         task.setStatus(modifiedTask.getStatus());
         task.setSeverity(modifiedTask.getSeverity());
-        task.setDescription(modifiedTask.getDescription());
+        task.setDescription(escapedDesc);
         task.setDeviceId(modifiedTask.getDeviceId());
         task = taskRepository.save(task);
         return assembler.toModel(task);
@@ -165,6 +168,11 @@ class MaintenanceTaskController {
             // Error, no such device.
             throw new FactoryDeviceNotFoundException(task.getDeviceId());
         }
+        String escapedDesc = task.getDescription();
+        // Escape HTML in the description
+        escapedDesc = escapedDesc.replaceAll("<", "&lt;");
+        escapedDesc = escapedDesc.replaceAll(">", "&gt;");
+        task.setDescription(escapedDesc);
         return assembler.toModel(taskRepository.save(task));
     }
 }
