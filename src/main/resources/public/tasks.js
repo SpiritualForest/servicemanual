@@ -2,24 +2,72 @@
 
 /* Add task modal functions */
 
-function configureAddTaskModalButtons() {
-    // Configures the click events for the Add task modal and its relevant buttons
+function configureSaveTaskModalButtons() {
+    // Configures the click events for the save task modal and its relevant buttons
     let addTaskBtn = document.getElementById("open-modal-btn");
-    let modalDiv = document.getElementById("add-task-modal");
-    let cancelBtn = document.getElementById("add-task-modal-cancel-btn");
-    let saveBtn = document.getElementById("add-task-modal-save-btn");
-    addTaskBtn.onclick = function() { modalDiv.style.display = "block"; }
-    cancelBtn.onclick = function() { modalDiv.style.display = "none"; }
-    saveBtn.onclick = function() { saveNewTask(modalDiv); }
+    let saveTaskModal = document.getElementById("save-task-modal");
+    let cancelBtn = document.getElementById("save-task-modal-cancel-btn");
+    let saveBtn = document.getElementById("save-task-modal-save-btn");
+    addTaskBtn.onclick = function() {
+        // Open the saveTaskModal and set the save button
+        // onclick function to call saveTask() with no parameters.
+        // No parameters on saveTask() means create a new one
+        saveTaskModal.style.display = "block";
+        saveBtn.onclick = function() { saveTask(); }
+        // Also hide the task ID div
+        document.getElementById("task-id-div").style.display = "none";
+        // Set the save task header to "Add task"
+        document.getElementById("save-task-header").innerHTML = "Add task";
+    }
+    // Cancel button hides the div
+    cancelBtn.onclick = function() { saveTaskModal.style.display = "none"; }
 }
 
-function saveNewTask(modalDiv) {
-    let deviceId = document.getElementById("add-task-select-device").value; // Select
-    let taskStatus = document.getElementById("add-task-select-status").value; // Select
-    let taskSeverity = document.getElementById("add-task-select-severity").value; // Select
-    let taskDescription = document.getElementById("add-task-description").value; // Textarea
+function openEditTaskDiv(id, deviceId, taskStatus, taskSeverity, description) {
+    // Open the task editing div
+    // This function is hooked up to all the "Edit" buttons, for each task.
+    // The parameters come from each table row.
+    // View the fillTasksTable() function further down to see the hooking.
+    
+    let saveTaskModal = document.getElementById("save-task-modal");
+    saveTaskModal.style.display = "block";
+    
+    // Also display the TaskID div and set the save task header to "Edit task"
+    document.getElementById("task-id-div").style.display = "block";
+    document.getElementById("save-task-header").innerHTML = `Edit task ${id}`;
+    
+    // Now we populate the various input elements with the task's information
+    // TaskID
+    document.getElementById("save-task-task-id").value = id;
+    // DeviceID
+    document.getElementById("save-task-select-device").value = deviceId;
+    // Task status
+    document.getElementById("save-task-select-status").value = taskStatus;
+    // Task severity
+    document.getElementById("save-task-select-severity").value = taskSeverity;
+    // Description
+    document.getElementById("save-task-description").value = description;
 
-    // Escape the HTML - we don't want XSS attacks :)
+    // Set the save task button's action to edit tasks
+    // Pass true to indicate that we need to edit a task, rather than create a new one
+    let saveTaskBtn = document.getElementById("save-task-modal-save-btn");
+    saveTaskBtn.onclick = function() { saveTask(editExisting=true); }
+}
+
+function saveTask(editExisting=false) {
+    // Saves a task.
+    // If editExisting is true, it will use the PUT method and modify an existing task.
+    // Otherwise, creates a new task
+
+    // Our div that contains the various input elements
+    let saveTaskModal = document.getElementById("save-task-modal");
+    
+    let deviceId = document.getElementById("save-task-select-device").value; // Select
+    let taskStatus = document.getElementById("save-task-select-status").value; // Select
+    let taskSeverity = document.getElementById("save-task-select-severity").value; // Select
+    let taskDescription = document.getElementById("save-task-description").value; // Textarea
+     
+    // Escape the HTML in the description - we don't want XSS attacks :)
     taskDescription = taskDescription.replace(/</g, "&lt;");
     taskDescription = taskDescription.replace(/>/g, "&gt");
     
@@ -27,18 +75,30 @@ function saveNewTask(modalDiv) {
         errorMsg("Error creating task: description is required");
         return;
     }
-
+    
     let taskObj = {
         deviceId: deviceId,
         status: taskStatus,
         severity: taskSeverity,
         description: taskDescription,
-        // We don't add task ID or registration time, those are added automatically in the backend.
     }
+    
+    // Method and endpoint are set to creating new tasks by default
+    let requestMethod = "POST";
+    let endpoint = "/api/tasks/create";
+    
+    if (editExisting) {
+        // We're actually editing a task, so set the taskId in the request body,
+        // set the HTTP method to PUT, and set the endpoint to /api/tasks/<taskId>
+        taskId = document.getElementById("save-task-task-id").value;
+        taskObj.id = taskId;
+        requestMethod = "PUT";
+        endpoint = `/api/tasks/${taskId}`;
+    }
+    
     // Perform the request
-    let endpoint = "/api/tasks/create"
     fetch(endpoint,  {
-        method: "POST",
+        method: requestMethod,
         body: JSON.stringify(taskObj),
         headers: { "Content-type": "application/json; charset=UTF-8" }
     }).then(response => {
@@ -47,16 +107,22 @@ function saveNewTask(modalDiv) {
             successMsg("Task created successfully");
             return response.json();
         }
+        else if (response.ok) {
+            // Successfully edited a task
+            successMsg("Changes saved successfully");
+            return response.json();
+        }
         else {
+            // Error
             throw response;
         }
     }).then(() => {
-        // Close the modal and fetch all the tasks again to refresh the tasks lists.
-        modalDiv.style.display = "none";
+        // Close the save task modal and fetch all the tasks again to refresh the tasks lists.
+        saveTaskModal.style.display = "none";
         fetchTasks();
     })
     .catch(err => {
-        errorMsg("Error creating task");
+        errorMsg("Error saving task");
         console.log(err);
     })
 }
@@ -66,9 +132,8 @@ function fetchDevices() {
      * for filtering, adding, and editing tasks.
      * Since we don't provide the option to add, edit, or remove devices,
      * this function only gets called once. */
-    let addTaskSelectDevice = document.getElementById("add-task-select-device"); // Device ID menu for the adding new tasks
+    let saveTaskSelectDevice = document.getElementById("save-task-select-device"); // Device ID menu for the adding new tasks
     let selectFilterTasksDevice = document.getElementById("select-filter-tasks-device"); // Device ID menu for filter tasks by device ID
-    let editTaskSelectDevice = document.getElementById("edit-task-select-device"); // Device ID menu for editing existing tasks
     fetch("/factorydevices").then(response => {
         if (response.ok) {
             return response.json();
@@ -76,8 +141,7 @@ function fetchDevices() {
         else {
             throw response;
         }
-    })
-    .then(devices => {
+    }).then(devices => {
         for(let device of devices) {
             let deviceId = device.id;
             let name = device.name;
@@ -87,15 +151,11 @@ function fetchDevices() {
             let fullDeviceData = `${deviceId} (${name}/${type}/${year})`;
             optionElementAddTask.value = deviceId;
             optionElementAddTask.innerHTML = fullDeviceData
-            addTaskSelectDevice.appendChild(optionElementAddTask);
+            saveTaskSelectDevice.appendChild(optionElementAddTask);
             let optionElementFilterTasks = document.createElement("option"); // Filter select
             optionElementFilterTasks.value = deviceId;
             optionElementFilterTasks.innerHTML = fullDeviceData;
             selectFilterTasksDevice.appendChild(optionElementFilterTasks);
-            let optionElementEditTask = document.createElement("option"); // Edit task select
-            optionElementEditTask.value = deviceId;
-            optionElementEditTask.innerHTML = fullDeviceData;
-            editTaskSelectDevice.appendChild(optionElementEditTask);
         }
     }).catch(err => {
         errorMsg(err);
@@ -173,6 +233,10 @@ function fillTasksTable(tasks) {
         let description = task.description;
         let registered = task.registered;
         
+        // Escape the HTML in the description - we don't want XSS attacks :)
+        description = description.replace(/</g, "&lt;");
+        description = description.replace(/>/g, "&gt");
+        
         // Task, device, status, severity, description, registered, action
         let row = tableElement.insertRow();
         let allData = [id, deviceId, taskStatus, taskSeverity, description, registered];
@@ -183,8 +247,7 @@ function fillTasksTable(tasks) {
         }
         if (row.cells[severityCell].innerHTML.toLowerCase() == "critical") {
             // Set bold red font if the severity is critical
-            row.cells[severityCell].style.color = "red";
-            row.cells[severityCell].style.fontWeight = "bold";
+            row.cells[severityCell].className = "td-severity-critical";
         }
         // Now add a cell that contains the actions
         let actionCell = row.insertCell(allData.length);
@@ -198,87 +261,10 @@ function fillTasksTable(tasks) {
         deleteBtn.className = "task-btn";
         actionCell.appendChild(editBtn);
         actionCell.appendChild(deleteBtn);
-        // Add the functions to edit and delete the tasks
+        // Add the functions to edit and delete the task
         editBtn.onclick = function() { openEditTaskDiv(id, deviceId, taskStatus, taskSeverity, description); }
         deleteBtn.onclick = function() { deleteTask(id); }
     }
-}
-
-function configureEditTaskModalSaveAndCancelButtons() {
-    let editTaskDiv = document.getElementById("edit-task");
-    let cancelEditBtn = document.getElementById("edit-task-modal-cancel-btn");
-    cancelEditBtn.onclick = function() { editTaskDiv.style.display = "none"; }
-    let saveEditedTaskBtn = document.getElementById("edit-task-modal-save-btn");
-    saveEditedTaskBtn.onclick = function() { saveEditedTask(); }
-}
-
-function openEditTaskDiv(id, deviceId, taskStatus, taskSeverity, description) {
-    // Open the task editing div
-    let editTaskDiv = document.getElementById("edit-task");
-    editTaskDiv.style.display = "block";
-    
-    // Now we populate the various input elements with the task's information
-    // TaskID
-    document.getElementById("edit-task-id").value = id;
-    // DeviceID
-    document.getElementById("edit-task-select-device").value = deviceId;
-    // Task status
-    document.getElementById("edit-task-select-status").value = taskStatus;
-    // Task severity
-    document.getElementById("edit-task-select-severity").value = taskSeverity;
-    // Description
-    document.getElementById("edit-task-description").value = description;
-}
-
-function saveEditedTask() {
-    let editTaskDiv = document.getElementById("edit-task");
-    let taskId = document.getElementById("edit-task-id").value;
-    let deviceId = document.getElementById("edit-task-select-device").value;
-    let taskStatus = document.getElementById("edit-task-select-status").value;
-    let taskSeverity = document.getElementById("edit-task-select-severity").value;
-    let description = document.getElementById("edit-task-description").value;
-    
-    // Escape the HTML - we don't want XSS attacks :)
-    description = description.replace(/</g, "&lt;");
-    description = description.replace(/>/g, "&gt");
-    
-    if (description == "") {
-        errorMsg("Error saving changes: description is required");
-        return;
-    }
-    
-    let endpoint = `/api/tasks/${taskId}`;
-
-    let taskObj = {
-        // We provide the task ID as an endpoint path variable, not in the body object.
-        deviceId: deviceId,
-        status: taskStatus,
-        severity: taskSeverity,
-        description: description,
-    }
-    // Perform the request
-    fetch(endpoint,  {
-        method: "PUT",
-        body: JSON.stringify(taskObj),
-        headers: { "Content-type": "application/json; charset=UTF-8" }
-    }).then(response => {
-        if (response.status === 200) {
-            // Successfully modified the resource
-            successMsg("Changes saved successfully");
-            return response.json();
-        }
-        else {
-            throw response;
-        }
-    }).then(() => {
-        // Close the modal and fetch all the tasks again to refresh the tasks lists.
-        editTaskDiv.style.display = "none";
-        fetchTasks();
-    })
-    .catch(err => {
-        errorMsg(err);
-        console.log(err);
-    })
 }
 
 function deleteTask(id) {
@@ -410,7 +396,6 @@ deleteTasksBtn.onclick = function() { deleteAllTasks(); }
 
 // Configure filters and buttons
 configureFilters();
-configureAddTaskModalButtons();
-configureEditTaskModalSaveAndCancelButtons();
+configureSaveTaskModalButtons();
 fetchDevices(); // Populate our DeviceID select menus
 fetchTasks(); // Populate the tasks table with all tasks

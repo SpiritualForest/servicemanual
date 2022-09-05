@@ -21,74 +21,42 @@
 
         <div class="tasks-container">
             
-            <div id="add-task-modal" class="add-task-modal">
-				<div class="add-task-modal-content">
-                    <h3 class="add-new-task-header">Add new task</h3>
-                	<div class="add-task-modal-attribute">
-                    	<p class="modal-paragraph">Device:</p>
-                    	<select id="add-task-select-device"></select> <!-- populate this with JS -->
-                	</div>
-                	<div class="add-task-modal-attribute">
-                    	<p class="modal-paragraph">Status:</p>
-                        <select id="add-task-select-status"> <!-- Select status -->
-                        	<option value="OPEN">Open</option>
-                        	<option value="CLOSED">Closed</option>
-                    	</select>
-                	</div>
-                	<div class="add-task-modal-attribute">
-                    	<p class="modal-paragraph">Severity:</p>
-                        <select id="add-task-select-severity"> <!-- Select severity -->
-                        	<option value="CRITICAL">Critical</option>
-                        	<option value="IMPORTANT">Important</option>
-                        	<option value="UNIMPORTANT">Unimportant</option>
-                    	</select>
-                	</div>
-                	<div class="add-task-modal-attribute">
-                    	<textarea id="add-task-description" rows=5 cols=20 placeholder="Task description..." class="add-task-textarea"></textarea>
-                	</div>
-                    <div class="add-task-modal-attribute">
-                	    <button class="add-task-modal-save-btn add-task-btn" id="add-task-modal-save-btn">Save</button>
-                	    <button class="add-task-modal-cancel-btn add-task-btn" id="add-task-modal-cancel-btn">Cancel</button>
-                    </div>
-                </div>
-            </div> <!-- end of add-task-modal class div -->
-            
-            <div id="edit-task" class="add-task-modal">
-				<div class="add-task-modal-content">
-                    <h3 class="add-new-task-header">Edit task</h3>
-                    <div class="add-task-modal-attribute">
+            <div id="save-task-modal" class="save-task-modal">
+				<div class="save-task-modal-content">
+                    <h3 class="save-task-header" id="save-task-header">Add task</h3> <!-- change based on the task (add or edit) -->
+                    <div class="save-task-modal-attribute task-id-div" id="task-id-div"> <!-- Hide or show based on editing or adding -->
                         <p class="modal-paragraph">Task:</p>
-                        <input id="edit-task-id" type="text" disabled="disabled" placeholder="Task ID">
+                        <input type="text" id="save-task-task-id" disabled="disabled" placeholder="Task ID">
                     </div>
-                	<div class="add-task-modal-attribute">
+                	<div class="save-task-modal-attribute">
                     	<p class="modal-paragraph">Device:</p>
-                    	<select id="edit-task-select-device"></select> <!-- populate this with JS -->
+                    	<select id="save-task-select-device"></select> <!-- populate this with JS -->
                 	</div>
-                	<div class="add-task-modal-attribute">
+                	<div class="save-task-modal-attribute">
                     	<p class="modal-paragraph">Status:</p>
-                    	<select id="edit-task-select-status">
+                        <select id="save-task-select-status"> <!-- Select status -->
                         	<option value="OPEN">Open</option>
                         	<option value="CLOSED">Closed</option>
                     	</select>
                 	</div>
-                	<div class="add-task-modal-attribute">
+                	<div class="save-task-modal-attribute">
                     	<p class="modal-paragraph">Severity:</p>
-                    	<select id="edit-task-select-severity">
+                        <select id="save-task-select-severity"> <!-- Select severity -->
                         	<option value="CRITICAL">Critical</option>
                         	<option value="IMPORTANT">Important</option>
                         	<option value="UNIMPORTANT">Unimportant</option>
                     	</select>
                 	</div>
-                	<div class="add-task-modal-attribute">
-                    	<textarea id="edit-task-description" rows=5 cols=20 placeholder="Task description..." class="add-task-textarea"></textarea>
+                	<div class="save-task-modal-attribute">
+                    	<textarea id="save-task-description" rows=5 cols=20 placeholder="Task description..." class="save-task-textarea"></textarea>
                 	</div>
-                    <div class="add-task-modal-attribute">
-                	    <button class="add-task-modal-save-btn add-task-btn" id="edit-task-modal-save-btn">Save</button>
-                	    <button class="add-task-modal-cancel-btn add-task-btn" id="edit-task-modal-cancel-btn">Cancel</button>
+                    <div class="save-task-modal-attribute">
+                	    <button class="save-task-modal-save-btn save-task-btn" id="save-task-modal-save-btn">Save</button>
+                	    <button class="save-task-modal-cancel-btn save-task-btn" id="save-task-modal-cancel-btn">Cancel</button>
                     </div>
                 </div>
-            </div> <!-- end of edit-task-modal class div -->
-            
+            </div> <!-- end of save-task-modal class div -->
+             
             <div class="filter-tasks">
                 <input type="checkbox" id="filter-tasks" name="filter-tasks">
                 <label for="filter-tasks" class="filter-paragraph filter-checkbox">Filter</label>

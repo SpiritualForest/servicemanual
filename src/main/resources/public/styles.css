@@ -87,7 +87,7 @@ td, th {
     margin: 5px;
     padding: 5px;
 }
-.add-task-modal {
+.save-task-modal {
     padding: 10px;
     z-index: 1;
     display: none; /* Hidden by default */
@@ -96,28 +96,28 @@ td, th {
     margin-bottom: 10px;
 }
 
-.add-new-task-header {
+.save-task-header {
     width: 65%;
     margin: 0 auto;
 }
 
-.add-task-modal-select {
+.save-task-modal-select {
     margin: 5px;
 }
 
-.add-task-textarea {
+.save-task-textarea {
     margin-bottom: 5px;
     margin-top: 5px;
 }
 
-.add-task-modal-save-btn {
+.save-task-modal-save-btn {
     float: left;
 }
 
-.add-task-modal-cancel-btn {
+.save-task-modal-cancel-btn {
     float: right;
 }
-.add-task-btn {
+.save-task-btn {
     font-size: 14px;
 }
 
@@ -130,11 +130,20 @@ td, th {
     cursor: pointer;
 }
 
-.add-task-textarea {
+.save-task-textarea {
     width: 100%;
 }
 
 .task-btn {
     margin: 5px;
     font-size: 14px;
+}
+
+.task-id-div {
+    display: none;
+}
+
+.td-severity-critical {
+    color: red;
+    font-weight: bold;
 }
