@@ -56,6 +56,7 @@ public class MaintenanceTask {
      * @param description Description of the task
      * @param registered Registration time of the task
      */
+     
     public MaintenanceTask(Long deviceId, TaskSeverity severity, TaskStatus status, String description, LocalDateTime registered) {
         this.deviceId = deviceId;
         this.severity = severity;

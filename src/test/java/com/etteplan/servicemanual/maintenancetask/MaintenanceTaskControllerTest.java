@@ -413,6 +413,22 @@ public class MaintenanceTaskControllerTest {
         assertFalse(desc.contains(">"));
     }
 
+    @Test
+    public void addTaskWithTaskId() throws Exception {
+        // Create a new task, but explicitly provide an id for it in the body.
+        // The ID should be discarded.
+        String json = "{\"id\": 1, \"deviceId\": 1, \"status\": \"OPEN\", \"severity\": \"CRITICAL\", \"description\": \"Major fixes of security holes\"}";
+        MvcResult result = mvc.perform(MockMvcRequestBuilders.post(API_TASKS).accept(MediaType.APPLICATION_JSON)
+                .contentType(MediaType.APPLICATION_JSON).content(json))
+            .andExpect(status().isCreated()).andReturn();
+        JSONObject response = new JSONObject(result.getResponse().getContentAsString());
+        Long taskId = response.getLong("id");
+        // Assert that the taskId is NOT 1
+        assertNotEquals(1L, taskId);
+        // Assert that there is no task with ID 1
+        assertFalse(taskRepository.existsById(1L));
+    }
+
     // PUT
 
     @Test

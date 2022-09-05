@@ -172,6 +172,7 @@ class MaintenanceTaskController {
         task.setSeverity(modifiedTask.getSeverity());
         task.setDescription(escapedDesc);
         task.setDeviceId(modifiedTask.getDeviceId());
+        task.setRegistered(task.getRegistered()); // Prevent modification of registration time
         task = taskRepository.save(task);
         return assembler.toModel(task);
     } 
