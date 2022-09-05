@@ -14,7 +14,7 @@ Short version:
 
 Endpoints:
 
-/api/tasks - GET, DELETE to get all or delete all tasks according to the given parameters.  
+/api/tasks - _**GET, DELETE**_ to get all or delete all tasks according to the given parameters.  
 Accepted query parameters:
 ```
 deviceId=integer
@@ -24,7 +24,7 @@ severity=string (UNIMPORTANT, IMPORTANT, CRITICAL)
 If no query parameters are supplied to the request, it will either fetch all, or _**DELETE ALL TASKS**_.  
 _**Exercise caution**_ with the _**DELETE**_ method on this endpoint.  
 
-Supplying unknown or malformed query parameters to this endpoint will result in a 400 "bad request" response.  
+Supplying unknown or malformed query parameters with _**GET**_ or _**DELETE**_ to this endpoint will result in a 400 "bad request" response.  
 Example queries:
 ```
 GET /api/tasks?deviceId=1
@@ -33,9 +33,9 @@ DELETE /api/tasks?status=CLOSED
 DELETE /api/tasks?deviceId=10
 ```
   
-/api/tasks - POST. Create a new task. View the api.yml file's definition for MaintenanceTask to see the body content to pass in the request.  
+/api/tasks - _**POST**_. Create a new task. View the api.yml file's definition for MaintenanceTask to see the body content to pass in the request.  
 
-/api/tasks/{taskId} - GET, PUT, DELETE. Retrieve, update, or delete the task with the given taskId. taskId is an integer. The body for the PUT request is the same as in the /api/tasks/create POST request. View the definition for 'MaintenanceTask' in api.yml.  
+/api/tasks/{taskId} - _**GET, PUT, DELETE**_. Retrieve, update, or delete the task with the given _taskId_. _taskId_ is an integer. The body for the PUT request is the same as in the /api/tasks POST request. View the definition for 'MaintenanceTask' in api.yml.  
 Query parameters passed to this endpoint are **discarded**, and have no effect on the request or response. 
 Passing a taskId value that is not an integer will result in a 400 "bad request" response.  
 
