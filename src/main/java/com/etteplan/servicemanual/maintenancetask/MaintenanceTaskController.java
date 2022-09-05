@@ -103,6 +103,23 @@ class MaintenanceTaskController {
             return ResponseEntity.badRequest().body(ex.getMessage());
         }
     }
+    
+    // Create a new task
+    @PostMapping("/api/tasks")
+    @ResponseStatus(HttpStatus.CREATED)
+    EntityModel<MaintenanceTask> createTask(@RequestBody @Valid MaintenanceTask task) {
+        // Returns 400 bad request if the supplied task object is not valid in some way.
+        if (!deviceRepository.existsById(task.getDeviceId())) {
+            // Error, no such device.
+            throw new FactoryDeviceNotFoundException(task.getDeviceId());
+        }
+        String escapedDesc = task.getDescription();
+        // Escape HTML in the description
+        escapedDesc = escapedDesc.replaceAll("<", "&lt;");
+        escapedDesc = escapedDesc.replaceAll(">", "&gt;");
+        task.setDescription(escapedDesc);
+        return assembler.toModel(taskRepository.save(task));
+    }
 
     // MAPPING: /api/tasks/{taskId}
 
@@ -157,22 +174,5 @@ class MaintenanceTaskController {
         task.setDeviceId(modifiedTask.getDeviceId());
         task = taskRepository.save(task);
         return assembler.toModel(task);
-    }
- 
-    // Create a new task
-    @PostMapping("/api/tasks/create")
-    @ResponseStatus(HttpStatus.CREATED)
-    EntityModel<MaintenanceTask> createTask(@RequestBody @Valid MaintenanceTask task) {
-        // Returns 400 bad request if the supplied task object is not valid in some way.
-        if (!deviceRepository.existsById(task.getDeviceId())) {
-            // Error, no such device.
-            throw new FactoryDeviceNotFoundException(task.getDeviceId());
-        }
-        String escapedDesc = task.getDescription();
-        // Escape HTML in the description
-        escapedDesc = escapedDesc.replaceAll("<", "&lt;");
-        escapedDesc = escapedDesc.replaceAll(">", "&gt;");
-        task.setDescription(escapedDesc);
-        return assembler.toModel(taskRepository.save(task));
-    }
+    } 
 }

@@ -56,6 +56,10 @@ public class MaintenanceTaskControllerTest {
             "Device was overheating",
             "Replaced a transistor"
         );
+    // Endpoint constants
+
+    private final String API_TASKS = "/api/tasks";
+    private final String API_TASKID = "/api/tasks/%d";
 
     private MaintenanceTask createMaintenanceTask(Long deviceId, TaskStatus status, TaskSeverity severity) {
         // Create a new task, save it, and return it.
@@ -79,7 +83,7 @@ public class MaintenanceTaskControllerTest {
     @Test
     public void getMaintenanceTasks() throws Exception {
         // All tasks
-        mvc.perform(MockMvcRequestBuilders.get("/api/tasks").accept(MediaType.APPLICATION_JSON))
+        mvc.perform(MockMvcRequestBuilders.get(API_TASKS).accept(MediaType.APPLICATION_JSON))
             .andExpect(status().isOk());
     }
 
@@ -93,7 +97,7 @@ public class MaintenanceTaskControllerTest {
             createMaintenanceTask(deviceId, TaskStatus.CLOSED, TaskSeverity.CRITICAL);
         }
         // Make the request, status closed, severity critical
-        MvcResult result = mvc.perform(MockMvcRequestBuilders.get("/api/tasks").param("status", "CLOSED").param("severity", "CRITICAL")
+        MvcResult result = mvc.perform(MockMvcRequestBuilders.get(API_TASKS).param("status", "CLOSED").param("severity", "CRITICAL")
                 .accept(MediaType.APPLICATION_JSON))
             .andExpect(status().isOk()).andReturn();
         // Parse JSON so that we can assert that only open status and critical severity have been returned
@@ -113,7 +117,7 @@ public class MaintenanceTaskControllerTest {
         }
         
         // Make the request, status open
-        MvcResult result = mvc.perform(MockMvcRequestBuilders.get("/api/tasks").param("status", "OPEN")
+        MvcResult result = mvc.perform(MockMvcRequestBuilders.get(API_TASKS).param("status", "OPEN")
                 .accept(MediaType.APPLICATION_JSON))
             .andExpect(status().isOk()).andReturn();
         // Parse JSON so that we can assert that only open status has been returned
@@ -131,7 +135,7 @@ public class MaintenanceTaskControllerTest {
             createMaintenanceTask(1L, TaskStatus.OPEN, TaskSeverity.UNIMPORTANT);
         }
         // Make the request, severity unimportant
-        MvcResult result = mvc.perform(MockMvcRequestBuilders.get("/api/tasks").param("severity", "UNIMPORTANT")
+        MvcResult result = mvc.perform(MockMvcRequestBuilders.get(API_TASKS).param("severity", "UNIMPORTANT")
                 .accept(MediaType.APPLICATION_JSON))
             .andExpect(status().isOk()).andReturn();
         // Parse JSON so that we can assert that only unimportant severity has been returned
@@ -146,7 +150,7 @@ public class MaintenanceTaskControllerTest {
     public void getMaintenanceTasksNoSuchDevice() throws Exception {
         // Get a task for a device that doesn't exist.
         // Should just return 200 and no task objects.
-        mvc.perform(MockMvcRequestBuilders.get("/api/tasks").param("deviceId", "123456789").accept(MediaType.APPLICATION_JSON))
+        mvc.perform(MockMvcRequestBuilders.get(API_TASKS).param("deviceId", "123456789").accept(MediaType.APPLICATION_JSON))
             .andExpect(status().isOk());
     }
 
@@ -159,7 +163,7 @@ public class MaintenanceTaskControllerTest {
     @Test
     public void getMaintenanceTasksGarbageParam() throws Exception {
         // Try to get it with a param that can't be converted to its type
-        mvc.perform(MockMvcRequestBuilders.get("/api/tasks").param("status", "NO_SUCH_STATUS").accept(MediaType.APPLICATION_JSON))
+        mvc.perform(MockMvcRequestBuilders.get(API_TASKS).param("status", "NO_SUCH_STATUS").accept(MediaType.APPLICATION_JSON))
             .andExpect(status().isBadRequest());
     }
 
@@ -167,21 +171,21 @@ public class MaintenanceTaskControllerTest {
     public void getMaintenanceTasksNonExistentParams() throws Exception {
         // Get tasks with query params that don't match anything.
         // Should fail, return status 400
-        mvc.perform(MockMvcRequestBuilders.get("/api/tasks").param("no_such_param", "no_such_value").accept(MediaType.APPLICATION_JSON))
+        mvc.perform(MockMvcRequestBuilders.get(API_TASKS).param("no_such_param", "no_such_value").accept(MediaType.APPLICATION_JSON))
             .andExpect(status().isBadRequest());
     }
 
     @Test
     public void getMaintenanceTasksEmptyParam() throws Exception {
         // Pass an query parameter. Should return 400
-        mvc.perform(MockMvcRequestBuilders.get("/api/tasks").param("status", "").accept(MediaType.APPLICATION_JSON))
+        mvc.perform(MockMvcRequestBuilders.get(API_TASKS).param("status", "").accept(MediaType.APPLICATION_JSON))
             .andExpect(status().isBadRequest());
     }
 
     @Test
     public void getSingleTask() throws Exception {
         MaintenanceTask task = createMaintenanceTask(2L, TaskStatus.CLOSED, TaskSeverity.CRITICAL);
-        mvc.perform(MockMvcRequestBuilders.get(String.format("/api/tasks/%d", task.getId())).accept(MediaType.APPLICATION_JSON))
+        mvc.perform(MockMvcRequestBuilders.get(String.format(API_TASKID, task.getId())).accept(MediaType.APPLICATION_JSON))
             .andExpect(status().isOk());
     }
 
@@ -190,7 +194,7 @@ public class MaintenanceTaskControllerTest {
         // Getting a single task doesn't support any query parameters, so they should just be discarded.
         // The task should be fetched, status 200.
         MaintenanceTask task = createMaintenanceTask(2L, TaskStatus.CLOSED, TaskSeverity.IMPORTANT);
-        mvc.perform(MockMvcRequestBuilders.get(String.format("/api/tasks/%d", task.getId())).param("nosuchparam", "nosuchvalue").accept(MediaType.APPLICATION_JSON))
+        mvc.perform(MockMvcRequestBuilders.get(String.format(API_TASKID, task.getId())).param("nosuchparam", "nosuchvalue").accept(MediaType.APPLICATION_JSON))
             .andExpect(status().isOk());
     }
 
@@ -223,7 +227,7 @@ public class MaintenanceTaskControllerTest {
         for (int i = 0; i < 5; i++) {
             createMaintenanceTask(5L, TaskStatus.OPEN, TaskSeverity.IMPORTANT);
         }
-        MvcResult result = mvc.perform(MockMvcRequestBuilders.get("/api/tasks").param("deviceId", "5").accept(MediaType.APPLICATION_JSON))
+        MvcResult result = mvc.perform(MockMvcRequestBuilders.get(API_TASKS).param("deviceId", "5").accept(MediaType.APPLICATION_JSON))
             .andExpect(status().isOk()).andReturn();
         // Parse JSON
         JSONArray taskArray = getTaskArray(new JSONObject(result.getResponse().getContentAsString()));
@@ -242,7 +246,7 @@ public class MaintenanceTaskControllerTest {
             createMaintenanceTask(3L, TaskStatus.CLOSED, TaskSeverity.CRITICAL);
         }
         // Make the request, status closed, severity critical
-        MvcResult result = mvc.perform(MockMvcRequestBuilders.get("/api/tasks").param("deviceId", "3").param("status", "CLOSED").param("severity", "CRITICAL")
+        MvcResult result = mvc.perform(MockMvcRequestBuilders.get(API_TASKS).param("deviceId", "3").param("status", "CLOSED").param("severity", "CRITICAL")
                 .accept(MediaType.APPLICATION_JSON))
             .andExpect(status().isOk()).andReturn();
         // Parse JSON so that we can assert that only open status and critical severity have been returned
@@ -261,7 +265,7 @@ public class MaintenanceTaskControllerTest {
             createMaintenanceTask(6L, TaskStatus.OPEN, TaskSeverity.CRITICAL);
         }
         // Make the request, status open
-        MvcResult result = mvc.perform(MockMvcRequestBuilders.get("/api/tasks").param("deviceId", "6").param("status", "OPEN")
+        MvcResult result = mvc.perform(MockMvcRequestBuilders.get(API_TASKS).param("deviceId", "6").param("status", "OPEN")
                 .accept(MediaType.APPLICATION_JSON))
             .andExpect(status().isOk()).andReturn();
         // Parse JSON so that we can assert that only open status has been returned
@@ -279,7 +283,7 @@ public class MaintenanceTaskControllerTest {
             createMaintenanceTask(4L, TaskStatus.CLOSED, TaskSeverity.UNIMPORTANT);
         }
         // Make the request, severity unimportant
-        MvcResult result = mvc.perform(MockMvcRequestBuilders.get("/api/tasks").param("deviceId", "4").param("severity", "UNIMPORTANT")
+        MvcResult result = mvc.perform(MockMvcRequestBuilders.get(API_TASKS).param("deviceId", "4").param("severity", "UNIMPORTANT")
                 .accept(MediaType.APPLICATION_JSON))
             .andExpect(status().isOk()).andReturn();
         // Parse JSON so that we can assert that only unimportant severity has been returned
@@ -295,14 +299,14 @@ public class MaintenanceTaskControllerTest {
     public void getTasksFilterNonExistentParam() throws Exception {
         // Filter tasks by one good parameter, and one garbage parameter that can't be correctly mapped.
         // Should return 400
-        mvc.perform(MockMvcRequestBuilders.get("/api/tasks").param("deviceId", "1").param("nosuchparam", "nosuchval").accept(MediaType.APPLICATION_JSON)).
+        mvc.perform(MockMvcRequestBuilders.get(API_TASKS).param("deviceId", "1").param("nosuchparam", "nosuchval").accept(MediaType.APPLICATION_JSON)).
             andExpect(status().isBadRequest());
     }
 
     @Test
     public void getTasksFilterGarbageParam() throws Exception {
         // One good param, one garbage param that can't be converted to its correct type. Should return 400
-        mvc.perform(MockMvcRequestBuilders.get("/api/tasks").param("deviceId", "1").param("status", "nosuchstatus").accept(MediaType.APPLICATION_JSON)).
+        mvc.perform(MockMvcRequestBuilders.get(API_TASKS).param("deviceId", "1").param("status", "nosuchstatus").accept(MediaType.APPLICATION_JSON)).
             andExpect(status().isBadRequest());
     }
 
@@ -311,7 +315,7 @@ public class MaintenanceTaskControllerTest {
     @Test
     public void addTask() throws Exception {
         String json = "{\"deviceId\": 1, \"status\": \"OPEN\", \"severity\": \"CRITICAL\", \"description\": \"Major fixes of security holes\"}";
-        mvc.perform(MockMvcRequestBuilders.post("/api/tasks/create").accept(MediaType.APPLICATION_JSON)
+        mvc.perform(MockMvcRequestBuilders.post(API_TASKS).accept(MediaType.APPLICATION_JSON)
                 .contentType(MediaType.APPLICATION_JSON).content(json))
             .andExpect(status().isCreated());
     }
@@ -320,7 +324,7 @@ public class MaintenanceTaskControllerTest {
     public void addTaskNullValue() throws Exception {
         // Try adding a task with a null device ID. Should return bad request
         String json = "{\"deviceId\": null, \"status\": \"OPEN\", \"severity\": \"CRITICAL\", \"description\": \"Major fixes of security holes\"}";
-        mvc.perform(MockMvcRequestBuilders.post("/api/tasks/create").accept(MediaType.APPLICATION_JSON)
+        mvc.perform(MockMvcRequestBuilders.post(API_TASKS).accept(MediaType.APPLICATION_JSON)
                 .contentType(MediaType.APPLICATION_JSON).content(json))
             .andExpect(status().isBadRequest());
     }
@@ -331,7 +335,7 @@ public class MaintenanceTaskControllerTest {
         // Result should a disregard of this value altogether, with a replacement by LocalDateTime.now()
         // in the TaskMaintenance's default constructor.
         String json = "{\"deviceId\": 1, \"status\": \"OPEN\", \"severity\": \"CRITICAL\", \"description\": \"Major fixes of security holes\", \"registered\": \"some random value lol\"}";
-        mvc.perform(MockMvcRequestBuilders.post("/api/tasks/create").accept(MediaType.APPLICATION_JSON)
+        mvc.perform(MockMvcRequestBuilders.post(API_TASKS).accept(MediaType.APPLICATION_JSON)
                 .contentType(MediaType.APPLICATION_JSON).content(json))
             .andExpect(status().isBadRequest());
     }
@@ -340,7 +344,7 @@ public class MaintenanceTaskControllerTest {
     public void addTaskNonExistentKeyValuePair() throws Exception {
         // Add it with a non existent key/value pair - should return 400
         String json = "{\"deviceId\": 1, \"status\": \"OPEN\", \"severity\": \"CRITICAL\", \"description\": \"Major fixes of security holes\", \"randomkey\": \"randomvalue\"}";
-        mvc.perform(MockMvcRequestBuilders.post("/api/tasks/create").accept(MediaType.APPLICATION_JSON)
+        mvc.perform(MockMvcRequestBuilders.post(API_TASKS).accept(MediaType.APPLICATION_JSON)
                 .contentType(MediaType.APPLICATION_JSON).content(json))
             .andExpect(status().isBadRequest());
     }
@@ -349,7 +353,7 @@ public class MaintenanceTaskControllerTest {
     public void addTaskGarbageStatus() throws Exception {
         // Add it with an invalid status - should return 400
         String json = "{\"deviceId\": 1, \"status\": \"NOSUCHSTATUS\", \"severity\": \"CRITICAL\", \"description\": \"Major fixes of security holes\"}";
-        mvc.perform(MockMvcRequestBuilders.post("/api/tasks/create").accept(MediaType.APPLICATION_JSON)
+        mvc.perform(MockMvcRequestBuilders.post(API_TASKS).accept(MediaType.APPLICATION_JSON)
                 .contentType(MediaType.APPLICATION_JSON).content(json))
             .andExpect(status().isBadRequest());
     }
@@ -359,7 +363,7 @@ public class MaintenanceTaskControllerTest {
         // Try to add a task with an empty string as a description.
         // Should return bad request due to the NotEmpty constraint we set on it.
         String json = "{\"deviceId\": 1, \"status\": \"OPEN\", \"severity\": \"CRITICAL\", \"description\": \"\"}";
-        mvc.perform(MockMvcRequestBuilders.post("/api/tasks/create").accept(MediaType.APPLICATION_JSON)
+        mvc.perform(MockMvcRequestBuilders.post(API_TASKS).accept(MediaType.APPLICATION_JSON)
                 .contentType(MediaType.APPLICATION_JSON).content(json))
             .andExpect(status().isBadRequest());
     }
@@ -368,7 +372,7 @@ public class MaintenanceTaskControllerTest {
     public void addTaskDeviceNotFound() throws Exception {
         // Add a task with a deviceId that doesn't exist.
         String json = "{\"deviceId\": 123456789, \"status\": \"OPEN\", \"severity\": \"CRITICAL\", \"description\": \"Major fixes of security holes\"}";
-        mvc.perform(MockMvcRequestBuilders.post("/api/tasks/create").accept(MediaType.APPLICATION_JSON)
+        mvc.perform(MockMvcRequestBuilders.post(API_TASKS).accept(MediaType.APPLICATION_JSON)
                 .contentType(MediaType.APPLICATION_JSON).content(json))
             .andExpect(status().isNotFound());
     }
@@ -388,7 +392,7 @@ public class MaintenanceTaskControllerTest {
     public void addTaskEmptyBody() throws Exception {
         // Try to add a task without providing a task object body in the request
         // Should be 400 bad request
-        mvc.perform(MockMvcRequestBuilders.post("/api/tasks/create").accept(MediaType.APPLICATION_JSON))
+        mvc.perform(MockMvcRequestBuilders.post(API_TASKS).accept(MediaType.APPLICATION_JSON))
             .andExpect(status().isBadRequest());
     }
 
@@ -396,7 +400,7 @@ public class MaintenanceTaskControllerTest {
     public void addTaskHTMLDescription() throws Exception {
         // Add a task with HTML in the description. This should be escaped.
         String json = "{ \"status\": \"CLOSED\", \"severity\": \"CRITICAL\", \"deviceId\": 1, \"description\": \"<script type=\\\"text/javascript\\\">alert(\\\"XSS!\\\");</script>\"}";
-        MvcResult result = mvc.perform(MockMvcRequestBuilders.post("/api/tasks/create").accept(MediaType.APPLICATION_JSON)
+        MvcResult result = mvc.perform(MockMvcRequestBuilders.post(API_TASKS).accept(MediaType.APPLICATION_JSON)
                 .contentType(MediaType.APPLICATION_JSON).content(json))
             .andExpect(status().isCreated()).andReturn();
         JSONObject response = new JSONObject(result.getResponse().getContentAsString());
@@ -417,7 +421,7 @@ public class MaintenanceTaskControllerTest {
         MaintenanceTask newTask = createMaintenanceTask(1L, TaskStatus.OPEN, TaskSeverity.IMPORTANT);
         // Now modify it
         String json = "{\"status\": \"CLOSED\", \"description\": \"A test task\", \"deviceId\": 1, \"severity\": \"IMPORTANT\"}"; 
-        mvc.perform(MockMvcRequestBuilders.put(String.format("/api/tasks/%d", newTask.getId())).accept(MediaType.APPLICATION_JSON)
+        mvc.perform(MockMvcRequestBuilders.put(String.format(API_TASKID, newTask.getId())).accept(MediaType.APPLICATION_JSON)
                 .contentType(MediaType.APPLICATION_JSON).content(json))
             .andExpect(status().isOk());
         // Now also load up the task object from the repository and compare the status
@@ -441,7 +445,7 @@ public class MaintenanceTaskControllerTest {
         String json = "{\"description\": \"A test task\", \"deviceId\": 1, \"severity\": \"IMPORTANT\"}"; 
         MaintenanceTask newTask = createMaintenanceTask(1L, TaskStatus.OPEN, TaskSeverity.IMPORTANT);
         // Now try to modify it
-        mvc.perform(MockMvcRequestBuilders.put(String.format("/api/tasks/%d", newTask.getId())).accept(MediaType.APPLICATION_JSON)
+        mvc.perform(MockMvcRequestBuilders.put(String.format(API_TASKID, newTask.getId())).accept(MediaType.APPLICATION_JSON)
                 .contentType(MediaType.APPLICATION_JSON).content(json))
             .andExpect(status().isBadRequest());
         // Now also load up the task object from the repository and compare the status
@@ -456,7 +460,7 @@ public class MaintenanceTaskControllerTest {
         // Try to modify a task, pass empty description. Should return BadRequest.
         String json = "{\"description\": \"\", \"deviceId\": 1, \"severity\": \"IMPORTANT\", \"status\": \"OPEN\"}"; 
         MaintenanceTask newTask = createMaintenanceTask(1L, TaskStatus.OPEN, TaskSeverity.IMPORTANT);
-        mvc.perform(MockMvcRequestBuilders.put(String.format("/api/tasks/%d", newTask.getId())).accept(MediaType.APPLICATION_JSON)
+        mvc.perform(MockMvcRequestBuilders.put(String.format(API_TASKID, newTask.getId())).accept(MediaType.APPLICATION_JSON)
                 .contentType(MediaType.APPLICATION_JSON).content(json))
             .andExpect(status().isBadRequest());
     }
@@ -466,9 +470,9 @@ public class MaintenanceTaskControllerTest {
         // Make the PUT request on /api/tasks/create
         // Should return 400 bad request because it tries to convert "create" into an integer as a taskId
         String json = "{\"description\": \"testing\", \"deviceId\": 1, \"severity\": \"IMPORTANT\", \"status\": \"OPEN\"}"; 
-        mvc.perform(MockMvcRequestBuilders.put("/api/tasks/create").accept(MediaType.APPLICATION_JSON)
+        mvc.perform(MockMvcRequestBuilders.put(API_TASKS).accept(MediaType.APPLICATION_JSON)
                 .contentType(MediaType.APPLICATION_JSON).content(json))
-            .andExpect(status().isBadRequest());
+            .andExpect(status().isMethodNotAllowed());
     }
     
     @Test
@@ -476,7 +480,7 @@ public class MaintenanceTaskControllerTest {
         // Modify a task with HTML in the description. This should be escaped.
         MaintenanceTask task = createMaintenanceTask(1L, TaskStatus.OPEN, TaskSeverity.IMPORTANT);
         String json = "{ \"status\": \"CLOSED\", \"severity\": \"CRITICAL\", \"deviceId\": 1, \"description\": \"<script type=\\\"text/javascript\\\">alert(\\\"XSS!\\\");</script>\"}";
-        MvcResult result = mvc.perform(MockMvcRequestBuilders.put(String.format("/api/tasks/%d", task.getId())).accept(MediaType.APPLICATION_JSON)
+        MvcResult result = mvc.perform(MockMvcRequestBuilders.put(String.format(API_TASKID, task.getId())).accept(MediaType.APPLICATION_JSON)
                 .contentType(MediaType.APPLICATION_JSON).content(json))
             .andExpect(status().isOk()).andReturn();
         JSONObject response = new JSONObject(result.getResponse().getContentAsString());
@@ -496,7 +500,7 @@ public class MaintenanceTaskControllerTest {
         MaintenanceTask task = createMaintenanceTask(1L, TaskStatus.CLOSED, TaskSeverity.IMPORTANT);
         assertTrue(taskRepository.existsById(task.getId()));
         // Delete
-        mvc.perform(MockMvcRequestBuilders.delete("/api/tasks").accept(MediaType.APPLICATION_JSON))
+        mvc.perform(MockMvcRequestBuilders.delete(API_TASKS).accept(MediaType.APPLICATION_JSON))
             .andExpect(status().isOk());
         // Assert that no tasks exist
         assertTrue(taskRepository.findAll().isEmpty());
@@ -508,7 +512,7 @@ public class MaintenanceTaskControllerTest {
         // Confirm its existence in the database
         assertTrue(taskRepository.existsById(task.getId()));
         // Delete
-        mvc.perform(MockMvcRequestBuilders.delete(String.format("/api/tasks/%d", task.getId())).accept(MediaType.APPLICATION_JSON))
+        mvc.perform(MockMvcRequestBuilders.delete(String.format(API_TASKID, task.getId())).accept(MediaType.APPLICATION_JSON))
             .andExpect(status().isOk());
         // Assert the deletion
         assertFalse(taskRepository.findById(task.getId()).isPresent());
@@ -532,7 +536,7 @@ public class MaintenanceTaskControllerTest {
         // Assert the existence of the newly created tasks
         assertFalse(taskRepository.findAllByDeviceId(1L).isEmpty());
         // Now delete
-        mvc.perform(MockMvcRequestBuilders.delete("/api/tasks").param("deviceId", "1").accept(MediaType.APPLICATION_JSON))
+        mvc.perform(MockMvcRequestBuilders.delete(API_TASKS).param("deviceId", "1").accept(MediaType.APPLICATION_JSON))
             .andExpect(status().isOk());
         // Assert the deletion
         assertTrue(taskRepository.findAllByDeviceId(1L).isEmpty());
@@ -548,7 +552,7 @@ public class MaintenanceTaskControllerTest {
         // Assert the existence of the newly created tasks
         assertFalse(taskRepository.findAllByDeviceIdAndStatusAndSeverity(1L, TaskStatus.CLOSED, TaskSeverity.IMPORTANT).isEmpty());
         // Delete
-        mvc.perform(MockMvcRequestBuilders.delete("/api/tasks").param("deviceId", "1").param("status", "CLOSED").param("severity", "IMPORTANT").
+        mvc.perform(MockMvcRequestBuilders.delete(API_TASKS).param("deviceId", "1").param("status", "CLOSED").param("severity", "IMPORTANT").
                 accept(MediaType.APPLICATION_JSON))
             .andExpect(status().isOk());
         // Assert the deletion
@@ -565,7 +569,7 @@ public class MaintenanceTaskControllerTest {
         // Assert the existence of the newly created tasks
         assertFalse(taskRepository.findAllByDeviceIdAndStatus(1L, TaskStatus.CLOSED).isEmpty());
         // Delete
-        mvc.perform(MockMvcRequestBuilders.delete("/api/tasks").param("deviceId", "1").param("status", "CLOSED").
+        mvc.perform(MockMvcRequestBuilders.delete(API_TASKS).param("deviceId", "1").param("status", "CLOSED").
                 accept(MediaType.APPLICATION_JSON))
             .andExpect(status().isOk());
         // Assert the deletion
@@ -582,7 +586,7 @@ public class MaintenanceTaskControllerTest {
         // Assert the existence of the newly created tasks
         assertFalse(taskRepository.findAllByDeviceIdAndSeverity(1L, TaskSeverity.IMPORTANT).isEmpty());
         // Delete
-        mvc.perform(MockMvcRequestBuilders.delete("/api/tasks").param("deviceId", "1").param("severity", "IMPORTANT").
+        mvc.perform(MockMvcRequestBuilders.delete(API_TASKS).param("deviceId", "1").param("severity", "IMPORTANT").
                 accept(MediaType.APPLICATION_JSON))
             .andExpect(status().isOk());
         // Assert the deletion
@@ -599,7 +603,7 @@ public class MaintenanceTaskControllerTest {
         // Assert the existence of the newly created tasks
         assertFalse(taskRepository.findAllByStatusAndSeverity(TaskStatus.CLOSED, TaskSeverity.IMPORTANT).isEmpty());
         // Delete
-        mvc.perform(MockMvcRequestBuilders.delete("/api/tasks").param("status", "CLOSED").param("severity", "IMPORTANT").
+        mvc.perform(MockMvcRequestBuilders.delete(API_TASKS).param("status", "CLOSED").param("severity", "IMPORTANT").
                 accept(MediaType.APPLICATION_JSON))
             .andExpect(status().isOk());
         // Assert the deletion
@@ -616,7 +620,7 @@ public class MaintenanceTaskControllerTest {
         // Assert the existence of the newly created tasks
         assertFalse(taskRepository.findAllByStatus(TaskStatus.CLOSED).isEmpty());
         // Delete
-        mvc.perform(MockMvcRequestBuilders.delete("/api/tasks").param("status", "CLOSED").
+        mvc.perform(MockMvcRequestBuilders.delete(API_TASKS).param("status", "CLOSED").
                 accept(MediaType.APPLICATION_JSON))
             .andExpect(status().isOk());
         // Assert the deletion
@@ -633,7 +637,7 @@ public class MaintenanceTaskControllerTest {
         // Assert the existence of the newly created tasks
         assertFalse(taskRepository.findAllBySeverity(TaskSeverity.IMPORTANT).isEmpty());
         // Delete
-        mvc.perform(MockMvcRequestBuilders.delete("/api/tasks").param("severity", "IMPORTANT").
+        mvc.perform(MockMvcRequestBuilders.delete(API_TASKS).param("severity", "IMPORTANT").
                 accept(MediaType.APPLICATION_JSON))
             .andExpect(status().isOk());
         // Assert the deletion
@@ -644,7 +648,7 @@ public class MaintenanceTaskControllerTest {
     public void deleteTaskGarbageParams() throws Exception {
         // Delete tasks with garbage parameters - should return 400 bad request
         MaintenanceTask task = createMaintenanceTask(1L, TaskStatus.CLOSED, TaskSeverity.CRITICAL);
-        mvc.perform(MockMvcRequestBuilders.delete("/api/tasks").param("deviceId", "lulzbad").accept(MediaType.APPLICATION_JSON))
+        mvc.perform(MockMvcRequestBuilders.delete(API_TASKS).param("deviceId", "lulzbad").accept(MediaType.APPLICATION_JSON))
             .andExpect(status().isBadRequest());
         // Assert that nothing was deleted
         assertFalse(taskRepository.findAll().isEmpty());
@@ -656,7 +660,7 @@ public class MaintenanceTaskControllerTest {
         // Delete a task, but make the query with a non existent parameter name.
         // Should return 400 due to a bad parameter
         MaintenanceTask task = createMaintenanceTask(2L, TaskStatus.OPEN, TaskSeverity.CRITICAL);
-        mvc.perform(MockMvcRequestBuilders.delete("/api/tasks").param("lolshit", "lulzcrap").accept(MediaType.APPLICATION_JSON))
+        mvc.perform(MockMvcRequestBuilders.delete(API_TASKS).param("lolshit", "lulzcrap").accept(MediaType.APPLICATION_JSON))
             .andExpect(status().isBadRequest());
         // Assert that no tasks were deleted and that our created task still exists
         assertFalse(taskRepository.findAll().isEmpty());
@@ -668,7 +672,7 @@ public class MaintenanceTaskControllerTest {
         // Delete a task, pass one valid parameter, and one garbage parameter
         // It should return 400 bad request and not delete anything
         MaintenanceTask task = createMaintenanceTask(2L, TaskStatus.OPEN, TaskSeverity.CRITICAL); 
-        mvc.perform(MockMvcRequestBuilders.delete("/api/tasks").param("deviceId", "2").param("lolshit", "lulzies").accept(MediaType.APPLICATION_JSON))
+        mvc.perform(MockMvcRequestBuilders.delete(API_TASKS).param("deviceId", "2").param("lolshit", "lulzies").accept(MediaType.APPLICATION_JSON))
             .andExpect(status().isBadRequest());
         // Assert that no tasks were deleted and that our created task specifically still exists
         assertFalse(taskRepository.findAllByDeviceId(2L).isEmpty());
@@ -680,7 +684,7 @@ public class MaintenanceTaskControllerTest {
         // Delete a task, pass one valid parameter, and one invalid parameter (that can't be converted to its type)
         // Should return 400
         MaintenanceTask task = createMaintenanceTask(1L, TaskStatus.OPEN, TaskSeverity.CRITICAL);  
-        mvc.perform(MockMvcRequestBuilders.delete("/api/tasks").param("deviceId", "1").param("status", "FUCKITHAHAHAHAHA").accept(MediaType.APPLICATION_JSON))
+        mvc.perform(MockMvcRequestBuilders.delete(API_TASKS).param("deviceId", "1").param("status", "FUCKITHAHAHAHAHA").accept(MediaType.APPLICATION_JSON))
             .andExpect(status().isBadRequest());
         // Assert that no tasks for device ID 1 were deleted
         assertFalse(taskRepository.findAllByDeviceId(1L).isEmpty());
@@ -691,7 +695,7 @@ public class MaintenanceTaskControllerTest {
     @Test
     public void deleteTasksEmptyQueryParam() throws Exception {
         // Pass an empty query parameter. Should return 400
-        mvc.perform(MockMvcRequestBuilders.delete("/api/tasks").param("status", "").accept(MediaType.APPLICATION_JSON))
+        mvc.perform(MockMvcRequestBuilders.delete(API_TASKS).param("status", "").accept(MediaType.APPLICATION_JSON))
             .andExpect(status().isBadRequest());
     }
     
@@ -699,7 +703,7 @@ public class MaintenanceTaskControllerTest {
     public void deleteTasksDeviceNotFound() throws Exception {
         // Should return isOk(), even though nothing happens
         MaintenanceTask task = createMaintenanceTask(3L, TaskStatus.CLOSED, TaskSeverity.UNIMPORTANT);
-        mvc.perform(MockMvcRequestBuilders.delete("/api/tasks").param("deviceId", "123456789").accept(MediaType.APPLICATION_JSON))
+        mvc.perform(MockMvcRequestBuilders.delete(API_TASKS).param("deviceId", "123456789").accept(MediaType.APPLICATION_JSON))
             .andExpect(status().isOk());
         // Assert that no tasks were deleted
         assertFalse(taskRepository.findAll().isEmpty());

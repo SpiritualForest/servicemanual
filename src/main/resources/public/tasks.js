@@ -83,9 +83,9 @@ function saveTask(editExisting=false) {
         description: taskDescription,
     }
     
-    // Method and endpoint are set to creating new tasks by default
+    // Method is set to creating new tasks by default
     let requestMethod = "POST";
-    let endpoint = "/api/tasks/create";
+    let endpoint = "/api/tasks";
     
     if (editExisting) {
         // We're actually editing a task, so set the taskId in the request body,

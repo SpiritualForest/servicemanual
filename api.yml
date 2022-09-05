@@ -124,6 +124,31 @@ paths:
           description: OK
         400:
           description: Bad request
+    post:
+      summary: Creates a new maintenance task
+      consumes: application/json
+      parameters:
+        - in: body
+          name: Maintenance task
+          schema:
+            $ref: '#/definitions/MaintenanceTask'
+          required:
+            - deviceId
+            - description
+            - status
+            - severity
+      produces: application/json
+      responses:
+        201:
+          description: CREATED
+          content:
+            application/json:
+              schema:
+                $ref: '#/definitions/MaintenanceTaskResponse'
+        404:
+          description: Factory device not found
+        400:
+          description: Bad request 
 
   /tasks/{taskId}:
     get:
@@ -182,30 +207,3 @@ paths:
           description: OK
         404:
           description: Task not found
-
-  /tasks/create:
-    post:
-      summary: Creates a new maintenance task
-      consumes: application/json
-      parameters:
-        - in: body
-          name: Maintenance task
-          schema:
-            $ref: '#/definitions/MaintenanceTask'
-          required:
-            - deviceId
-            - description
-            - status
-            - severity
-      produces: application/json
-      responses:
-        201:
-          description: CREATED
-          content:
-            application/json:
-              schema:
-                $ref: '#/definitions/MaintenanceTaskResponse'
-        404:
-          description: Factory device not found
-        400:
-          description: Bad request 
