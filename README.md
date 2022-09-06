@@ -14,7 +14,7 @@ Short version:
 
 Endpoints:
 
-/api/tasks - _**GET, DELETE**_ to get all or delete all tasks according to the given parameters.  
+**/api/tasks** - _**GET, DELETE**_ to get all or delete all tasks according to the given parameters.  
 Accepted query parameters:
 ```
 deviceId=integer
@@ -33,17 +33,19 @@ DELETE /api/tasks?status=CLOSED
 DELETE /api/tasks?deviceId=10
 ```
   
-/api/tasks - _**POST**_. Create a new task. View the api.yml file's definition for MaintenanceTask to see the body content to pass in the request.  
+**/api/tasks** - _**POST**_. Create a new task. View the api.yml file's definition for MaintenanceTask to see the body content to pass in the request.  
 **NOTE**: it is _not_ required to pass an explicit taskId in the request body for this method. If an "id" property is present in the request body, it is discarded.  
 The database automatically generates an ID, and logs the current time as the task's registration time, when a new task is created.  
 It **_is_** possible to explicitly pass a registration time if desired, but this property is also **not** required. See the MaintenanceTask object's "registered" property example for the appropriate format to pass a registration time in the request body.  
 Passing a malformed registration time will result in an HTTP 400 "bad request" response.  
 Passing an empty request body, unknown properties, or malformed values in the request body, will result in a 400 "bad request" response, and the task will _**NOT**_ be created.  
+Since all tasks are attached to a deviceId, passing deviceId which does not exist in the database will result in a 404 "not found" response.
 Query parameters passed with this method are **discarded**, and have no effect on the request or response.  
 
-/api/tasks/{taskId} - _**GET, PUT, DELETE**_. Retrieve, update, or delete the task with the given _taskId_. _taskId_ is an integer. The body for the PUT request is the same as in the /api/tasks POST request. View the definition for 'MaintenanceTask' in api.yml.  
+**/api/tasks/{taskId}** - _**GET, PUT, DELETE**_. Retrieve, update, or delete the task with the given _taskId_. _taskId_ is an integer. The body for the PUT request is the same as in the /api/tasks POST request. View the definition for 'MaintenanceTask' in api.yml.  
 Query parameters passed to this endpoint are **discarded**, and have no effect on the request or response. 
 Passing a taskId value that is not an integer will result in a 400 "bad request" response.  
+If the task doesn't exist in the database, a 404 "not found" response will be returned.  
 
 MaintenanceTask object example:
 ```

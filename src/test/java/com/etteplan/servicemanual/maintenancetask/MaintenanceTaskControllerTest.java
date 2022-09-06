@@ -429,6 +429,24 @@ public class MaintenanceTaskControllerTest {
         assertFalse(taskRepository.existsById(1L));
     }
 
+    @Test
+    public void addTaskRegistrationTime() throws Exception {
+        // Create a task and explicitly supply the registration time in the correct format.
+        // The task should be created and the registration time set to the supplied one.
+        String registered = "2022-09-01T14:03:01";
+        String json = String.format("{\"deviceId\": 1, \"status\": \"OPEN\", \"severity\": \"CRITICAL\", \"description\": \"Major fixes of security holes\", \"registered\": \"%s\"}", registered);
+        MvcResult result = mvc.perform(MockMvcRequestBuilders.post(API_TASKS).accept(MediaType.APPLICATION_JSON)
+                .contentType(MediaType.APPLICATION_JSON).content(json))
+            .andExpect(status().isCreated()).andReturn();
+        JSONObject response = new JSONObject(result.getResponse().getContentAsString());
+        Long taskId = response.getLong("id");
+        String regTime = response.getString("registered");
+        assertEquals(registered, regTime);
+        // Now compare also using the task repository
+        MaintenanceTask task = taskRepository.findById(taskId).get();
+        assertEquals(registered, task.getRegistered().toString());
+    }
+
     // PUT
 
     @Test
@@ -507,6 +525,26 @@ public class MaintenanceTaskControllerTest {
         assertTrue(desc.contains("&lt;"));
         assertFalse(desc.contains("<"));
         assertFalse(desc.contains(">"));
+    }
+    
+    @Test
+    public void modifyTaskRegistrationTime() throws Exception {
+        // Create a task and explicitly supply the registration time in the correct format.
+        // The task should be created and the registration time set to the supplied one.
+        String registered = "2022-09-01T14:03:01";
+        String json = String.format("{\"deviceId\": 1, \"status\": \"OPEN\", \"severity\": \"CRITICAL\", \"description\": \"Major fixes of security holes\", \"registered\": \"%s\"}", registered);
+        MaintenanceTask task = createMaintenanceTask(1L, TaskStatus.OPEN, TaskSeverity.CRITICAL);
+        MvcResult result = mvc.perform(MockMvcRequestBuilders.put(String.format(API_TASKID, task.getId())).accept(MediaType.APPLICATION_JSON)
+                .contentType(MediaType.APPLICATION_JSON).content(json))
+            .andExpect(status().isOk()).andReturn();
+        JSONObject response = new JSONObject(result.getResponse().getContentAsString());
+        Long taskId = response.getLong("id");
+        String regTime = response.getString("registered");
+        assertEquals(task.getId(), taskId);
+        assertEquals(registered, regTime);
+        // Now compare also using the task repository
+        task = taskRepository.findById(task.getId()).get(); // Need to refetch because the previous object contains the original datetime
+        assertEquals(registered, task.getRegistered().toString());
     }
 
     // DELETE
