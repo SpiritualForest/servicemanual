@@ -46,6 +46,7 @@ Query parameters passed with this method are **discarded**, and have no effect o
 Query parameters passed to this endpoint are **discarded**, and have no effect on the request or response. 
 Passing a taskId value that is not an integer will result in a 400 "bad request" response.  
 If the task doesn't exist in the database, a 404 "not found" response will be returned.  
+When modifying a task with PUT request, if the deviceId supplied in the body doesn't exist in the database, a 404 "not found" response will be returned.  
 
 MaintenanceTask object example:
 ```
