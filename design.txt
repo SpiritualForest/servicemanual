@@ -56,8 +56,9 @@ The TaskFetcher accepts a map of string to string key/value pairs constituting t
 It iterates over the parameters and compares each one against the legal parameters that I've defined (deviceId, status, severity).
 If the parameter is unknown, a QueryParameterException is thrown.
 
+If a parameter is known, its value (data) is validated. If the validation fails, a QueryParameterException is thrown.
+
 Each legal parameter has been assigned a numerical value. 1, 2, or 4.
-If a parameter is known, its value is validated. If the validation fails, a QueryParameterException is thrown.
 If the validation succeeds, a databaseMethod integer has its value increased by the value that was assigned to the parameter (1, 2, or 4).
 
 The value of databaseMethod tells us which parameters were found, and lets us decide what JPA repository method to use when fetching tasks.
@@ -68,4 +69,4 @@ Prior to this parameter int value idea, I had a chain of if/else if/else checks 
 
 Using the TaskFetcher, I was able to get rid of the multiple GET and DELETE mappings in the controller, clean up the code significantly,
 and increase its performance, due to moving away from manual null checks to constructing an integer value
-and using switch/case against that value. Switch/case is better optimized for larger sets of data to compare values again, than if/else.
+and using switch/case against that value. Switch/case is better optimized for larger sets of data to compare values against, than if/else.
