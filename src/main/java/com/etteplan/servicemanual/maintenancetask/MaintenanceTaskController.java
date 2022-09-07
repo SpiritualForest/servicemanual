@@ -124,8 +124,7 @@ class MaintenanceTaskController {
         }
         String escapedDesc = task.getDescription();
         // Escape HTML in the description
-        escapedDesc = escapedDesc.replaceAll("<", "&lt;");
-        escapedDesc = escapedDesc.replaceAll(">", "&gt;");
+        escapedDesc = escapedDesc.replaceAll("<", "&lt;").replaceAll(">", "&gt;");
         task.setDescription(escapedDesc);
         return assembler.toModel(taskRepository.save(task));
     }
@@ -173,6 +172,8 @@ class MaintenanceTaskController {
         MaintenanceTask task = taskRepository.findById(taskId).get();
         for(String param : body.keySet()) {
             String value = body.get(param);
+            // Wrap the switch in a try, so that we can catch IllegalArgumentException only once
+            // instead of catching it in every case.
             try {
                 switch (param) {
                     case RP_DEVICEID:
