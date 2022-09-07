@@ -31,6 +31,9 @@ import java.util.HashMap;
 import java.util.stream.Collectors;
 import java.util.ArrayList;
 
+import java.time.LocalDateTime;
+import java.time.format.DateTimeParseException;
+
 @RestController
 class MaintenanceTaskController {
     
@@ -42,7 +45,14 @@ class MaintenanceTaskController {
     // They serve literally no other purpose.
     private final Map<String, String> emptyParams = new HashMap<String, String>();
     private Map<String, String> deviceParam = new HashMap<String, String>();
-    private final String Q_DEVICEID = "deviceId";
+    
+    // Request body property names
+    private final String RP_DEVICEID = "deviceId";
+    private final String RP_STATUS = "status";
+    private final String RP_SEVERITY = "severity";
+    private final String RP_DESCRIPTION = "description";
+    private final String RP_REGISTERED = "registered";
+    private final String RP_ID = "id"; // Never actually modified, but we need to know about it
 
     // Our constructor
     public MaintenanceTaskController(MaintenanceTaskRepository taskRepository, FactoryDeviceRepository deviceRepository, MaintenanceTaskModelAssembler assembler) {
@@ -61,7 +71,7 @@ class MaintenanceTaskController {
         }
         else {
             // Add links to /api/tasks and the /api/tasks?deviceId=
-            deviceParam.put(Q_DEVICEID, Long.toString(deviceId));
+            deviceParam.put(RP_DEVICEID, Long.toString(deviceId));
             List<EntityModel<MaintenanceTask>> tasksModel = tasks.stream()
                     .map(assembler::toModelWithDevice)
                     .collect(Collectors.toList());
@@ -143,40 +153,86 @@ class MaintenanceTaskController {
         throw new MaintenanceTaskNotFoundException(taskId);
     }
 
-    // Update a single task
+    // Update a single task - we validate the request body ourselves
     @PutMapping("/api/tasks/{taskId}")
-    EntityModel<MaintenanceTask> updateTask(@RequestBody @Valid MaintenanceTask modifiedTask, @PathVariable Long taskId) {
-        // Returns 400 bad request if the modifiedTask body contains null values, 
-        // empty description, garbage parameters,
-        // or is in some way malformed or incorrect.
+    ResponseEntity<Object> updateTask(@RequestBody Map<String, String> body, @PathVariable Long taskId) {
+        // Returns 400 bad request if the request body is empty, contains an unknown property,
+        // or the value of a property cannot be correctly converted to a MaintenanceTask field that represents it.
+
+        /* We allow the modification of all, or just some, of the fields. */
+
         if (!taskRepository.existsById(taskId)) {
             // No such task
             throw new MaintenanceTaskNotFoundException(taskId);
         }
-        if (!deviceRepository.existsById(modifiedTask.getDeviceId())) {
-            // The supplied deviceId doesn't actually exist in the database. Abort.
-            throw new FactoryDeviceNotFoundException(modifiedTask.getDeviceId());
+        if (body.isEmpty()) {
+            // Empty body supplied, return 400
+            return ResponseEntity.badRequest().body("Error: empty request body");
         }
-        
-        /* We must load up the appropriate MaintenanceTask entity
-         * and update all of its relevant fields ourselves, otherwise
-         * a new one will be created in its place with these fields,
-         * and the original one will remain unmodified.
-         * God bless the people who developed this. */
-        String escapedDesc = modifiedTask.getDescription();
-        // Escape HTML in the description string
-        escapedDesc = escapedDesc.replaceAll("<", "&lt;");
-        escapedDesc = escapedDesc.replaceAll(">", "&gt;");
+
+        // The request body is not empty, let's parse it.
         MaintenanceTask task = taskRepository.findById(taskId).get();
-        task.setStatus(modifiedTask.getStatus());
-        task.setSeverity(modifiedTask.getSeverity());
-        task.setDescription(escapedDesc);
-        task.setDeviceId(modifiedTask.getDeviceId());
-        if (modifiedTask.getRegistered() != null) {
-            // Update registration time
-            task.setRegistered(modifiedTask.getRegistered());
+        for(String param : body.keySet()) {
+            String value = body.get(param);
+            try {
+                switch (param) {
+                    case RP_ID:
+                        // Do nothing, but we need this so that the ID parameter won't be considered unknown
+                        break;
+
+                    case RP_DEVICEID:
+                        // Throws IllegalArgumentException if parsing fails
+                        Long deviceId = Long.parseLong(value);
+                        if (!deviceRepository.existsById(deviceId)) {
+                            // No such device
+                            throw new FactoryDeviceNotFoundException(deviceId);
+                        }
+                        task.setDeviceId(deviceId);
+                        break;
+
+                    case RP_STATUS:
+                        // Throws IllegalArgumentException if parsing fails
+                        task.setStatus(TaskStatus.valueOf(value));
+                        break;
+
+                    case RP_SEVERITY:
+                        // Throws IllegalArgumentException if parsing fails
+                        task.setSeverity(TaskSeverity.valueOf(value));
+                        break;
+
+                    case RP_DESCRIPTION:
+                        // We validate that there are no constraint violations on NotNull and NotEmpty
+                        if (value != null && !value.isEmpty()) {
+                            // Escape the HTML, we don't want XSS attacks, do we?
+                            value = value.replaceAll("<", "&lt;").replaceAll(">", "&gt;");
+                            task.setDescription(value);
+                        }
+                        else {
+                            // Constraint violation on description
+                            return ResponseEntity.badRequest().body("Error in description: must be neither null nor empty");
+                        }
+                        break;
+
+                    case RP_REGISTERED:
+                        // Throws DateTimeParseException if parsing fails
+                        task.setRegistered(LocalDateTime.parse(value));
+                        break;
+
+                    default:
+                        // Unknown parameter
+                        return ResponseEntity.badRequest().body(String.format("Unknown property: %s", param));
+                }
+            }
+            catch (IllegalArgumentException ex) {
+                // Couldn't convert a parameter
+                return ResponseEntity.badRequest().body(String.format("Error in request body properties: %s", ex.getMessage()));
+            }
+            catch (DateTimeParseException ex) {
+                return ResponseEntity.badRequest().body("Could not parse registration time: must be yyyy-dd-mmThh:mm:ss");
+            }
         }
+        // Save changes and return
         task = taskRepository.save(task);
-        return assembler.toModel(task);
+        return ResponseEntity.ok().body(assembler.toModel(task));
     } 
 }
