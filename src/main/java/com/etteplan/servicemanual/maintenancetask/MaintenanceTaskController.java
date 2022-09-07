@@ -202,20 +202,22 @@ class MaintenanceTaskController {
 
                     case RP_DESCRIPTION:
                         // We validate that there are no constraint violations on NotNull and NotEmpty
-                        if (value != null && !value.isEmpty()) {
-                            // Escape the HTML, we don't want XSS attacks, do we?
-                            value = value.replaceAll("<", "&lt;").replaceAll(">", "&gt;");
-                            task.setDescription(value);
+                        if (value == null || value.isEmpty()) {
+                            return ResponseEntity.badRequest().body("Error in description: can't be null or empty");
                         }
-                        else {
-                            // Constraint violation on description
-                            return ResponseEntity.badRequest().body("Error in description: must be neither null nor empty");
-                        }
+                        // Valid desc. Escape the HTML, we don't want XSS attacks, do we?
+                        value = value.replaceAll("<", "&lt;").replaceAll(">", "&gt;");
+                        task.setDescription(value);
                         break;
 
                     case RP_REGISTERED:
                         // Throws DateTimeParseException if parsing fails
-                        task.setRegistered(LocalDateTime.parse(value));
+                        try {
+                            task.setRegistered(LocalDateTime.parse(value));
+                        }
+                        catch (DateTimeParseException ex) {
+                            return ResponseEntity.badRequest().body("Could not parse registration time: must be yyyy-dd-mmThh:mm:ss");
+                        }
                         break;
 
                     default:
@@ -224,11 +226,8 @@ class MaintenanceTaskController {
                 }
             }
             catch (IllegalArgumentException ex) {
-                // Couldn't convert a parameter
+                // Couldn't convert deviceId, status, or severity
                 return ResponseEntity.badRequest().body(String.format("Error in request body properties: %s", ex.getMessage()));
-            }
-            catch (DateTimeParseException ex) {
-                return ResponseEntity.badRequest().body("Could not parse registration time: must be yyyy-dd-mmThh:mm:ss");
             }
         }
         // Save changes and return

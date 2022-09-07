@@ -660,6 +660,14 @@ public class MaintenanceTaskControllerTest {
         assertEquals(TaskSeverity.CRITICAL, task.getSeverity());
     }
 
+    @Test
+    public void modifyTaskUnknownProperty() throws Exception {
+        MaintenanceTask task = createMaintenanceTask(3L, TaskStatus.OPEN, TaskSeverity.CRITICAL);
+        mvc.perform(MockMvcRequestBuilders.put(String.format(API_TASKID, task.getId())).accept(MediaType.APPLICATION_JSON)
+                .contentType(MediaType.APPLICATION_JSON).content("{ \"unknownparam\": \"unknown value\" }"))
+            .andExpect(status().isBadRequest());
+    }
+
     // DELETE
 
     @Test
