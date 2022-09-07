@@ -701,6 +701,14 @@ public class MaintenanceTaskControllerTest {
     }
 
     @Test
+    public void deleteTaskBadId() throws Exception {
+        // Try to delete a task with a non-integer ID path variable
+        // Should return 400 bad request
+        mvc.perform(MockMvcRequestBuilders.delete("/api/tasks/nosuchtask").accept(MediaType.APPLICATION_JSON))
+            .andExpect(status().isBadRequest());
+    }
+
+    @Test
     public void deleteTasksByDeviceId() throws Exception {
         // Delete all the tasks associated with a given device.
         

@@ -148,7 +148,7 @@ paths:
         404:
           description: Factory device not found
         400:
-          description: Bad request 
+          description: Bad request, error in body 
 
   /tasks/{taskId}:
     parameters:
@@ -171,13 +171,41 @@ paths:
                 $ref: '#/definitions/MaintenanceTaskResponse'
         404:
           description: Task not found
+        400:
+          description: Bad request, taskId is not an integer
     put:
-      summary: Modifies a single task based on the given ID
+      summary: Modifies a single task based on the given TaskID
       parameters:
         - in: body
-          name: Maintenance task
+          name: MaintenanceTask
+          description: The MaintenanceTask object to update
           schema:
-            $ref: '#/definitions/MaintenanceTask'
+            type: object
+            properties:
+              deviceId:
+                type: integer
+                required: false
+                description: Factory Device ID
+              severity:
+                type: string
+                required: false
+                description: Task severity (UNIMPORTANT, IMPORTANT, or CRITICAL)
+                example: "CRITICAL"
+              status:
+                type: string
+                required: false
+                description: Task status (OPEN or CLOSED)
+                example: "OPEN"
+              description:
+                type: string
+                required: false
+                description: The task description
+                example: "Reconnected RAM sticks on motherboard"
+              registered:
+                type: string
+                required: false
+                description: The date and time the task was registered. java.time.LocalDateTime format.
+                example: "2022-08-29T15:10:06.042637"
       consumes: application/json
       produces: application/json
       responses:
@@ -192,7 +220,9 @@ paths:
         404:
           description: Factory device not found
         400:
-          description: Bad request
+          description: Bad request, error in request body
+        400:
+          description: Bad request, taskId is not an integer
     delete:
       summary: Deletes the specified task
       produces: application/json
@@ -201,3 +231,5 @@ paths:
           description: OK
         404:
           description: Task not found
+        400:
+          description: Bad request, taskId is not an integer
