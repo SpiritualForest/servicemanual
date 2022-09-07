@@ -49,6 +49,7 @@ Retrieve, update, or delete the task with the given _taskId_. _taskId_ is an int
 All properties in the request body for the **PUT** request are **_optional_**. It is possible to modify as many, or as few, fields as desired.  
 Passing an empty request body will result in a 400 "bad request" response.  
 Passing unknown properties, or properties with malformed or incorrect values, in the request body, will result in a 400 "bad request" response.
+**NOTE** in this case, attempting to pass a task ID in the request body will result in a 400 "bad request" response, as it is not allowed. The ID is passed only as a path variable.  
 
 Query parameters passed to this endpoint are **discarded**, and have no effect on the request or response. 
 Passing a taskId value that is not an integer will result in a 400 "bad request" response.  

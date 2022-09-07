@@ -52,7 +52,6 @@ class MaintenanceTaskController {
     private final String RP_SEVERITY = "severity";
     private final String RP_DESCRIPTION = "description";
     private final String RP_REGISTERED = "registered";
-    private final String RP_ID = "id"; // Never actually modified, but we need to know about it
 
     // Our constructor
     public MaintenanceTaskController(MaintenanceTaskRepository taskRepository, FactoryDeviceRepository deviceRepository, MaintenanceTaskModelAssembler assembler) {
@@ -176,10 +175,6 @@ class MaintenanceTaskController {
             String value = body.get(param);
             try {
                 switch (param) {
-                    case RP_ID:
-                        // Do nothing, but we need this so that the ID parameter won't be considered unknown
-                        break;
-
                     case RP_DEVICEID:
                         // Throws IllegalArgumentException if parsing fails
                         Long deviceId = Long.parseLong(value);

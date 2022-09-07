@@ -91,7 +91,6 @@ function saveTask(editExisting=false) {
         // We're actually editing a task, so set the taskId in the request body,
         // set the HTTP method to PUT, and set the endpoint to /api/tasks/<taskId>
         taskId = document.getElementById("save-task-task-id").value;
-        taskObj.id = taskId;
         requestMethod = "PUT";
         endpoint = `/api/tasks/${taskId}`;
     }
