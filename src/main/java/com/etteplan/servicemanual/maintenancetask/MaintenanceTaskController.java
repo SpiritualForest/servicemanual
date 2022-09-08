@@ -23,7 +23,7 @@ import com.etteplan.servicemanual.factorydevice.FactoryDeviceNotFoundException;
 import javax.validation.Valid;
 
 // MaintenanceTask and its Repository already exist in this package, that's why we don't have to import them.
-// TaskFetcher is a static class used to resolve query parameters and fetch task accordingly. View TaskFetcher.java
+// TaskFetcher is a static class used to resolve query parameters and fetch tasks accordingly. View TaskFetcher.java
 // TaskEditor is a static class similar to TaskFetcher, but its purpose and validation mechanism are different.
 
 import java.util.List;
@@ -43,13 +43,7 @@ class MaintenanceTaskController {
     // They serve literally no other purpose.
     private final Map<String, String> emptyParams = new HashMap<String, String>();
     private Map<String, String> deviceParam = new HashMap<String, String>();
-    
-    // Request body property names
-    private final String RP_DEVICEID = "deviceId";
-    private final String RP_STATUS = "status";
-    private final String RP_SEVERITY = "severity";
-    private final String RP_DESCRIPTION = "description";
-    private final String RP_REGISTERED = "registered";
+    private final String DEVICEID = "deviceId";
 
     // Our constructor
     public MaintenanceTaskController(MaintenanceTaskRepository taskRepository, FactoryDeviceRepository deviceRepository, MaintenanceTaskModelAssembler assembler) {
@@ -70,7 +64,7 @@ class MaintenanceTaskController {
         }
         else {
             // Add links to /api/tasks and the /api/tasks?deviceId=
-            deviceParam.put(RP_DEVICEID, Long.toString(deviceId));
+            deviceParam.put(DEVICEID, Long.toString(deviceId));
             List<EntityModel<MaintenanceTask>> tasksModel = tasks.stream()
                     .map(assembler::toModelWithDevice)
                     .collect(Collectors.toList());
@@ -123,7 +117,7 @@ class MaintenanceTaskController {
             throw new FactoryDeviceNotFoundException(task.getDeviceId());
         }
         String escapedDesc = task.getDescription();
-        // Escape HTML in the description
+        // Escape HTML in the description to prevent potential XSS attacks
         escapedDesc = escapedDesc.replaceAll("<", "&lt;").replaceAll(">", "&gt;");
         task.setDescription(escapedDesc);
         return assembler.toModel(taskRepository.save(task));
