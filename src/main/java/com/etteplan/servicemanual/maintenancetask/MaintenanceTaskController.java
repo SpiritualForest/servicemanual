@@ -24,15 +24,13 @@ import javax.validation.Valid;
 
 // MaintenanceTask and its Repository already exist in this package, that's why we don't have to import them.
 // TaskFetcher is a static class used to resolve query parameters and fetch task accordingly. View TaskFetcher.java
+// TaskEditor is a static class similar to TaskFetcher, but its purpose and validation mechanism are different.
 
 import java.util.List;
 import java.util.Map;
 import java.util.HashMap;
 import java.util.stream.Collectors;
 import java.util.ArrayList;
-
-import java.time.LocalDateTime;
-import java.time.format.DateTimeParseException;
 
 @RestController
 class MaintenanceTaskController {
@@ -59,6 +57,8 @@ class MaintenanceTaskController {
         this.deviceRepository = deviceRepository;
         this.assembler = assembler;
         TaskFetcher.setTaskRepository(taskRepository);
+        TaskEditor.setTaskRepository(taskRepository);
+        TaskEditor.setDeviceRepository(deviceRepository);
     }
 
     CollectionModel<EntityModel<MaintenanceTask>> addHyperlinks(Long deviceId, List<MaintenanceTask> tasks) {
@@ -170,64 +170,12 @@ class MaintenanceTaskController {
 
         // The request body is not empty, let's parse it.
         MaintenanceTask task = taskRepository.findById(taskId).get();
-        for(String param : body.keySet()) {
-            String value = body.get(param);
-            // Wrap the switch in a try, so that we can catch IllegalArgumentException only once
-            // instead of catching it in every case.
-            try {
-                switch (param) {
-                    case RP_DEVICEID:
-                        // Throws IllegalArgumentException if parsing fails
-                        Long deviceId = Long.parseLong(value);
-                        if (!deviceRepository.existsById(deviceId)) {
-                            // No such device
-                            throw new FactoryDeviceNotFoundException(deviceId);
-                        }
-                        task.setDeviceId(deviceId);
-                        break;
-
-                    case RP_STATUS:
-                        // Throws IllegalArgumentException if parsing fails
-                        task.setStatus(TaskStatus.valueOf(value));
-                        break;
-
-                    case RP_SEVERITY:
-                        // Throws IllegalArgumentException if parsing fails
-                        task.setSeverity(TaskSeverity.valueOf(value));
-                        break;
-
-                    case RP_DESCRIPTION:
-                        // We validate that there are no constraint violations on NotNull and NotEmpty
-                        if (value == null || value.isEmpty()) {
-                            return ResponseEntity.badRequest().body("Error in description: can't be null or empty");
-                        }
-                        // Valid desc. Escape the HTML, we don't want XSS attacks, do we?
-                        value = value.replaceAll("<", "&lt;").replaceAll(">", "&gt;");
-                        task.setDescription(value);
-                        break;
-
-                    case RP_REGISTERED:
-                        // Throws DateTimeParseException if parsing fails
-                        try {
-                            task.setRegistered(LocalDateTime.parse(value));
-                        }
-                        catch (DateTimeParseException ex) {
-                            return ResponseEntity.badRequest().body("Could not parse registration time: must be yyyy-dd-mmThh:mm:ss");
-                        }
-                        break;
-
-                    default:
-                        // Unknown parameter
-                        return ResponseEntity.badRequest().body(String.format("Unknown property: %s", param));
-                }
-            }
-            catch (IllegalArgumentException ex) {
-                // Couldn't convert deviceId, status, or severity
-                return ResponseEntity.badRequest().body(String.format("Error in request body properties: %s", ex.getMessage()));
-            }
+        try {
+            task = TaskEditor.editTask(task, body);
         }
-        // Save changes and return
-        task = taskRepository.save(task);
+        catch (RequestBodyException ex) {
+            return ResponseEntity.badRequest().body(ex.getMessage());
+        }
         return ResponseEntity.ok().body(assembler.toModel(task));
     } 
 }
