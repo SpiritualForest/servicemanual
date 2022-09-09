@@ -44,19 +44,63 @@ Passing an empty request body, unknown properties, or malformed values in the re
 Since all tasks are attached to a deviceId, passing deviceId which does not exist in the database will result in a 404 "not found" response.
 Query parameters passed with this method are **discarded**, and have no effect on the request or response.  
 
+Example POST request with no registration time:
+```
+POST /api/tasks
+Host: localhost
+Content-Type: application/json
+{ 
+    "deviceId": 1,
+    "status": "OPEN",
+    "severity": "IMPORTANT",
+    "description": "Clean power supply fan"
+}
+```
+Example with registration time:
+```
+POST /api/tasks
+Host: localhost
+Content-Type: application/json
+{ 
+    "deviceId": 1,
+    "status": "OPEN",
+    "severity": "IMPORTANT",
+    "description": "Clean power supply fan",
+    "registered": "2022-09-01T10:05:35"
+}
+```
+
+
 ### /api/tasks/{taskId} - _GET, PUT, DELETE_
-Retrieve, update, or delete the task with the given _taskId_. _taskId_ is an integer. The body for the PUT request is the same as in the **/api/tasks POST** request. View the definition for 'MaintenanceTask' in api.yml.  
+Retrieve, update, or delete the task with the given _taskId_. _taskId_ is an integer. The body for the PUT request is the same as in the **/api/tasks POST** request.  
+
+Example **GET** and **DELETE** requests:
+```
+GET /api/tasks/750
+DELETE /api/tasks/800
+```
+
 All properties in the request body for the **PUT** request are **_optional_**. It is possible to modify as many, or as few, fields as desired.  
 Passing an empty request body will result in a 400 "bad request" response.  
 Passing unknown properties, or properties with malformed or incorrect values, in the request body, will result in a 400 "bad request" response.  
 **NOTE** in this case, attempting to pass a task ID in the request body will result in a 400 "bad request" response, as it is not allowed. The ID is passed only as a path variable.  
+
+Example PUT request to change the description on task 700:
+```
+PUT /api/tasks/700
+Host: localhost
+Content-Type: application/json
+{ 
+    "description": "Fixed a transistor"
+}
+```
 
 Query parameters passed to this endpoint are **discarded**, and have no effect on the request or response. 
 Passing a taskId value that is not an integer will result in a 400 "bad request" response.  
 If the task doesn't exist in the database, a 404 "not found" response will be returned.  
 When modifying a task with PUT request, if the deviceId supplied in the body doesn't exist in the database, a 404 "not found" response will be returned.  
 
-### MaintenanceTask object example:
+### MaintenanceTask object response example:
 ```
 {
     id: 855,
