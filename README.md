@@ -36,12 +36,15 @@ DELETE /api/tasks?deviceId=10
   
 ### /api/tasks - _POST_
 Create a new task. View the api.yml file's definition for MaintenanceTask to see the body content to pass in the request.  
-**NOTE:** it is _not_ required to pass an explicit taskId in the request body for this method. If an "id" property is present in the request body, it is discarded.  
+**NOTE:** the request body should **NOT** contain an explicit taskId. If an "id" property is present in the request body, it is discarded.  
 The database automatically generates an ID, and logs the current time as the task's registration time, when a new task is created.  
+  
 It **_is_** possible to explicitly pass a registration time if desired, but this property is also **NOT** required. See the MaintenanceTask object's "registered" property example for the appropriate format to pass a registration time in the request body.  
 Passing a malformed registration time will result in an **HTTP 400 "bad request"** response.  
+  
 Passing an empty request body, unknown properties, or malformed values in the request body, will result in a **400 "bad request"** response, and the task will _**NOT**_ be created.  
-Since all tasks are attached to a deviceId, passing deviceId which does not exist in the database will result in a **404 "device not found"** response.
+  
+Since all tasks are attached to a deviceId, passing deviceId which does not exist in the database will result in a **404 "device not found"** response.  
 Query parameters passed with this method are **discarded**, and have no effect on the request or response.  
 
 Example **POST** request with no registration time:
@@ -84,9 +87,13 @@ Passing a _taskId_ value that is not an integer will result in a **400 "bad requ
 If the task doesn't exist in the database, a **404 "task not found"** response will be returned.  
 
 All properties in the request body for the **PATCH** request are **_optional_**. It is possible to modify as many, or as few, fields as desired.  
+
 Passing an empty request body will result in a **400 "bad request"** response.  
-Passing unknown properties, or properties with malformed or incorrect values, in the request body, will result in a **400 "bad request"** response.  
-When attempting to modify the _deviceId_ of a task, if the device doesn't exist in the database, a **404 "device not found"** response will be retured.
+
+Passing unknown properties, or properties with malformed or incorrect values, in the request body, will result in a **400 "bad request"** response. 
+
+When attempting to modify the _deviceId_ of a task, if the device doesn't exist in the database, a **404 "device not found"** response will be retured.  
+
 **NOTE:** in this case, attempting to pass a task ID in the request body will result in a **400 "bad request"** response, as it is not allowed. The ID is passed only as a path variable.  
 
 Example **PATCH** request to change the description on task _700_:
