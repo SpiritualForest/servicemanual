@@ -173,8 +173,8 @@ paths:
           description: Task not found
         400:
           description: Bad request, taskId is not an integer
-    put:
-      summary: Modifies a single task based on the given TaskID
+    patch:
+      summary: Modifies the fields of a task based on the given ID
       parameters:
         - in: body
           name: MaintenanceTask

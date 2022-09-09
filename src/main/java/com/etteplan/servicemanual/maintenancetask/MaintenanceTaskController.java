@@ -3,7 +3,7 @@ package com.etteplan.servicemanual.maintenancetask;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.DeleteMapping;
-import org.springframework.web.bind.annotation.PutMapping;
+import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -145,13 +145,13 @@ class MaintenanceTaskController {
         throw new MaintenanceTaskNotFoundException(taskId);
     }
 
-    // Update a single task - we validate the request body ourselves
-    @PutMapping("/api/tasks/{taskId}")
+    // Update a task's fields.
+    @PatchMapping("/api/tasks/{taskId}")
     ResponseEntity<Object> updateTask(@RequestBody Map<String, String> body, @PathVariable Long taskId) {
         // Returns 400 bad request if the request body is empty, contains an unknown property,
         // or the value of a property cannot be correctly converted to a MaintenanceTask field that represents it.
 
-        /* We allow the modification of all, or just some, of the fields. */
+        /* We allow the modification of as many or as few of the fields as desired. */
 
         if (!taskRepository.existsById(taskId)) {
             // No such task
