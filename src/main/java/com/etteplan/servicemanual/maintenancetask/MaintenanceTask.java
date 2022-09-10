@@ -33,6 +33,7 @@ public class MaintenanceTask {
     @NotEmpty
     private String description;
     
+    @NotNull
     private LocalDateTime registered;
 
     protected MaintenanceTask() {
