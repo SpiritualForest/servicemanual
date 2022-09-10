@@ -50,8 +50,11 @@ public class TaskEditor {
     protected static MaintenanceTask editTask(MaintenanceTask task, Map<String, String> requestBody) throws RequestBodyException, FactoryDeviceNotFoundException {
         // Validates the requestBody and edits the given task accordingly.
         // If successful, returns the edited and saved task object.
-        // If the request body contains unknown properties, or incorrect values for a property,
+        // If the request body is empty, contains unknown properties, or incorrect values for a property,
         // RequestBodyException will be thrown.
+        if (requestBody.isEmpty()) {
+            throw new RequestBodyException("Error: empty request body");
+        }
         for(String param : requestBody.keySet()) {
             String value = requestBody.get(param);
             switch (param) {

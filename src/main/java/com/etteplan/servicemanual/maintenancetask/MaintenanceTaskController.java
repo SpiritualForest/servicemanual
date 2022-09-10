@@ -157,12 +157,7 @@ class MaintenanceTaskController {
             // No such task
             throw new MaintenanceTaskNotFoundException(taskId);
         }
-        if (body.isEmpty()) {
-            // Empty body supplied, return 400
-            return ResponseEntity.badRequest().body("Error: empty request body");
-        }
-
-        // The request body is not empty, let's parse it.
+        
         MaintenanceTask task = taskRepository.findById(taskId).get();
         try {
             task = TaskEditor.editTask(task, body);
