@@ -61,7 +61,7 @@ class MaintenanceTaskController {
         if (deviceId == null) {
             // Add links to /api/tasks
             List<EntityModel<MaintenanceTask>> tasksModel = tasks.stream().map(assembler::toModel).collect(Collectors.toList());
-            return CollectionModel.of(tasksModel, linkTo(methodOn(MaintenanceTaskController.class).all(this.emptyParams)).withSelfRel());
+            return CollectionModel.of(tasksModel, linkTo(methodOn(MaintenanceTaskController.class).all(emptyParams)).withSelfRel());
         }
         else {
             // Add links to /api/tasks and the /api/tasks?deviceId=
@@ -71,7 +71,7 @@ class MaintenanceTaskController {
                     .collect(Collectors.toList());
             return CollectionModel.of(tasksModel, 
                     linkTo(methodOn(MaintenanceTaskController.class).all(deviceParam)).withRel("device"),
-                    linkTo(methodOn(MaintenanceTaskController.class).all(this.emptyParams)).withRel("tasks"));
+                    linkTo(methodOn(MaintenanceTaskController.class).all(emptyParams)).withRel("tasks"));
         }
     }
 
@@ -110,7 +110,7 @@ class MaintenanceTaskController {
             return ResponseEntity.badRequest().body(ex.getMessage());
         }
         // Query was ok, tasks were deleted (if any were found)
-        return ResponseEntity.ok().body("Tasks deleted.");
+        return ResponseEntity.ok().body(String.format("Deleted %d tasks", tasks.size()));
     }
     
     // Create a new task
@@ -151,7 +151,7 @@ class MaintenanceTaskController {
         
         // The task was found. Delete it.
         taskRepository.delete(task);
-        return ResponseEntity.ok("Task deleted successfully.");
+        return ResponseEntity.ok(String.format("Task %d deleted", taskId));
     }
 
     // Update a task's fields.
@@ -161,13 +161,11 @@ class MaintenanceTaskController {
         // or the value of a property cannot be correctly converted to a MaintenanceTask field that represents it.
 
         /* We allow the modification of as many or as few of the fields as desired. */
-
-        if (!taskRepository.existsById(taskId)) {
-            // No such task
-            throw new MaintenanceTaskNotFoundException(taskId);
-        }
         
-        MaintenanceTask task = taskRepository.findById(taskId).get();
+        MaintenanceTask task = taskRepository.findById(taskId)
+            .orElseThrow(() -> new MaintenanceTaskNotFoundException(taskId));
+        
+        // Task exists. Try to edit it according to the given request body
         try {
             // Try to edit the task
             task = TaskEditor.editTask(task, requestBody);

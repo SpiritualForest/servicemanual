@@ -23,7 +23,7 @@ public class MaintenanceTask {
 
     @Enumerated(EnumType.STRING)
     @NotNull
-    private TaskSeverity severity; // Severity
+    private TaskSeverity severity; // Unimportant, important, or critical
     
     @Enumerated(EnumType.ORDINAL)
     @NotNull
@@ -33,6 +33,12 @@ public class MaintenanceTask {
     @NotEmpty
     private String description;
     
+    /* The "registered" field is automatically set in the default constructor,
+     * and the overloaded constructor which doesn't take it as a parameter,
+     * so its NotNull constraint is always met.
+     * If the overloaded constructor that takes this field as a parameter
+     * has an error in the parameter's value, the object simply won't be created. */
+
     @NotNull
     private LocalDateTime registered;
 
