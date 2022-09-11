@@ -24,7 +24,8 @@ import javax.validation.Valid;
 
 // MaintenanceTask and its Repository already exist in this package, that's why we don't have to import them.
 // TaskFetcher is a static class used to resolve query parameters and fetch tasks accordingly. View TaskFetcher.java
-// TaskEditor is a static class similar to TaskFetcher, but its purpose and validation mechanism are different.
+// TaskEditor is a static class used to validate PATCH request bodies
+// and edit existing MaintenanceTask objects. View TaskEditor.java
 
 import java.util.List;
 import java.util.Map;
@@ -83,28 +84,33 @@ class MaintenanceTaskController {
     @GetMapping("/api/tasks")
     ResponseEntity<Object> all(@RequestParam Map<String, String> queryParameters) {
         // Fetch tasks
+        List<MaintenanceTask> tasks = new ArrayList<>();
         try {
-            List<MaintenanceTask> tasks = TaskFetcher.fetchTasks(queryParameters);
-            return ResponseEntity.ok().body(addHyperlinks(TaskFetcher.getDeviceId(), tasks));
+            tasks = TaskFetcher.fetchTasks(queryParameters);
         }
         catch (QueryParameterException ex) {
             // Got a bad parameter. We do not proceed.
             return ResponseEntity.badRequest().body(ex.getMessage());
         }
+        // Query was ok, return whatever tasks were found.
+        return ResponseEntity.ok().body(addHyperlinks(TaskFetcher.getDeviceId(), tasks));
     }
     
     @DeleteMapping("/api/tasks")
     ResponseEntity<String> deleteTasks(@RequestParam Map<String, String> queryParameters) {
         // Delete tasks
+        List<MaintenanceTask> tasks = new ArrayList<>();
         try {
-            List<MaintenanceTask> tasks = TaskFetcher.fetchTasks(queryParameters);
+            // Try to fetch and delete the tasks
+            tasks = TaskFetcher.fetchTasks(queryParameters);
             taskRepository.deleteAll(tasks);
-            return ResponseEntity.ok().body("Tasks deleted.");
         }
         catch (QueryParameterException ex) {
             // Got a bad parameter.
             return ResponseEntity.badRequest().body(ex.getMessage());
         }
+        // Query was ok, tasks were deleted (if any were found)
+        return ResponseEntity.ok().body("Tasks deleted.");
     }
     
     // Create a new task
@@ -120,7 +126,9 @@ class MaintenanceTaskController {
         // Escape HTML in the description to prevent potential XSS attacks
         escapedDesc = escapedDesc.replaceAll("<", "&lt;").replaceAll(">", "&gt;");
         task.setDescription(escapedDesc);
-        return assembler.toModel(taskRepository.save(task));
+        // Save and return the created task object
+        task = taskRepository.save(task);
+        return assembler.toModel(task);
     }
 
     // MAPPING: /api/tasks/{taskId}
@@ -130,24 +138,25 @@ class MaintenanceTaskController {
     EntityModel<MaintenanceTask> getTaskById(@PathVariable Long taskId) {
         MaintenanceTask task = taskRepository.findById(taskId)
             .orElseThrow(() -> new MaintenanceTaskNotFoundException(taskId));
-
+        
+        // Task was found, show it
         return assembler.toModel(task);
     }
 
     // Delete a single task based on its id
     @DeleteMapping("/api/tasks/{taskId}")
     ResponseEntity<String> deleteTask(@PathVariable Long taskId) {
-        if (taskRepository.existsById(taskId)) {
-            taskRepository.deleteById(taskId);
-            return ResponseEntity.ok("Task deleted successfully.");
-        }
-        // If we reached here, the task was not found
-        throw new MaintenanceTaskNotFoundException(taskId);
+        MaintenanceTask task = taskRepository.findById(taskId)
+            .orElseThrow(() -> new MaintenanceTaskNotFoundException(taskId));
+        
+        // The task was found. Delete it.
+        taskRepository.delete(task);
+        return ResponseEntity.ok("Task deleted successfully.");
     }
 
     // Update a task's fields.
     @PatchMapping("/api/tasks/{taskId}")
-    ResponseEntity<Object> updateTask(@RequestBody Map<String, String> body, @PathVariable Long taskId) {
+    ResponseEntity<Object> updateTask(@RequestBody Map<String, String> requestBody, @PathVariable Long taskId) {
         // Returns 400 bad request if the request body is empty, contains an unknown property,
         // or the value of a property cannot be correctly converted to a MaintenanceTask field that represents it.
 
@@ -160,11 +169,14 @@ class MaintenanceTaskController {
         
         MaintenanceTask task = taskRepository.findById(taskId).get();
         try {
-            task = TaskEditor.editTask(task, body);
+            // Try to edit the task
+            task = TaskEditor.editTask(task, requestBody);
         }
         catch (RequestBodyException ex) {
+            // Encountered error in the request body
             return ResponseEntity.badRequest().body(ex.getMessage());
         }
+        // Task edited successfully
         return ResponseEntity.ok().body(assembler.toModel(task));
     } 
 }
