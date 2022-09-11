@@ -42,7 +42,7 @@ The database automatically generates an ID, and logs the current time as the tas
 It **_is_** possible to explicitly pass a registration time if desired, but this property is also **NOT** required. See the MaintenanceTask object's "registered" property example for the appropriate format to pass a registration time in the request body.  
 Passing a malformed registration time will result in an **HTTP 400 "bad request"** response.  
   
-Passing an empty request body, unknown properties, or malformed values in the request body, will result in a **400 "bad request"** response, and the task will _**NOT**_ be created.  
+Passing an empty request body, unknown properties, or malformed values (including null) in the request body, will result in a **400 "bad request"** response, and the task will _**NOT**_ be created.  
   
 Since all tasks are attached to a deviceId, passing deviceId which does not exist in the database will result in a **404 "device not found"** response.  
 Query parameters passed with this method are **discarded**, and have no effect on the request or response.  
@@ -90,7 +90,7 @@ All properties in the request body for the **PATCH** request are **_optional_**.
 
 Passing an empty request body will result in a **400 "bad request"** response.  
 
-Passing unknown properties, or properties with malformed or incorrect values, in the request body, will result in a **400 "bad request"** response. 
+Passing unknown properties, or properties with malformed or incorrect values (including null), in the request body, will result in a **400 "bad request"** response. 
 
 When attempting to modify the _deviceId_ of a task, if the device doesn't exist in the database, a **404 "device not found"** response will be retured.  
 
