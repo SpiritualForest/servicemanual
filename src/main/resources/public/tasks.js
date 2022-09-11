@@ -1,7 +1,5 @@
 // All of the front-end's interactions with the REST API are handled here.
 
-/* Add task modal functions */
-
 function configureSaveTaskModalButtons() {
     // Configures the click events for the save task modal and its relevant buttons
     let addTaskBtn = document.getElementById("open-modal-btn");
@@ -69,7 +67,7 @@ function saveTask(editExisting=false) {
      
     // Escape the HTML in the description - we don't want XSS attacks :)
     taskDescription = taskDescription.replace(/</g, "&lt;");
-    taskDescription = taskDescription.replace(/>/g, "&gt");
+    taskDescription = taskDescription.replace(/>/g, "&gt;");
     
     if (taskDescription == "") {
         errorMsg("Error creating task: description is required");
@@ -88,8 +86,8 @@ function saveTask(editExisting=false) {
     let endpoint = "/api/tasks";
     
     if (editExisting) {
-        // We're actually editing a task, so set the taskId in the request body,
-        // set the HTTP method to PUT, and set the endpoint to /api/tasks/<taskId>
+        // We're actually editing a task.
+        // Set the HTTP method to PATCH, and set the endpoint to /api/tasks/<taskId>
         taskId = document.getElementById("save-task-task-id").value;
         requestMethod = "PATCH";
         endpoint = `/api/tasks/${taskId}`;
@@ -234,7 +232,7 @@ function fillTasksTable(tasks) {
         
         // Escape the HTML in the description - we don't want XSS attacks :)
         description = description.replace(/</g, "&lt;");
-        description = description.replace(/>/g, "&gt");
+        description = description.replace(/>/g, "&gt;");
         
         // Task, device, status, severity, description, registered, action
         let row = tableElement.insertRow();
