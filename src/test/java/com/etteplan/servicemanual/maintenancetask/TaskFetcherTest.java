@@ -168,4 +168,36 @@ public class TaskFetcherTest {
             assertEquals(TaskSeverity.CRITICAL, task.getSeverity());
         }
     }
+
+    @Test
+    public void fetchTasksNullStatus() throws Exception {
+        params.put("status", null);
+        assertThrows(QueryParameterException.class, () -> {
+            TaskFetcher.fetchTasks(params);
+        });
+    }
+
+    @Test
+    public void fetchTasksNullDevice() throws Exception {
+        params.put("deviceId", null);
+        assertThrows(QueryParameterException.class, () -> {
+            TaskFetcher.fetchTasks(params);
+        });
+    }
+
+    @Test
+    public void fetchTasksNullSeverity() throws Exception {
+        params.put("severity", null);
+        assertThrows(QueryParameterException.class, () -> {
+            TaskFetcher.fetchTasks(params);
+        });
+    }
+
+    @Test
+    public void fetchTasksEmptyValue() throws Exception {
+        params.put("deviceId", "");
+        assertThrows(QueryParameterException.class, () -> {
+            TaskFetcher.fetchTasks(params);
+        });
+    }
 }

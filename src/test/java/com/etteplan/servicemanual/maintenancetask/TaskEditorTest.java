@@ -178,5 +178,41 @@ public class TaskEditorTest {
             TaskEditor.editTask(task, params);
         });
     }
+
+    @Test
+    public void editTaskNullDevice() throws Exception {
+        MaintenanceTask task = createTask(10L, TaskStatus.CLOSED, TaskSeverity.CRITICAL);
+        params.put("deviceId", null);
+        assertThrows(RequestBodyException.class, () -> {
+            TaskEditor.editTask(task, params);
+        });
+    }
+    
+    @Test
+    public void editTaskNullStatus() throws Exception {
+        MaintenanceTask task = createTask(10L, TaskStatus.CLOSED, TaskSeverity.CRITICAL);
+        params.put("status", null);
+        assertThrows(RequestBodyException.class, () -> {
+            TaskEditor.editTask(task, params);
+        });
+    }
+    
+    @Test
+    public void editTaskNullSeverity() throws Exception {
+        MaintenanceTask task = createTask(10L, TaskStatus.CLOSED, TaskSeverity.CRITICAL);
+        params.put("severity", null);
+        assertThrows(RequestBodyException.class, () -> {
+            TaskEditor.editTask(task, params);
+        });
+    }
+    
+    @Test
+    public void editTaskNullRegistered() throws Exception {
+        MaintenanceTask task = createTask(11L, TaskStatus.CLOSED, TaskSeverity.CRITICAL);
+        params.put("registered", null);
+        assertThrows(RequestBodyException.class, () -> {
+            TaskEditor.editTask(task, params);
+        });
+    }
 }
 

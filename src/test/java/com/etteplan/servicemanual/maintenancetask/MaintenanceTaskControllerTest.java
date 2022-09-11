@@ -321,7 +321,7 @@ public class MaintenanceTaskControllerTest {
     }
     
     @Test
-    public void addTaskNullValue() throws Exception {
+    public void addTaskNullDevice() throws Exception {
         // Try adding a task with a null device ID. Should return bad request
         String json = "{\"deviceId\": null, \"status\": \"OPEN\", \"severity\": \"CRITICAL\", \"description\": \"Major fixes of security holes\"}";
         mvc.perform(MockMvcRequestBuilders.post(API_TASKS).accept(MediaType.APPLICATION_JSON)
@@ -332,9 +332,36 @@ public class MaintenanceTaskControllerTest {
     @Test
     public void addTaskBadRegistrationTime() throws Exception {
         // Add it with a malformed registration time
-        // Result should a disregard of this value altogether, with a replacement by LocalDateTime.now()
-        // in the TaskMaintenance's default constructor.
+        // Should return 400 bad request
         String json = "{\"deviceId\": 1, \"status\": \"OPEN\", \"severity\": \"CRITICAL\", \"description\": \"Major fixes of security holes\", \"registered\": \"some random value lol\"}";
+        mvc.perform(MockMvcRequestBuilders.post(API_TASKS).accept(MediaType.APPLICATION_JSON)
+                .contentType(MediaType.APPLICATION_JSON).content(json))
+            .andExpect(status().isBadRequest());
+    }
+    
+    @Test
+    public void addTaskNullRegistrationTime() throws Exception {
+        // Add it with a null registration time
+        // Should return 400 bad request
+        String json = "{\"deviceId\": 1, \"status\": \"OPEN\", \"severity\": \"CRITICAL\", \"description\": \"Major fixes of security holes\", \"registered\": null}";
+        mvc.perform(MockMvcRequestBuilders.post(API_TASKS).accept(MediaType.APPLICATION_JSON)
+                .contentType(MediaType.APPLICATION_JSON).content(json))
+            .andExpect(status().isBadRequest());
+    }
+    
+    @Test
+    public void addTaskNullStatus() throws Exception {
+        // Add task with a null status. Should return 400
+        String json = "{\"deviceId\": 1, \"status\": null, \"severity\": \"CRITICAL\", \"description\": \"Major fixes of security holes\"}";
+        mvc.perform(MockMvcRequestBuilders.post(API_TASKS).accept(MediaType.APPLICATION_JSON)
+                .contentType(MediaType.APPLICATION_JSON).content(json))
+            .andExpect(status().isBadRequest());
+    }
+    
+    @Test
+    public void addTaskNullSeverity() throws Exception {
+        // Add task with a null status. Should return 400
+        String json = "{\"deviceId\": 1, \"status\": \"OPEN\", \"severity\": null, \"description\": \"Major fixes of security holes\"}";
         mvc.perform(MockMvcRequestBuilders.post(API_TASKS).accept(MediaType.APPLICATION_JSON)
                 .contentType(MediaType.APPLICATION_JSON).content(json))
             .andExpect(status().isBadRequest());

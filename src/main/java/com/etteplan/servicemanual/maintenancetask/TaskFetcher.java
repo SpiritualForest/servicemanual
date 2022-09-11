@@ -99,7 +99,7 @@ public final class TaskFetcher {
                         status = TaskStatus.valueOf(value);
                         databaseMethod += DQP_STATUS; // Indicate that we found the status parameter
                     }
-                    catch (IllegalArgumentException ex) {
+                    catch (IllegalArgumentException | NullPointerException ex) {
                         // Bad parameter for status. Throw exception, show which statuses are available
                         throw new QueryParameterException(String.format(notConvertable, value, availableStatus));
                     }
@@ -110,7 +110,7 @@ public final class TaskFetcher {
                         severity = TaskSeverity.valueOf(value);
                         databaseMethod += DQP_SEVERITY; // Indicate that we found the severity parameter
                     }
-                    catch (IllegalArgumentException ex) {
+                    catch (IllegalArgumentException | NullPointerException ex) {
                         // Bad parameter for severity.
                         throw new QueryParameterException(String.format(notConvertable, value, availableSeverity));
                     }

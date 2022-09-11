@@ -84,7 +84,7 @@ public class TaskEditor {
                     try {
                         task.setStatus(TaskStatus.valueOf(value));
                     }
-                    catch (IllegalArgumentException ex) {
+                    catch (IllegalArgumentException | NullPointerException ex) {
                         throw new RequestBodyException(E_STATUS);
                     }
                     break;
@@ -94,7 +94,7 @@ public class TaskEditor {
                     try {
                         task.setSeverity(TaskSeverity.valueOf(value));
                     }
-                    catch (IllegalArgumentException ex) {
+                    catch (IllegalArgumentException | NullPointerException ex) {
                         throw new RequestBodyException(E_SEVERITY);
                     }
                     break;
@@ -114,7 +114,7 @@ public class TaskEditor {
                     try {
                         task.setRegistered(LocalDateTime.parse(value));
                     }
-                    catch (DateTimeParseException ex) {
+                    catch (DateTimeParseException | NullPointerException ex) {
                         throw new RequestBodyException(E_REGISTERED);
                     }
                     break;
