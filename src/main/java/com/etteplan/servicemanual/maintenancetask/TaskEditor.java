@@ -9,7 +9,7 @@ import java.time.format.DateTimeParseException;
 import java.util.Map;
 
 /* This is a static class whose responsibility is to validate the request body
- * provided by the client in the PUT request, and edit the task accordingly.
+ * provided by the client in the PATCH request, and edit the task accordingly.
  * If the body is malformed or contains unknown properties, RequestBodyException is thrown.
  * If the deviceId is supplied in the body, but doesn't exist, FactoryDeviceNotFound is thrown.
  * FactoryDeviceNotFound is handled implicitly by the controller because it has an attached
