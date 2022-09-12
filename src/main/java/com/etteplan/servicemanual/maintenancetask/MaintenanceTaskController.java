@@ -101,15 +101,15 @@ class MaintenanceTaskController {
         // Delete tasks
         List<MaintenanceTask> tasks = new ArrayList<>();
         try {
-            // Try to fetch and delete the tasks
+            // Try to fetch the tasks
             tasks = TaskFetcher.fetchTasks(queryParameters);
-            taskRepository.deleteAll(tasks);
         }
         catch (QueryParameterException ex) {
             // Got a bad parameter.
             return ResponseEntity.badRequest().body(ex.getMessage());
         }
-        // Query was ok, tasks were deleted (if any were found)
+        // Query was ok, delete whatever tasks were found
+        taskRepository.deleteAll(tasks);
         return ResponseEntity.ok().body(String.format("Deleted %d tasks", tasks.size()));
     }
     
@@ -167,11 +167,10 @@ class MaintenanceTaskController {
         
         // Task exists. Try to edit it according to the given request body
         try {
-            // Try to edit the task
             task = TaskEditor.editTask(task, requestBody);
         }
         catch (RequestBodyException ex) {
-            // Encountered error in the request body
+            // Error in the request body
             return ResponseEntity.badRequest().body(ex.getMessage());
         }
         // Task edited successfully
