@@ -8,9 +8,9 @@ The application listens on localhost:8080. A front-end web interface is availabl
 
 The application will initialize the database with some randomly created tasks on the first run.  
 
-Please view the api.yml file for a detailed documentation of the API.
+View api.yml for a concise view of the API.  
 
-Short version:
+A more detailed explanation, with examples, follows here:  
 
 Endpoints:
 
@@ -30,8 +30,11 @@ Example queries:
 ```
 GET /api/tasks?deviceId=1
 GET /api/tasks?status=OPEN&severity=CRITICAL
+GET /api/tasks?deviceId=2&status=OPEN&severity=CRITICAL
+
 DELETE /api/tasks?status=CLOSED
 DELETE /api/tasks?deviceId=10
+DELETE /api/tasks?deviceId=10&severity=UNIMPORTANT
 ```
   
 ### /api/tasks - _POST_
