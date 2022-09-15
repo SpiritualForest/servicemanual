@@ -22,11 +22,6 @@ import com.etteplan.servicemanual.factorydevice.FactoryDeviceNotFoundException;
 
 import javax.validation.Valid;
 
-// MaintenanceTask and its Repository already exist in this package, that's why we don't have to import them.
-// TaskFetcher is a static class used to resolve query parameters and fetch tasks accordingly. View TaskFetcher.java
-// TaskEditor is a static class used to validate PATCH request bodies
-// and edit existing MaintenanceTask objects. View TaskEditor.java
-
 import java.util.List;
 import java.util.Map;
 import java.util.HashMap;
@@ -40,39 +35,21 @@ class MaintenanceTaskController {
     private final FactoryDeviceRepository deviceRepository;
     private final MaintenanceTaskModelAssembler assembler;
     
-    // We need these param HashMaps for creating hyperlinks in responses
-    // They serve literally no other purpose.
-    private final Map<String, String> emptyParams = new HashMap<String, String>();
-    private Map<String, String> deviceParam = new HashMap<String, String>();
-    private final String DEVICEID = "deviceId";
-
     // Our constructor
     public MaintenanceTaskController(MaintenanceTaskRepository taskRepository, FactoryDeviceRepository deviceRepository, MaintenanceTaskModelAssembler assembler) {
         this.taskRepository = taskRepository;
         this.deviceRepository = deviceRepository;
         this.assembler = assembler;
-        TaskFetcher.setTaskRepository(taskRepository);
-        TaskEditor.setTaskRepository(taskRepository);
+        TaskFetcher.setTaskRepository(taskRepository); // TaskFetcher.java
+        TaskEditor.setTaskRepository(taskRepository); // TaskEditor.java
         TaskEditor.setDeviceRepository(deviceRepository);
     }
 
-    CollectionModel<EntityModel<MaintenanceTask>> addHyperlinks(Long deviceId, List<MaintenanceTask> tasks) {
-        // Helper function to create hyperlinks to the supplied MaintenanceTask objects
-        if (deviceId == null) {
-            // Add links to /api/tasks
-            List<EntityModel<MaintenanceTask>> tasksModel = tasks.stream().map(assembler::toModel).collect(Collectors.toList());
-            return CollectionModel.of(tasksModel, linkTo(methodOn(MaintenanceTaskController.class).all(emptyParams)).withSelfRel());
-        }
-        else {
-            // Add links to /api/tasks and the /api/tasks?deviceId=
-            deviceParam.put(DEVICEID, Long.toString(deviceId));
-            List<EntityModel<MaintenanceTask>> tasksModel = tasks.stream()
-                    .map(assembler::toModelWithDevice)
-                    .collect(Collectors.toList());
-            return CollectionModel.of(tasksModel, 
-                    linkTo(methodOn(MaintenanceTaskController.class).all(deviceParam)).withRel("device"),
-                    linkTo(methodOn(MaintenanceTaskController.class).all(emptyParams)).withRel("tasks"));
-        }
+    CollectionModel<EntityModel<MaintenanceTask>> addHyperlinks(List<MaintenanceTask> tasks) {
+        // Helper function to add links to /api/tasks, and /api/tasks/{taskId} to each task obj
+        // prior to sending it as a response to the client
+        List<EntityModel<MaintenanceTask>> tasksModel = tasks.stream().map(assembler::toModel).collect(Collectors.toList());
+        return CollectionModel.of(tasksModel, linkTo(methodOn(MaintenanceTaskController.class).all(assembler.params)).withSelfRel());
     }
 
     // MAPPING: /api/tasks
@@ -81,9 +58,10 @@ class MaintenanceTaskController {
      * If a query parameter is bad in some way, such as not convertable to its required type, or unknown,
      * then QueryParameterException is thrown, and our response status is 400 bad request. */
     
+    // Fetch tasks
+    
     @GetMapping("/api/tasks")
     ResponseEntity<Object> all(@RequestParam Map<String, String> queryParameters) {
-        // Fetch tasks
         List<MaintenanceTask> tasks = new ArrayList<>();
         try {
             tasks = TaskFetcher.fetchTasks(queryParameters);
@@ -93,9 +71,11 @@ class MaintenanceTaskController {
             return ResponseEntity.badRequest().body(ex.getMessage());
         }
         // Query was ok, return whatever tasks were found.
-        return ResponseEntity.ok().body(addHyperlinks(TaskFetcher.getDeviceId(), tasks));
+        return ResponseEntity.ok().body(addHyperlinks(tasks));
     }
     
+    // Delete tasks
+
     @DeleteMapping("/api/tasks")
     ResponseEntity<String> deleteTasks(@RequestParam Map<String, String> queryParameters) {
         // Delete tasks
@@ -114,6 +94,7 @@ class MaintenanceTaskController {
     }
     
     // Create a new task
+
     @PostMapping("/api/tasks")
     @ResponseStatus(HttpStatus.CREATED)
     EntityModel<MaintenanceTask> createTask(@RequestBody @Valid MaintenanceTask task) {
@@ -134,6 +115,7 @@ class MaintenanceTaskController {
     // MAPPING: /api/tasks/{taskId}
 
     // Show a unique task by its id
+    
     @GetMapping("/api/tasks/{taskId}")
     EntityModel<MaintenanceTask> getTaskById(@PathVariable Long taskId) {
         MaintenanceTask task = taskRepository.findById(taskId)
@@ -144,6 +126,7 @@ class MaintenanceTaskController {
     }
 
     // Delete a single task based on its id
+    
     @DeleteMapping("/api/tasks/{taskId}")
     ResponseEntity<String> deleteTask(@PathVariable Long taskId) {
         MaintenanceTask task = taskRepository.findById(taskId)
@@ -154,7 +137,8 @@ class MaintenanceTaskController {
         return ResponseEntity.ok(String.format("Task %d deleted", taskId));
     }
 
-    // Update a task's fields.
+    // Update a task object's fields.
+    
     @PatchMapping("/api/tasks/{taskId}")
     ResponseEntity<Object> updateTask(@RequestBody Map<String, String> requestBody, @PathVariable Long taskId) {
         // Returns 400 bad request if the request body is empty, contains an unknown property,

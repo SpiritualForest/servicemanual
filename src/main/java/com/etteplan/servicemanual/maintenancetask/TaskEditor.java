@@ -8,9 +8,9 @@ import java.time.format.DateTimeParseException;
 
 import java.util.Map;
 
-/* This is a static class whose responsibility is to validate the request body
- * provided by the client in the PATCH request, and edit the task accordingly.
- * If the body is malformed or contains unknown properties, RequestBodyException is thrown.
+/* Static class to edit existing MaintenanceTask entites based on the given request body.
+ * This class is used by the controller when handling PATCH requests.
+ * If the request body is empty, malformed, or contains unknown properties, RequestBodyException is thrown.
  * If the deviceId is supplied in the body, but doesn't exist, FactoryDeviceNotFound is thrown.
  * FactoryDeviceNotFound is handled implicitly by the controller because it has an attached
  * FactoryDeviceNotFoundAdvice class that tells the controller how to handle it.
@@ -30,12 +30,12 @@ public class TaskEditor {
     private static final String RP_REGISTERED = "registered";
 
     // Error messages
-    private static final String E_DEVICEID = "Error in request body: deviceId must be an integer.";
-    private static final String E_STATUS = "Error in request body: status must be either 'OPEN' or 'CLOSED'.";
-    private static final String E_SEVERITY = "Error in request body: severity must be 'UNIMPORTANT', 'IMPORTANT', or 'CRITICAL'.";
-    private static final String E_DESCRIPTION = "Error in request body: description can't be null or empty.";
-    private static final String E_REGISTERED = "Could not parse registration time: must be java.time.LocalDateTime format: yyyy-dd-mmThh:mm:ss";
-    private static final String E_UNKNOWN = "Unknown property '%s'. Available properties: deviceId, status, severity, description, registered.";
+    private static final String ERR_DEVICEID = "Error in request body: deviceId must be an integer.";
+    private static final String ERR_STATUS = "Error in request body: status must be either 'OPEN' or 'CLOSED'.";
+    private static final String ERR_SEVERITY = "Error in request body: severity must be 'UNIMPORTANT', 'IMPORTANT', or 'CRITICAL'.";
+    private static final String ERR_DESCRIPTION = "Error in request body: description can't be null or empty.";
+    private static final String ERR_REGISTERED = "Could not parse registration time: must be java.time.LocalDateTime format: yyyy-dd-mmThh:mm:ss";
+    private static final String ERR_UNKNOWN = "Unknown property '%s'. Available properties: deviceId, status, severity, description, registered.";
 
     private TaskEditor() {} // Private constructor for static class
 
@@ -48,10 +48,10 @@ public class TaskEditor {
     }
 
     protected static MaintenanceTask editTask(MaintenanceTask task, Map<String, String> requestBody) throws RequestBodyException, FactoryDeviceNotFoundException {
-        // Validates the requestBody and edits the given task accordingly.
+        // Edits the task according to the given request body.
         // If successful, returns the edited and saved task object.
         // If the request body is empty, contains unknown properties, or incorrect values for a property,
-        // RequestBodyException will be thrown.
+        // RequestBodyException will be thrown and the task won't be editd.
         if (requestBody.isEmpty()) {
             throw new RequestBodyException("Error: empty request body");
         }
@@ -65,9 +65,9 @@ public class TaskEditor {
                         deviceId = Long.parseLong(value);
                     }
                     catch (IllegalArgumentException ex) {
-                        throw new RequestBodyException(E_DEVICEID);
+                        throw new RequestBodyException(ERR_DEVICEID);
                     }
-                    // Now check if the device exists
+                    // Now check that the device exists
                     if (!deviceRepository.existsById(deviceId)) {
                         // No such device
                         // We don't need to handle this in the controller
@@ -85,7 +85,7 @@ public class TaskEditor {
                         task.setStatus(TaskStatus.valueOf(value));
                     }
                     catch (IllegalArgumentException | NullPointerException ex) {
-                        throw new RequestBodyException(E_STATUS);
+                        throw new RequestBodyException(ERR_STATUS);
                     }
                     break;
 
@@ -95,14 +95,14 @@ public class TaskEditor {
                         task.setSeverity(TaskSeverity.valueOf(value));
                     }
                     catch (IllegalArgumentException | NullPointerException ex) {
-                        throw new RequestBodyException(E_SEVERITY);
+                        throw new RequestBodyException(ERR_SEVERITY);
                     }
                     break;
 
                 case RP_DESCRIPTION:
                     // We validate that there are no constraint violations on NotNull and NotEmpty
                     if (value == null || value.isEmpty()) {
-                        throw new RequestBodyException(E_DESCRIPTION);
+                        throw new RequestBodyException(ERR_DESCRIPTION);
                     }
                     // Valid desc. Escape the HTML, we don't want XSS attacks, do we?
                     value = value.replaceAll("<", "&lt;").replaceAll(">", "&gt;");
@@ -115,17 +115,16 @@ public class TaskEditor {
                         task.setRegistered(LocalDateTime.parse(value));
                     }
                     catch (DateTimeParseException | NullPointerException ex) {
-                        throw new RequestBodyException(E_REGISTERED);
+                        throw new RequestBodyException(ERR_REGISTERED);
                     }
                     break;
 
                 default:
                     // Unknown parameter
-                    throw new RequestBodyException(String.format(E_UNKNOWN, param));
+                    throw new RequestBodyException(String.format(ERR_UNKNOWN, param));
             }
         }
         // Task object edited. Save and return it.
         return taskRepository.save(task);
     }
 }
-

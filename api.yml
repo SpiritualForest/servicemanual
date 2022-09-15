@@ -75,13 +75,6 @@ definitions:
                   type: string
                   description: Hyperlink to the API endpoint that retrieves all tasks
                   example: http://localhost:8080/api/tasks
-            device:
-              type: object
-              properties:
-                href:
-                  type: string
-                  description: Hyperlink to the API endpoint that retrieves all the tasks for this task's attached device
-                  example: http://localhost:8080/api/tasks/deviceId/1
 basePath: /api
 schemes:
   - http

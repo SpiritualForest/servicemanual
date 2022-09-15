@@ -4,14 +4,11 @@ import java.util.Map;
 import java.util.List;
 import java.util.ArrayList;
 
-/* This class resolves which database query method must be called based
- * on the given query parameter values.
- * This class is static. It cannot be instantiated or extended, and has no instance members, only static
- * class members. I decided to design it this way because we don't need a TaskFetcher instance
- * in the controller. We just need to call the function that resolves the query parameters
- * and fetches the appropriate tasks from the database. An instance is not needed for this.
- * Plus, when this class needed to be instantiated, the unit tests failed
- * when I tried to instantiate it in the controller's constructor. */
+/* Static class to fetch a list of tasks based on given query parameters.
+ * Encountering unknown or malformed query parameters will
+ * throw QueryParameterException.
+ * If the query is correct but no tasks match the supplied parameters,
+ * an empty list will be returned. */
 
 public final class TaskFetcher {
  
@@ -31,31 +28,22 @@ public final class TaskFetcher {
     /* Database Query Parameters represent a combined value between 1 and 7.
      * Based on this value, we decide which database query function to call
      * in order to retrieve tasks.
-     * Each query parameter has been assigned its own numerical value:
-     * deviceId: 1, status: 2, severity: 4. The combination of these values tells us
-     * which parameters we need to pass to the JPA repository function.
+     * Each query parameter has been assigned its own numerical value.
+     * The combination of these values tells us which parameters we need
+     * to pass to the JPA repository function.
      * So for example, if we encounter the deviceId and status parameters in our query,
      * the combined value will become 3. So we know then to call the function
      * that retrieves tasks by deviceId and status, and pass to it only the parameters deviceId and status.
-     * This works similarly to Linux's filesystem permissions numbering system.
-     * So if we got a total combined value of 7, it means we filter with all 3 parameters. */
+     * So if we got a total of 6, filter tasks by status and severity, and only supply those parameters.
+     * If we got 7, filter by all three parameters. And so forth. */
     
     private static final int DQP_DEVICEID = 1;
     private static final int DQP_STATUS = 2;
     private static final int DQP_SEVERITY = 4;
 
-    // We store this field because we need it for creating "/api/tasks?deviceId=<id>" hyperlinks
-    // in the controller that uses this class, when responding to GET requests.
-    private static Long deviceId = null;
-
-    protected static Long getDeviceId() {
-        return deviceId;
-    }
-
     private static MaintenanceTaskRepository taskRepository;
 
     protected static void setTaskRepository(MaintenanceTaskRepository repository) {
-        // Set the task repository so that we won't have to always pass it as a parameter
         TaskFetcher.taskRepository = repository;
     }
  
@@ -71,7 +59,7 @@ public final class TaskFetcher {
             // No parameters were actually supplied. Fetch all tasks.
             return taskRepository.findAllByOrderBySeverityAscRegistered();
         }
-        // Parameters were supplied. Resolve.
+        // Parameters were supplied. Parse the query. 
         
         int databaseMethod = 0; // Which JPA repository method to call, based on the parameters we encountered
         Long deviceId = null;
@@ -86,10 +74,11 @@ public final class TaskFetcher {
                     try {
                         deviceId = Long.parseLong(value);
                         databaseMethod += DQP_DEVICEID; // Indicate that we found the deviceId parameter
-                        TaskFetcher.deviceId = deviceId; // Stored for hyperlink creation in the controller
                     }
                     catch (IllegalArgumentException ex) {
-                        // Bad parameter for deviceId
+                        // Bad parameter for deviceId.
+                        // No "NullPointerException" check here because in case of null
+                        // it will throw "NumberFormatException", which is a subclass of "IllegalArgumentException"
                         throw new QueryParameterException(String.format(notConvertable, value, "Must be an integer."));
                     }
                     break;
@@ -121,7 +110,7 @@ public final class TaskFetcher {
                     throw new QueryParameterException(String.format(unknownParam, param, availableParams));
             }
         }
-        // Now we call the database query resolution function with all 3 parameters, and pass our databaseMethod variable
+        // Now we call the database query resolution function with all 3 parameters, and pass our databaseMethod integer
         // to tell it which query it should use. Based on this, it will know which JPA repository function to call
         // and which query parameters to pass along.
         return queryDatabase(databaseMethod, deviceId, status, severity);
@@ -129,7 +118,7 @@ public final class TaskFetcher {
 
     private static List<MaintenanceTask> queryDatabase(int databaseMethod, Long deviceId, TaskStatus status, TaskSeverity severity) {
         // Query the database based on the parameters we received
-        // The databaseMethod parameter is a value between 1 and 7
+        // The databaseMethod integer has a value between 1 and 7
         // DQP_DEVICEID = 1, DQP_STATUS = 2, DQP_SEVERITY = 4.
         // The combination of these values determine which database query method to call
         // from our task repository. This way we don't have to perform null checks on parameters :)

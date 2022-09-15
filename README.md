@@ -135,9 +135,6 @@ Content-Type: application/json
         tasks: {
                 href: "http://localhost:8080/api/tasks"
         }
-        device: {
-                href: "http://localhost:8080/api/tasks?deviceId=1"
-        }
     }
 }
 ```
