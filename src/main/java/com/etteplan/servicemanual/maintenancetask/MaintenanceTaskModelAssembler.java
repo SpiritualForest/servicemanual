@@ -15,7 +15,7 @@ class MaintenanceTaskModelAssembler implements RepresentationModelAssembler<Main
     // We need this map because the all() method accepts it as a parameter
     // Set to public so that the controller can use this field as well, without
     // having to define its own separate maps for its addHyperlinks function
-    public final Map<String, String> params = new HashMap<String, String>();
+    protected final Map<String, String> params = new HashMap<String, String>();
 
   @Override
   public EntityModel<MaintenanceTask> toModel(MaintenanceTask task) {
