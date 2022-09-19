@@ -8,15 +8,28 @@ info:
 host: localhost
 
 definitions:
-  _embedded:
+  MaintenanceTaskListResponse:
     type: object
     properties:
-        $ref: '#/definitions/MaintenanceTaskList'
-
-  maintenanceTaskList:
-    type: array
-    items:
-      $ref: '#/definitions/MaintenanceTaskResponse'
+      _embedded:
+        type: object
+        properties:
+          maintenanceTaskList:
+            type: array
+            items:
+              $ref: '#/definitions/MaintenanceTaskResponse'
+        required: false
+        description: An array of MaintenanceTask objects. If no tasks were found in the query, this portion of the response doesn't exist.
+      _links:
+        type: object
+        properties:
+          tasks:
+            type: object
+            properties:
+              href:
+              type: string
+              description: Hyperlink to the API endpoint that retrieves all tasks
+              example: http://localhost:8080/api/tasks
 
   MaintenanceTask:
     type: object
@@ -49,7 +62,8 @@ definitions:
   MaintenanceTaskResponse:
     type: object
     properties:
-      $ref: '#/definitions/MaintenanceTask'
+      schema:
+        $ref: '#/definitions/MaintenanceTask'
       _links:
         type: object:
           schema:
@@ -107,7 +121,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/definitions/_embedded'
+                $ref: '#/definitions/MaintenanceTaskListResponse'
         400:
           description: Bad request
     delete:
