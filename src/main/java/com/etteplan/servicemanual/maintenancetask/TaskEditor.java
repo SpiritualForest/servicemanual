@@ -17,7 +17,7 @@ import java.util.Map;
  * Therefore we don't need to handle it manually ourselves in the controller.
  * We only handle RequestBodyException there. */
 
-public class TaskEditor {
+public final class TaskEditor {
     
     private static FactoryDeviceRepository deviceRepository;
     private static MaintenanceTaskRepository taskRepository;
